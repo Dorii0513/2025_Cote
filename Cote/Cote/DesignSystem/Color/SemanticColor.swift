@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct DesignColor {
+struct CoteColor {
     
     struct icon {
         static let `default` = Color("gray80")
