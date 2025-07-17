@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Typography.swift
 //  Cote
 //
 //  Created by 김예림 on 7/17/25.
@@ -9,7 +9,6 @@ import SwiftUI
 import AppKit
 
 public enum CoteFontType {
-    //case defaultText
     case input
     case tag
     case gutter
@@ -18,12 +17,14 @@ public enum CoteFontType {
     case code1
     case code2
     
+    //font
     static let pretendardSemiBoldFont: String = "Pretendard-SemiBold"
     static let pretendardMediumFont: String = "Pretendard-Medium"
     static let pretendardRegularFont: String = "Pretendard-Regular"
     static let JetBrainsMonoMedium: String = "JetBrainsMono-Medium"
     static let JetBrainsMonoRegular: String = "JetBrainsMono-Regular"
     
+    //size
     static let head: CGFloat = 20
     static let bodyM: CGFloat = 15
     static let bodyS: CGFloat = 13
