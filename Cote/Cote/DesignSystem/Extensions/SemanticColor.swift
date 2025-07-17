@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 extension ShapeStyle where Self == Color {
     // icon
     static var iconDefault: Self { Color("gray80") }
