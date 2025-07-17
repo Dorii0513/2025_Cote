@@ -7,37 +7,34 @@
 
 import SwiftUI
 
-struct CoteColor {
+import SwiftUI
+
+extension ShapeStyle where Self == Color {
+    // icon
+    static var iconDefault: Self { Color("gray80") }
+    static var iconSelected: Self { Color("gray50") }
+    static var iconStrong:   Self { Color("gray70") }
+    static var iconSecondary:Self { Color("gray90") }
     
-    struct icon {
-        static let `default` = Color("gray80")
-        static let selected = Color("gray50")
-        static let strong = Color("gray70")
-        static let secondary = Color("gray90")
-    }
+    // text
+    static var textDefault:       Self { Color("gray50") }
+    static var textLabelSelected: Self { Color("gray50") }
+    static var textLabelDefault:  Self { Color("gray80") }
+    static var textLabelSecondary:Self { Color("gray60") }
+    static var textLabelInfo:     Self { Color("gray100") }
+    static var textTagSelected:   Self { Color("gray70") }
+    static var textTagDefault:    Self { Color("gray80") }
     
-    struct text {
-        static let `default` = Color("gray50")
-        static let label_selected = Color("gray50")
-        static let label_default = Color("gray80")
-        static let label_secondary = Color("gray60")
-        static let label_info = Color("gray100")
-        static let tag_selected = Color("gray70")
-        static let tag_default = Color("gray80")
-    }
+    // background
+    static var bgTag:            Self { Color("gray80-15%") }
+    static var bgInputDefault:   Self { Color("black90") }
+    static var bgElevatedDefault:Self { Color("black70") }
+    static var bgSurfaceGutter:  Self { Color("black100") }
+    static var bgSurfaceToolbar: Self { Color("black80") }
+    static var bgSurfaceSidebar: Self { Color("black100-95%") }
+    static var bgSurfaceScroll:  Self { Color("black70") }
+    static var bgSurfaceBar:     Self { Color("gray90") }
     
-    struct bg {
-        static let tag = Color("gray80-15%")
-        static let input_default = Color("black90")
-        static let elevated_default = Color("black70")
-        static let surface_gutter = Color("black100")
-        static let surface_toolbar = Color("black80")
-        static let surface_sidebar = Color("black100-95%")
-        static let surface_scroll = Color("black70")
-        static let surface_bar = Color("gray90")
-    }
-    
-    struct action {
-        static let `default` = Color("gray80-10%")
-    }
+    // action
+    static var actionDefault: Self { Color("gray80-10%") }
 }
