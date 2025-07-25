@@ -24,15 +24,15 @@ extension ShapeStyle where Self == Color {
     static var textTagDefault:    Self { Color("gray80") }
     
     // background
-    static var bgTag:            Self { Color("gray80-15%") }
+    static var bgTag:            Self { Color("gray80_15pct") }
     static var bgInputDefault:   Self { Color("black90") }
     static var bgElevatedDefault:Self { Color("black70") }
     static var bgSurfaceGutter:  Self { Color("black100") }
     static var bgSurfaceToolbar: Self { Color("black80") }
-    static var bgSurfaceSidebar: Self { Color("black100-95%") }
+    static var bgSurfaceSidebar: Self { Color("black100_95pct") }
     static var bgSurfaceScroll:  Self { Color("black70") }
     static var bgSurfaceBar:     Self { Color("gray90") }
     
     // action
-    static var actionDefault: Self { Color("gray80-10%") }
+    static var actionDefault: Self { Color("gray80_10pct") }
 }

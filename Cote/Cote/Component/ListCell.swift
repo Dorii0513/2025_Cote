@@ -1,0 +1,106 @@
+//
+//  noteCell.swift
+//  Cote
+//
+//  Created by 김예림 on 7/23/25.
+//
+
+import SwiftUI
+
+struct ListCell: View {
+    @State var isSelected = false
+    @State var isHover = false
+    
+    @Binding var expandedIDs: Set<UUID>
+    
+    let item: NoteItems
+    let depth: Int
+    
+    // expandedIDs 값이 존재할 때 true
+    private var isExpanded: Bool {
+        switch item {
+        case .folder(let f): return expandedIDs.contains(f.id)
+        case .note: return false
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            Spacer()
+                .frame(width: 20 * CGFloat(depth))
+            
+            switch item {
+            case.folder(let f):
+                Button {
+                    isSelected.toggle()
+                    toggleExpansion()
+                } label: {
+                    FolderCell(isSelected: $isSelected, folder: f)
+                }
+                .buttonStyle(.plain)
+                .onHover { (entered) in
+                    isHover = entered
+                }
+                
+            case.note(let n):
+                Button {
+                    
+                } label: {
+                    Spacer()
+                        .frame(width: 24)
+                    
+                    Text(n.title)
+                        .coteFont(.title2,
+                                  color: .textLabelDefault)
+                }
+                .buttonStyle(.plain)
+                .onHover { (entered) in
+                    isHover = entered
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 5)
+        .padding(.horizontal, 5)
+        .frame(maxWidth: .infinity, minHeight: 34)
+        .background(isHover ? Color.actionDefault : Color.clear)
+        .cornerRadius(5)
+        
+        if isExpanded {
+            ForEach(item.children) { child in
+                ListCell(
+                    isSelected: false,
+                    isHover: false,
+                    expandedIDs: $expandedIDs,
+                    item: child,
+                    depth: depth + 1
+                )
+            }
+        }
+    }
+    
+    private func toggleExpansion() {
+        guard case .folder(let f) = item else { return }
+        if isExpanded { expandedIDs.remove(f.id) }
+        else           { expandedIDs.insert(f.id) }
+    }
+}
+
+struct FolderCell: View {
+    @Binding var isSelected: Bool
+    let folder: Folder
+    var body: some View {
+        HStack(spacing: 0) {
+            if isSelected {
+                Image("arrow_down")
+                    .foregroundStyle(.iconSecondary)
+            } else {
+                Image("arrow_right")
+                    .foregroundStyle(.iconSecondary)
+            }
+            Text(folder.name)
+                .coteFont(.title2, color: .textLabelDefault)
+        }
+    }
+}
