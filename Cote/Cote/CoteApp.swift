@@ -13,5 +13,6 @@ struct CoteApp: App {
         WindowGroup {
             ContentView()
         }
+        .windowResizability(.contentSize)
     }
 }

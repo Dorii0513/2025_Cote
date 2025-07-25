@@ -7,47 +7,11 @@
 
 import SwiftUI
 
-struct Folder: Identifiable {
-    let id = UUID()
-    var name: String
-    var notes: [Note] = []
-    var folders: [Folder] = []
-}
-
-struct Note: Identifiable {
-    let id = UUID()
-    var title: String
-    var content: String
-}
-
-// 2) 트리 구조 표현용 enum
-enum NoteItems: Identifiable {
-    case folder(Folder)
-    case note(Note)
-    
-    var id: UUID {
-        switch self {
-        case .folder(let f): return f.id
-        case .note(let n):   return n.id
-        }
-    }
-    
-    // OutlineGroup 등이 읽어갈 children 프로퍼티
-    var children: [NoteItems] {
-        switch self {
-        case .folder(let f):
-            let folders = f.folders.map(NoteItems.folder)
-            let notes   = f.notes.map(NoteItems.note)
-            return folders + notes
-        case .note:
-            return []
-        }
-    }
-}
-
 struct Sidebar: View {
     @State var isTapped: Bool = false
     @State private var expandedIDs = Set<UUID>()
+    
+    // dummy
     let roots: [NoteItems] = [
         .folder(Folder(name: "문서", notes: [Note(title: "메모", content: "앱 아이디어")], folders: [Folder(name: "프로젝트", notes: [], folders: [])])),
         .note(Note(title: "할 일", content: "SwiftUI 공부")),
@@ -58,11 +22,7 @@ struct Sidebar: View {
     
     var body: some View {
         
-        ZStack {
-            
-            Color.bgSurfaceSidebar
-                .blur(radius: 100)
-            
+        ScrollView {
             VStack {
                 HStack {
                     
@@ -91,7 +51,8 @@ struct Sidebar: View {
             }
         }
         .padding(0)
-        .frame(width: 270, height: 970)
+        .background(.bgSurfaceSidebar)
+        .frame(minWidth: 210, minHeight: 750)
     }
 }
 
