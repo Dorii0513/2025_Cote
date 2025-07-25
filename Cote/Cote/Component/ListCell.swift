@@ -8,9 +8,7 @@
 import SwiftUI
 
 struct ListCell: View {
-    @State var isSelected = false
     @State var isHover = false
-    
     @Binding var expandedIDs: Set<UUID>
     
     let item: NoteItems
@@ -32,10 +30,9 @@ struct ListCell: View {
             switch item {
             case.folder(let f):
                 Button {
-                    isSelected.toggle()
                     toggleExpansion()
                 } label: {
-                    FolderCell(isSelected: $isSelected, folder: f)
+                    FolderCell(isExpanded: isExpanded, folder: f)
                 }
                 .buttonStyle(.plain)
                 .onHover { (entered) in
@@ -50,8 +47,8 @@ struct ListCell: View {
                         .frame(width: 24)
                     
                     Text(n.title)
-                        .coteFont(.title2,
-                                  color: .textLabelDefault)
+                        .coteFont(.title2, color: .textLabelDefault)
+                        .frame(height: 18)
                 }
                 .buttonStyle(.plain)
                 .onHover { (entered) in
@@ -63,14 +60,13 @@ struct ListCell: View {
         }
         .padding(.vertical, 5)
         .padding(.horizontal, 5)
-        .frame(maxWidth: .infinity, minHeight: 34)
+        .frame(maxWidth: .infinity, minHeight: 26)
         .background(isHover ? Color.actionDefault : Color.clear)
         .cornerRadius(5)
         
         if isExpanded {
             ForEach(item.children) { child in
                 ListCell(
-                    isSelected: false,
                     isHover: false,
                     expandedIDs: $expandedIDs,
                     item: child,
@@ -88,11 +84,11 @@ struct ListCell: View {
 }
 
 struct FolderCell: View {
-    @Binding var isSelected: Bool
+    var isExpanded: Bool
     let folder: Folder
     var body: some View {
         HStack(spacing: 0) {
-            if isSelected {
+            if isExpanded {
                 Image("arrow_down")
                     .foregroundStyle(.iconSecondary)
             } else {

@@ -25,9 +25,9 @@ public enum CoteFontType {
     static let JetBrainsMonoRegular: String = "JetBrainsMono-Regular"
     
     //size
-    static let head: CGFloat = 20
-    static let bodyM: CGFloat = 15
-    static let bodyS: CGFloat = 13
+    static let head: CGFloat = 16
+    static let bodyM: CGFloat = 12
+    static let bodyS: CGFloat = 10
     
     var font: String {
         switch self {
