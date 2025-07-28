@@ -21,38 +21,43 @@ struct Sidebar: View {
     ]
     
     var body: some View {
-        
-        ScrollView {
-            VStack {
-                HStack {
-                    
-                    MenuButton(name: "addFolder", action: {isTapped.toggle()})
-                    
-                    MenuButton(name: "addNote", action: {isTapped.toggle()})
+        ZStack {
+            VisualEffectView()
+            
+            Color.bgSurfaceSidebar
+            
+            ScrollView {
+                VStack {
+                    HStack {
+                        
+                        MenuButton(name: "addFolder", action: {isTapped.toggle()})
+                        
+                        MenuButton(name: "addNote", action: {isTapped.toggle()})
+                        
+                        Spacer()
+                        
+                        MenuButton(name: "filter", action: {isTapped.toggle()})
+                    }
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 5)
                     
                     Spacer()
+                        .frame(height:5)
                     
-                    MenuButton(name: "filter", action: {isTapped.toggle()})
-                }
-                .padding(.horizontal, 15)
-                .padding(.vertical, 5)
-                
-                Spacer()
-                    .frame(height:5)
-                
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(roots) { item in
-                        ListCell(expandedIDs: $expandedIDs, item: item, depth: 0)
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(roots) { item in
+                            ListCell(expandedIDs: $expandedIDs, item: item, depth: 0)
+                        }
                     }
+                    .padding(.horizontal, 10)
+                    
+                    Spacer()
                 }
-                .padding(.horizontal, 10)
-                
-                Spacer()
             }
+            .padding(0)
         }
-        .padding(0)
-        .background(.bgSurfaceSidebar)
         .frame(minWidth: 210, minHeight: 750)
+        .background(Color.clear)
     }
 }
 
