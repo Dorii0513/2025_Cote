@@ -29,7 +29,7 @@ extension ShapeStyle where Self == Color {
     static var bgElevatedDefault:Self { Color("black70") }
     static var bgSurfaceGutter:  Self { Color("black100") }
     static var bgSurfaceToolbar: Self { Color("black80") }
-    static var bgSurfaceSidebar: Self { Color("black100_95pct") }
+    static var bgSurfaceSidebar: Self { Color("black100_90pct") }
     static var bgSurfaceScroll:  Self { Color("black70") }
     static var bgSurfaceBar:     Self { Color("gray90") }
     
