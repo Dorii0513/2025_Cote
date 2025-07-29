@@ -8,12 +8,13 @@
 import Foundation
 import SwiftUI
 
-struct VisualEffectView: NSViewRepresentable {
+struct BlurEffect: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
-        let effectView = NSVisualEffectView()
-        effectView.state = .active
-        effectView.material = .hudWindow
-        return effectView
+        let effect = NSVisualEffectView()
+        effect.state = .active
+        effect.blendingMode = .behindWindow
+        effect.material = .fullScreenUI
+        return effect
     }
     
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
