@@ -22,13 +22,13 @@ struct Sidebar: View {
     
     var body: some View {
         ZStack {
-            VisualEffectView()
+            BlurEffect()
             
             Color.bgSurfaceSidebar
             
             ScrollView {
                 VStack {
-                    HStack {
+                    HStack(spacing: 0) {
                         
                         MenuButton(name: "addFolder", action: {isTapped.toggle()})
                         
