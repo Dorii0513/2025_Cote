@@ -22,9 +22,6 @@ struct Sidebar: View {
     
     var body: some View {
         ZStack {
-            BlurEffect()
-            
-            Color.bgSurfaceSidebar
             
             ScrollView {
                 VStack {
