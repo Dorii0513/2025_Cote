@@ -10,11 +10,23 @@ import AppKit
 
 struct MainView: View {
     var body: some View {
-        HStack {
-            Sidebar()
-            ContentView()
+        NavigationSplitView {
+            ZStack {
+                Color.bgSurfaceSidebar.ignoresSafeArea()
+                
+                Sidebar()
+                    .border(Color.blue, width: 4)
+                    .toolbar(content: {
+                        Button("Click Me") {
+                            
+                        }
+                    })
+            }
+        } detail: {
+            
         }
-        .background(Color.clear)
+        .containerBackground(Color.bgSurfaceSidebar, for: .window)
+        
     }
 }
 

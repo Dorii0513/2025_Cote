@@ -12,11 +12,9 @@ struct CoteApp: App {
     var body: some Scene {
         WindowGroup {
             MainView()
-                .toolbar {
-                    
-                }
+                .toolbar(removing: .title)
+                .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         }
         .windowResizability(.contentSize)
-        .windowToolbarStyle(.unifiedCompact(showsTitle: false))
     }
 }
