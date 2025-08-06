@@ -12,7 +12,6 @@ struct MenuButton: View {
     
     @Binding var selected: Bool
     let icon: Icon
-    let action: () -> Void
     
     private var iconColor: Color {
         switch icon.size {
@@ -37,7 +36,6 @@ struct MenuButton: View {
         ZStack {
             Button {
                 selected = true
-                action()
             } label: {
                 Image(icon.name)
                     .foregroundStyle(iconColor)

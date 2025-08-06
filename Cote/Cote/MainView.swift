@@ -31,9 +31,8 @@ struct MainView: View {
                             MenuButton(selected: Binding(
                                 get: { selectedButtonID == button.id },
                                 set: { if $0 { selectedButtonID = button.id }}),
-                                       icon: button,
-                                       action: {
-                            })
+                                       icon: button
+                            )
                         }
                     }
                 })
