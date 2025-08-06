@@ -11,7 +11,11 @@ import SwiftUI
 struct CoteApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView()
+                .toolbar(removing: .title)
+                .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         }
+        .windowResizability(.contentSize)
+        .windowToolbarStyle(.unifiedCompact)
     }
 }
