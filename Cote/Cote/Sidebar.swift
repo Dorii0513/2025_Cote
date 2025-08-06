@@ -47,18 +47,15 @@ private struct FolderView: View {
                 HStack(spacing: 4) {
                     
                     MenuButton(selected: $addFolderSelected,
-                               icon: CoteIcon.addFolder,
-                               action: {})
+                               icon: CoteIcon.addFolder)
                     
                     MenuButton(selected: $addFolderSelected,
-                               icon: CoteIcon.addNote,
-                               action: {})
+                               icon: CoteIcon.addNote)
                     
                     Spacer()
                     
                     MenuButton(selected: $addFolderSelected,
-                               icon: CoteIcon.filter,
-                               action: {})
+                               icon: CoteIcon.filter)
                 }
                 .padding(.vertical, 4)
                 
