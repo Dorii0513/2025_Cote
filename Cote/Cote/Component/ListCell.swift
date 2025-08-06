@@ -32,28 +32,23 @@ struct ListCell: View {
                 Button {
                     toggleExpansion()
                 } label: {
-                    FolderCell(isExpanded: isExpanded, folder: f)
+                    FolderCell(isExpanded: isExpanded, folder: f, isHover: $isHover)
                 }
                 .buttonStyle(.plain)
-                .onHover { (entered) in
-                    isHover = entered
-                }
                 
             case.note(let n):
                 Button {
                     
                 } label: {
                     Spacer()
-                        .frame(width: 24)
+                        .frame(width: 18)
                     
                     Text(n.title)
-                        .coteFont(.title2, color: .textLabelDefault)
-                        .frame(height: 18)
+                        .coteFont(.title2,
+                                  color: isHover ? .textDefault : .textLabelDefault)
+                        .frame(height: 18) //tag 높이
                 }
                 .buttonStyle(.plain)
-                .onHover { (entered) in
-                    isHover = entered
-                }
             }
             
             Spacer()
@@ -63,6 +58,9 @@ struct ListCell: View {
         .frame(maxWidth: .infinity, minHeight: 26)
         .background(isHover ? Color.actionDefault : Color.clear)
         .cornerRadius(5)
+        .onHover { (entered) in
+            isHover = entered
+        }
         
         if isExpanded {
             ForEach(item.children) { child in
@@ -86,6 +84,7 @@ struct ListCell: View {
 struct FolderCell: View {
     var isExpanded: Bool
     let folder: Folder
+    @Binding var isHover: Bool
     var body: some View {
         HStack(spacing: 0) {
             if isExpanded {
@@ -96,7 +95,8 @@ struct FolderCell: View {
                     .foregroundStyle(.iconSecondary)
             }
             Text(folder.name)
-                .coteFont(.title2, color: .textLabelDefault)
+                .coteFont(.title2,
+                          color: isHover ? .textDefault : .textLabelDefault)
         }
     }
 }

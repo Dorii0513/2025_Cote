@@ -8,55 +8,77 @@
 import SwiftUI
 
 struct Sidebar: View {
-    @State var isTapped: Bool = false
+    var body: some View {
+        ZStack {
+            VStack(spacing: 4) {
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(.actionDefault)
+                FolderView()
+            }
+        }
+        .frame(minWidth: 210, minHeight: 700)
+        .background(Color.clear)
+    }
+}
+
+
+//MARK: - Folder뷰
+
+private struct FolderView: View {
+    @State var addFolderSelected: Bool = false
+    @State var addNoteSelected: Bool = false
+    @State var filterSelected: Bool = false
+    
     @State private var expandedIDs = Set<UUID>()
     
     // dummy
     let roots: [NoteItems] = [
-        .folder(Folder(name: "문서", notes: [Note(title: "메모", content: "앱 아이디어")], folders: [Folder(name: "프로젝트", notes: [], folders: [])])),
-        .note(Note(title: "할 일", content: "SwiftUI 공부")),
-        .folder(Folder(name: "프로젝트", notes: [], folders: [])),
-        .note(Note(title: "메모", content: "앱 아이디어")),
-        .note(Note(title: "영화 목록", content: "..."))
+        .folder(Folder(name: "Untitled1", notes: [Note(title: "Untitled2", content: "앱 아이디어")], folders: [Folder(name: "Untitled3", notes: [], folders: [])])),
+        .note(Note(title: "Untitled4", content: "SwiftUI 공부")),
+        .folder(Folder(name: "Untitled5", notes: [], folders: [])),
+        .note(Note(title: "Untitled6", content: "앱 아이디어")),
+        .note(Note(title: "Untitled7", content: "..."))
     ]
     
     var body: some View {
-        ZStack {
-            
-            ScrollView {
-                VStack {
-                    HStack(spacing: 0) {
-                        
-                        MenuButton(name: "addFolder", action: {isTapped.toggle()})
-                        
-                        MenuButton(name: "addNote", action: {isTapped.toggle()})
-                        
-                        Spacer()
-                        
-                        MenuButton(name: "filter", action: {isTapped.toggle()})
-                    }
-                    .padding(.horizontal, 15)
-                    .padding(.vertical, 5)
+        ScrollView {
+            VStack {
+                HStack(spacing: 4) {
+                    
+                    MenuButton(selected: $addFolderSelected,
+                               icon: CoteIcon.addFolder,
+                               action: {})
+                    
+                    MenuButton(selected: $addFolderSelected,
+                               icon: CoteIcon.addNote,
+                               action: {})
                     
                     Spacer()
-                        .frame(height:5)
                     
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(roots) { item in
-                            ListCell(expandedIDs: $expandedIDs, item: item, depth: 0)
-                        }
-                    }
-                    .padding(.horizontal, 10)
-                    
-                    Spacer()
+                    MenuButton(selected: $addFolderSelected,
+                               icon: CoteIcon.filter,
+                               action: {})
                 }
+                .padding(.vertical, 4)
+                
+                Spacer()
+                    .frame(height:5)
+                
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(roots) { item in
+                        ListCell(expandedIDs: $expandedIDs, item: item, depth: 0)
+                    }
+                }
+                
+                Spacer()
             }
-            .padding(0)
         }
-        .frame(minWidth: 210, minHeight: 750)
-        .background(Color.clear)
+        .padding(.horizontal, 10)
+        .padding(0)
     }
 }
+
 
 #Preview {
     Sidebar()

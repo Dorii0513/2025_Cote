@@ -9,22 +9,43 @@ import SwiftUI
 
 struct MenuButton: View {
     @State var isHover = false
-    let name: String
+    
+    @Binding var selected: Bool
+    let icon: Icon
     let action: () -> Void
+    
+    private var iconColor: Color {
+        switch icon.size {
+        case .large:
+            return selected ? .iconSelected : (isHover ? .iconSelected : .textLabelDefault)
+        case .small:
+            return isHover ? .iconSelected : .textLabelDefault
+        }
+    }
+    
+    private var backgroundColor: Color {
+        switch icon.size {
+        case .large:
+            return selected ? .actionDefault : (isHover ? .actionDefault : .clear)
+        case .small:
+            return isHover ? .actionDefault : .clear
+        }
+    }
     
     var body: some View {
         
         ZStack {
             Button {
+                selected = true
                 action()
             } label: {
-                Image(name)
-                    .foregroundStyle(.textLabelDefault)
-                    .padding(5)
+                Image(icon.name)
+                    .foregroundStyle(iconColor)
+                    .padding(icon.size == .large ? 6 : 4)
             }
             .buttonStyle(.plain)
-            .background(isHover ? Color.actionDefault : Color.clear)
-            .cornerRadius(5)
+            .background(backgroundColor)
+            .cornerRadius(icon.size == .large ? 8 : 4)
             .onHover(perform: { hovering in
                 self.isHover = hovering
             })
