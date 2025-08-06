@@ -16,5 +16,6 @@ struct CoteApp: App {
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         }
         .windowResizability(.contentSize)
+        .windowToolbarStyle(.unifiedCompact)
     }
 }
