@@ -10,20 +10,23 @@ import AppKit
 
 struct MainView: View {
     @State private var selectedButtonID: UUID?
-
+    private let favoritesBarID = "com.example.favoritesBar"
+    
     var body: some View {
         NavigationSplitView {
             ZStack {
+                //블러 효과
+                BlurEffect().ignoresSafeArea()
                 Color.bgSurfaceSidebar.ignoresSafeArea()
                 
                 Sidebar()
             }
-            
             .toolbar(removing: .sidebarToggle)
             .toolbar(content: {
                 ToolbarItem {
                     Spacer()
                 }
+                
                 ToolbarItem(placement: .primaryAction, content: {
                     HStack(spacing: 4) {
                         Spacer()
@@ -38,9 +41,19 @@ struct MainView: View {
                 })
             })
         } detail: {
-            
+            ContentView()
+                .ignoresSafeArea()
         }
-        .presentedWindowToolbarStyle(.unified)
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                HStack {
+                    Text("Detail Title")
+                        .font(.title2)
+                }
+                .ignoresSafeArea()
+            }
+        }
+        .toolbarBackground(.bgInputDefault, for: .windowToolbar)
     }
 }
 
