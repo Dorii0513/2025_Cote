@@ -39,11 +39,11 @@ struct MenuButton: View {
             } label: {
                 Image(icon.name)
                     .foregroundStyle(iconColor)
-                    .padding(icon.size == .large ? 6 : 4)
+                    .padding(icon.size == .large ? 6 : 5)
             }
             .buttonStyle(.plain)
             .background(backgroundColor)
-            .cornerRadius(icon.size == .large ? 8 : 4)
+            .cornerRadius(8)
             .onHover(perform: { hovering in
                 self.isHover = hovering
             })

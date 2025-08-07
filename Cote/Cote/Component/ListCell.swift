@@ -57,7 +57,7 @@ struct ListCell: View {
         .padding(.horizontal, 5)
         .frame(maxWidth: .infinity, minHeight: 26)
         .background(isHover ? Color.actionDefault : Color.clear)
-        .cornerRadius(5)
+        .cornerRadius(8)
         .onHover { (entered) in
             isHover = entered
         }
