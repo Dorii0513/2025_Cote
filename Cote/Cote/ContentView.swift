@@ -9,8 +9,18 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Text("zz")
+        ZStack {
+            Color.bgInputDefault
+            
+            VStack {
+                Text("Untitled")
+                
+                Button {
+                    
+                } label: {
+                    Text("Add tags")
+                }
+            }
         }
     }
 }
