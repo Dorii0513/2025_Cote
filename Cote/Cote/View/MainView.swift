@@ -41,19 +41,12 @@ struct MainView: View {
                 })
             })
         } detail: {
-            ContentView()
-                .ignoresSafeArea()
-        }
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                HStack {
-                    Text("Detail Title")
-                        .font(.title2)
-                }
-                .ignoresSafeArea()
+            ZStack {
+                Color.bgSurfaceToolbar
+                    .ignoresSafeArea(edges: .top)
+                ContentView()
             }
         }
-        .toolbarBackground(.bgInputDefault, for: .windowToolbar)
     }
 }
 

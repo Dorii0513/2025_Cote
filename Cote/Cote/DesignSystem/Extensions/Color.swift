@@ -25,10 +25,10 @@ extension ShapeStyle where Self == Color {
     
     // background
     static var bgTag:            Self { Color("gray80_15pct") }
-    static var bgInputDefault:   Self { Color("black90") }
+    static var bgInputDefault:   Self { Color("black200") }
     static var bgElevatedDefault:Self { Color("black70") }
     static var bgSurfaceGutter:  Self { Color("black100") }
-    static var bgSurfaceToolbar: Self { Color("black80") }
+    static var bgSurfaceToolbar: Self { Color("black90") }
     static var bgSurfaceSidebar: Self { Color("black100_80pct") }
     static var bgSurfaceScroll:  Self { Color("black70") }
     static var bgSurfaceBar:     Self { Color("gray90") }
