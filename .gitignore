@@ -4,8 +4,8 @@
 
 ## User settings
 xcuserdata/
-Info.plist
-Cote/Cote/Info.plist
+Key.plist
+Cote/Cote/Key.plist
 
 ## Obj-C/Swift specific
 *.hmap
