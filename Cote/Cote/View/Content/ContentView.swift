@@ -14,15 +14,14 @@ struct ContentView: View {
         print("world")
     }
     """
+    @State private var tags: [String] = []
     var body: some View {
         ZStack {
             Color.bgInputDefault
             
             //dummy text
             VStack {
-                CodeEditor(text: .constant("""
-                func hello() {\n    print(\"hello\")\n}\n\n// soft wrap example: a very long line that will wrap in the text view but should NOT create extra line numbers\nlet x = 1234567890\n
-"""))
+                CodeEditorPreviewContainer()
                 HStack {
                     
                 }
