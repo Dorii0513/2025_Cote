@@ -5,43 +5,106 @@
 //  Created by 김예림 on 8/10/25.
 //
 
+
+//TODO: - 주석 삭제
+
 import SwiftUI
 import AppKit
 import Foundation
-import NaturalLanguage
-import SystemConfiguration
+//import NaturalLanguage
+//import SystemConfiguration
+
+// MARK: - Configuration
+public struct CodeEditorConfiguration {
+    public let font: NSFont
+    public let gutterWidth: CGFloat
+    public let gutterPadding: CGFloat
+    public let textInset: NSSize
+    public let lineNumberFont: NSFont
+    
+    public static let defaultConfig = CodeEditorConfiguration(
+        font: NSFont(name: "JetBrainsMono-Regular", size: 14) ?? .monospacedSystemFont(ofSize: 14, weight: .regular),
+        gutterWidth: 40,
+        gutterPadding: 8,
+        textInset: NSSize(width: 10, height: 8),
+        lineNumberFont: .monospacedSystemFont(ofSize: 11, weight: .regular)
+    )
+    
+    public init(
+        font: NSFont,
+        gutterWidth: CGFloat,
+        gutterPadding: CGFloat,
+        textInset: NSSize,
+        lineNumberFont: NSFont
+    ) {
+        self.font = font
+        self.gutterWidth = gutterWidth
+        self.gutterPadding = gutterPadding
+        self.textInset = textInset
+        self.lineNumberFont = lineNumberFont
+    }
+}
 
 // MARK: - SwiftUI Code Editor
 public struct CodeEditor: NSViewRepresentable {
     @Binding var text: String
     @Binding var suggestedTags: [String]
     @Binding var showSuggestedTags: Bool
-    let font: NSFont
     
+    private let configuration: CodeEditorConfiguration
+    
+    // Primary initializer with configuration
     public init(
         text: Binding<String>,
         suggestedTags: Binding<[String]> = .constant([]),
         showSuggestedTags: Binding<Bool> = .constant(false),
-        font: NSFont = NSFont(name: "JetBrainsMono-Regular", size: 14) ?? .monospacedSystemFont(ofSize: 14, weight: .regular)
+        configuration: CodeEditorConfiguration
     ) {
         self._text = text
         self._suggestedTags = suggestedTags
         self._showSuggestedTags = showSuggestedTags
-        self.font = font
+        self.configuration = configuration
+    }
+    
+    // Convenience initializer with default configuration
+    public init(
+        text: Binding<String>,
+        suggestedTags: Binding<[String]> = .constant([]),
+        showSuggestedTags: Binding<Bool> = .constant(false)
+    ) {
+        self._text = text
+        self._suggestedTags = suggestedTags
+        self._showSuggestedTags = showSuggestedTags
+        self.configuration = .defaultConfig
+    }
+    
+    // Legacy initializer with custom font
+    public init(
+        text: Binding<String>,
+        suggestedTags: Binding<[String]> = .constant([]),
+        showSuggestedTags: Binding<Bool> = .constant(false),
+        font: NSFont
+    ) {
+        self._text = text
+        self._suggestedTags = suggestedTags
+        self._showSuggestedTags = showSuggestedTags
+        self.configuration = CodeEditorConfiguration(
+            font: font,
+            gutterWidth: CodeEditorConfiguration.defaultConfig.gutterWidth,
+            gutterPadding: CodeEditorConfiguration.defaultConfig.gutterPadding,
+            textInset: CodeEditorConfiguration.defaultConfig.textInset,
+            lineNumberFont: CodeEditorConfiguration.defaultConfig.lineNumberFont
+        )
     }
     
     public func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        return Coordinator(self)
     }
     
     public func makeNSView(context: Context) -> NSScrollView {
-        let scrollView = NSScrollView()
-        scrollView.hasVerticalScroller = true
-        scrollView.autohidesScrollers = false
-        scrollView.drawsBackground = false
-        
+        let scrollView = createScrollView()
         let textView = createTextView(context: context)
-        let gutter = LineNumberGutter(textView: textView)
+        let gutter = LineNumberGutter(textView: textView, configuration: configuration)
         
         setupScrollView(scrollView, textView: textView, gutter: gutter, context: context)
         
@@ -56,24 +119,25 @@ public struct CodeEditor: NSViewRepresentable {
         context.coordinator.gutter?.needsDisplay = true
     }
     
+    private func createScrollView() -> NSScrollView {
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.autohidesScrollers = false
+        scrollView.drawsBackground = false
+        return scrollView
+    }
+    
     private func createTextView(context: Context) -> CodeTextView {
-        // Create text system
-        let textStorage = NSTextStorage()
-        let layoutManager = NSLayoutManager()
-        textStorage.addLayoutManager(layoutManager)
+        let textSystem = TextSystemFactory.create()
+        let textView = CodeTextView(frame: .zero, textContainer: textSystem.textContainer)
         
-        let textContainer = NSTextContainer()
-        textContainer.widthTracksTextView = true
-        textContainer.containerSize = NSSize(
-            width: 0,
-            height: CGFloat.greatestFiniteMagnitude
-        )
-        textContainer.lineFragmentPadding = 0
-        layoutManager.addTextContainer(textContainer)
+        configureTextView(textView, context: context)
         
-        // Create text view
-        let textView = CodeTextView(frame: .zero, textContainer: textContainer)
-        textView.font = font
+        return textView
+    }
+    
+    private func configureTextView(_ textView: CodeTextView, context: Context) {
+        textView.font = configuration.font
         textView.string = text
         textView.delegate = context.coordinator
         textView.isEditable = true
@@ -83,15 +147,11 @@ public struct CodeEditor: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = true
         textView.autoresizingMask = [.width]
-        textView.textContainerInset = NSSize(width: 8, height: 8)
+        textView.textContainerInset = configuration.textInset
         textView.drawsBackground = false
         textView.textColor = NSColor.labelColor
         textView.insertionPointColor = .labelColor
-        
-        // 타이핑 속성에도 폰트 고정(안하면 입력 시 기본 폰트로 바뀌는 경우 있음)
-        textView.typingAttributes[.font] = font
-        
-        return textView
+        textView.typingAttributes[.font] = configuration.font
     }
     
     private func setupScrollView(_ scrollView: NSScrollView, textView: CodeTextView, gutter: LineNumberGutter, context: Context) {
@@ -100,27 +160,33 @@ public struct CodeEditor: NSViewRepresentable {
         scrollView.verticalRulerView = gutter
         scrollView.documentView = textView
         
-        context.coordinator.textView = textView
-        context.coordinator.gutter = gutter
-        
-        // Setup text view insets for gutter space (고정 좌측 패딩)
-        updateTextViewInsets(textView: textView, gutterWidth: gutter.ruleThickness)
-        
-        // Scroll observation
-        scrollView.contentView.postsBoundsChangedNotifications = true
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.scrollViewDidScroll),
-            name: NSView.boundsDidChangeNotification,
-            object: scrollView.contentView
-        )
+        context.coordinator.configure(textView: textView, gutter: gutter, scrollView: scrollView)
+    }
+}
+
+// MARK: - Text System Factory
+private struct TextSystemFactory {
+    struct TextSystem {
+        let textStorage: NSTextStorage
+        let layoutManager: NSLayoutManager
+        let textContainer: NSTextContainer
     }
     
-    private func updateTextViewInsets(textView: NSTextView, gutterWidth: CGFloat) {
-        let currentInset = textView.textContainerInset
-        textView.textContainerInset = NSSize(
-            width: 10, // 고정 좌측 패딩 유지
-            height: currentInset.height
+    static func create() -> TextSystem {
+        let textStorage = NSTextStorage()
+        let layoutManager = NSLayoutManager()
+        textStorage.addLayoutManager(layoutManager)
+        
+        let textContainer = NSTextContainer()
+        textContainer.widthTracksTextView = true
+        textContainer.containerSize = NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
+        textContainer.lineFragmentPadding = 0
+        layoutManager.addTextContainer(textContainer)
+        
+        return TextSystem(
+            textStorage: textStorage,
+            layoutManager: layoutManager,
+            textContainer: textContainer
         )
     }
 }
@@ -128,34 +194,46 @@ public struct CodeEditor: NSViewRepresentable {
 // MARK: - Coordinator
 extension CodeEditor {
     public class Coordinator: NSObject, NSTextViewDelegate {
-        let parent: CodeEditor
+        private let parent: CodeEditor
+        private weak var scrollView: NSScrollView?
+        
         weak var textView: CodeTextView?
         weak var gutter: LineNumberGutter?
         
         init(_ parent: CodeEditor) {
             self.parent = parent
+            super.init()
         }
         
         deinit {
-            // Clean up observer to prevent crashes
             NotificationCenter.default.removeObserver(self)
         }
-
-        // ✅ Enter 직후 거터 즉시 갱신
+        
+        func configure(textView: CodeTextView, gutter: LineNumberGutter, scrollView: NSScrollView) {
+            self.textView = textView
+            self.gutter = gutter
+            self.scrollView = scrollView
+            
+            setupScrollObserver(scrollView)
+        }
+        
+        private func setupScrollObserver(_ scrollView: NSScrollView) {
+            scrollView.contentView.postsBoundsChangedNotifications = true
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(scrollViewDidScroll),
+                name: NSView.boundsDidChangeNotification,
+                object: scrollView.contentView
+            )
+        }
+        
+        // MARK: - Text View Delegate
         public func textView(_ textView: NSTextView,
                              shouldChangeTextIn affectedCharRange: NSRange,
                              replacementString: String?) -> Bool {
-            // 개행 입력을 감지하고, 실제 텍스트 반영 직후(다음 런루프)에 거터를 갱신한다
-            if replacementString == "\n" || replacementString == "\r" {
-                DispatchQueue.main.async { [weak self] in
-                    guard let self = self, let tv = self.textView, let lm = tv.layoutManager, let tc = tv.textContainer else { return }
-                    // 글리프/레이아웃을 강제 생성해 빈 줄도 즉시 라인 프래그먼트가 생기도록 함
-                    let len = (tv.string as NSString).length
-                    lm.ensureGlyphs(forCharacterRange: NSRange(location: 0, length: len))
-                    lm.ensureLayout(for: tc)
-                    self.gutter?.invalidateHashMarks()
-                    self.gutter?.needsDisplay = true
-                }
+            
+            if NewlineDetector.isNewline(replacementString) {
+                scheduleGutterUpdate()
             }
             return true
         }
@@ -163,11 +241,7 @@ extension CodeEditor {
         public func textDidChange(_ notification: Notification) {
             guard let textView = textView else { return }
             parent.text = textView.string
-            
-            // Ensure layout is updated
-            textView.layoutManager?.ensureLayout(for: textView.textContainer!)
-            gutter?.invalidateHashMarks()
-            gutter?.needsDisplay = true
+            updateLayoutAndGutter()
         }
         
         public func textViewDidChangeSelection(_ notification: Notification) {
@@ -177,53 +251,83 @@ extension CodeEditor {
         @objc func scrollViewDidScroll(_ notification: Notification) {
             gutter?.needsDisplay = true
         }
+        
+        // MARK: - Private Methods
+        private func scheduleGutterUpdate() {
+            DispatchQueue.main.async { [weak self] in
+                self?.updateLayoutAndGutter()
+            }
+        }
+        
+        private func updateLayoutAndGutter() {
+            guard let textView = textView,
+                  let layoutManager = textView.layoutManager,
+                  let textContainer = textView.textContainer else { return }
+            
+            let textLength = (textView.string as NSString).length
+            layoutManager.ensureGlyphs(forCharacterRange: NSRange(location: 0, length: textLength))
+            layoutManager.ensureLayout(for: textContainer)
+            
+            gutter?.invalidateHashMarks()
+            gutter?.needsDisplay = true
+        }
+    }
+}
+
+// MARK: - Newline Detection Utility
+private struct NewlineDetector {
+    static func isNewline(_ string: String?) -> Bool {
+        return string == "\n" || string == "\r"
     }
 }
 
 // MARK: - Custom Text View
 class CodeTextView: NSTextView {
-    override var isOpaque: Bool { false }
+    override var isOpaque: Bool { return false }
     
-    private var currentLineRect: NSRect? {
-        guard selectedRange.length == 0,
-              let layoutManager = layoutManager,
-              let textContainer = textContainer else { return nil }
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        CurrentLineHighlighter.draw(in: self)
+    }
+}
+
+// MARK: - Current Line Highlighter
+private struct CurrentLineHighlighter {
+    static func draw(in textView: CodeTextView) {
+        guard let lineRect = getCurrentLineRect(in: textView) else { return }
         
-        let glyphIndex = layoutManager.glyphIndexForCharacter(at: selectedRange.location)
+        NSColor.selectedTextBackgroundColor.withAlphaComponent(0.1).setFill()
+        NSBezierPath(rect: lineRect).fill()
+    }
+    
+    private static func getCurrentLineRect(in textView: CodeTextView) -> NSRect? {
+        guard textView.selectedRange.length == 0,
+              let layoutManager = textView.layoutManager,
+              let textContainer = textView.textContainer else { return nil }
+        
+        let glyphIndex = layoutManager.glyphIndexForCharacter(at: textView.selectedRange.location)
         let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil)
         
         return NSRect(
             x: 0,
-            y: lineRect.minY + textContainerOrigin.y,
-            width: bounds.width,
+            y: lineRect.minY + textView.textContainerOrigin.y,
+            width: textView.bounds.width,
             height: lineRect.height
         )
     }
-    
-    override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-        drawCurrentLineHighlight()
-    }
-    
-    private func drawCurrentLineHighlight() {
-        guard let lineRect = currentLineRect else { return }
-        NSColor.selectedTextBackgroundColor.withAlphaComponent(0.1).setFill()
-        NSBezierPath(rect: lineRect).fill()
-    }
 }
-
 
 // MARK: - Line Number Gutter
 class LineNumberGutter: NSRulerView {
     private weak var textView: CodeTextView?
-    private let padding: CGFloat = 8
-    private let fixedWidth: CGFloat = 40   // Increased for better visibility
+    private let configuration: CodeEditorConfiguration
     
-    init(textView: CodeTextView) {
+    init(textView: CodeTextView, configuration: CodeEditorConfiguration) {
         self.textView = textView
+        self.configuration = configuration
         super.init(scrollView: nil, orientation: .verticalRuler)
         self.clientView = textView
-        self.ruleThickness = fixedWidth
+        self.ruleThickness = configuration.gutterWidth
     }
     
     required init(coder: NSCoder) {
@@ -231,42 +335,72 @@ class LineNumberGutter: NSRulerView {
     }
     
     override func drawHashMarksAndLabels(in rect: NSRect) {
-        // ✅ 혹시 외부에서 바뀌었으면 즉시 되돌림
-        if ruleThickness != fixedWidth {
-            ruleThickness = fixedWidth
-        }
+        ensureCorrectWidth()
         
         guard let textView = textView,
               let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer else { return }
         
-        drawBackground()
-        drawCurrentLineHighlight()
-        
-        let visibleGlyphRange = getVisibleGlyphRange(layoutManager: layoutManager, textContainer: textContainer)
-        guard visibleGlyphRange.length > 0 else { return }
-        
-        drawLineNumbers(glyphRange: visibleGlyphRange, layoutManager: layoutManager)
+        GutterRenderer.render(
+            in: self,
+            textView: textView,
+            layoutManager: layoutManager,
+            textContainer: textContainer,
+            configuration: configuration
+        )
     }
     
-    private func drawBackground() {
-        NSColor.controlBackgroundColor.setFill()
-        NSBezierPath(rect: bounds).fill()
+    private func ensureCorrectWidth() {
+        if ruleThickness != configuration.gutterWidth {
+            ruleThickness = configuration.gutterWidth
+        }
+    }
+}
+
+// MARK: - Gutter Renderer
+private struct GutterRenderer {
+    static func render(
+        in gutter: LineNumberGutter,
+        textView: CodeTextView,
+        layoutManager: NSLayoutManager,
+        textContainer: NSTextContainer,
+        configuration: CodeEditorConfiguration
+    ) {
+        drawBackground(in: gutter)
+        drawCurrentLineHighlight(in: gutter, textView: textView, layoutManager: layoutManager)
         
-        // Add separator line
+        let visibleGlyphRange = getVisibleGlyphRange(gutter: gutter, layoutManager: layoutManager, textContainer: textContainer)
+        guard visibleGlyphRange.length > 0 else { return }
+        
+        drawLineNumbers(
+            in: gutter,
+            textView: textView,
+            layoutManager: layoutManager,
+            glyphRange: visibleGlyphRange,
+            configuration: configuration
+        )
+    }
+    
+    private static func drawBackground(in gutter: LineNumberGutter) {
+        NSColor.controlBackgroundColor.setFill()
+        NSBezierPath(rect: gutter.bounds).fill()
+        
+        // Separator line
         NSColor.separatorColor.setStroke()
         let separatorPath = NSBezierPath()
-        separatorPath.move(to: NSPoint(x: bounds.maxX - 0.5, y: bounds.minY))
-        separatorPath.line(to: NSPoint(x: bounds.maxX - 0.5, y: bounds.maxY))
+        separatorPath.move(to: NSPoint(x: gutter.bounds.maxX - 0.5, y: gutter.bounds.minY))
+        separatorPath.line(to: NSPoint(x: gutter.bounds.maxX - 0.5, y: gutter.bounds.maxY))
         separatorPath.lineWidth = 1.0
         separatorPath.stroke()
     }
     
-    private func drawCurrentLineHighlight() {
-        guard let textView = textView,
-              let scrollView = scrollView,
-              textView.selectedRange.length == 0,
-              let layoutManager = textView.layoutManager else { return }
+    private static func drawCurrentLineHighlight(
+        in gutter: LineNumberGutter,
+        textView: CodeTextView,
+        layoutManager: NSLayoutManager
+    ) {
+        guard let scrollView = gutter.scrollView,
+              textView.selectedRange.length == 0 else { return }
         
         let glyphIndex = layoutManager.glyphIndexForCharacter(at: textView.selectedRange.location)
         let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil)
@@ -275,7 +409,7 @@ class LineNumberGutter: NSRulerView {
         let highlightRect = NSRect(
             x: 0,
             y: lineRect.minY + textView.textContainerOrigin.y - scrollOffset,
-            width: bounds.width,
+            width: gutter.bounds.width,
             height: lineRect.height
         )
         
@@ -283,65 +417,80 @@ class LineNumberGutter: NSRulerView {
         NSBezierPath(rect: highlightRect).fill()
     }
     
-    private func getVisibleGlyphRange(layoutManager: NSLayoutManager, textContainer: NSTextContainer) -> NSRange {
-        guard let scrollView = scrollView else { return NSRange() }
+    private static func getVisibleGlyphRange(
+        gutter: LineNumberGutter,
+        layoutManager: NSLayoutManager,
+        textContainer: NSTextContainer
+    ) -> NSRange {
+        guard let scrollView = gutter.scrollView else { return NSRange() }
         let visibleRect = scrollView.contentView.bounds
         return layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
     }
     
-    private func drawLineNumbers(glyphRange: NSRange, layoutManager: NSLayoutManager) {
-        guard let textView = textView,
-              let scrollView = scrollView else { return }
+    private static func drawLineNumbers(
+        in gutter: LineNumberGutter,
+        textView: CodeTextView,
+        layoutManager: NSLayoutManager,
+        glyphRange: NSRange,
+        configuration: CodeEditorConfiguration
+    ) {
+        guard let scrollView = gutter.scrollView else { return }
         
-        let font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: NSColor.secondaryLabelColor,
-            .paragraphStyle: {
-                let style = NSMutableParagraphStyle()
-                style.alignment = .right
-                return style
-            }()
-        ]
+        let lineNumberRenderer = LineNumberRenderer(
+            font: configuration.lineNumberFont,
+            padding: configuration.gutterPadding,
+            gutterWidth: gutter.bounds.width
+        )
         
         let scrollOffset = scrollView.contentView.bounds.minY
-        let lineHeight = layoutManager.defaultLineHeight(for: font)
         var drawnLines = Set<Int>()
         
+        // Draw line numbers for visible fragments
         layoutManager.enumerateLineFragments(forGlyphRange: glyphRange) { rect, _, _, glyphRange, _ in
             let charIndex = layoutManager.characterIndexForGlyph(at: glyphRange.location)
-            let lineNumber = self.lineNumber(at: charIndex, in: textView.string)
+            let lineNumber = LineNumberCalculator.lineNumber(at: charIndex, in: textView.string)
+            
             guard drawnLines.insert(lineNumber).inserted else { return }
             
-            let y = rect.minY + textView.textContainerOrigin.y - scrollOffset + (rect.height - lineHeight) / 2
-            let numberRect = NSRect(
-                x: self.padding,
-                y: y,
-                width: self.bounds.width - self.padding * 2,
-                height: lineHeight
+            lineNumberRenderer.drawLineNumber(
+                lineNumber,
+                at: rect.minY + textView.textContainerOrigin.y - scrollOffset,
+                lineHeight: rect.height
             )
-            
-            NSAttributedString(string: "\(lineNumber)", attributes: attributes).draw(in: numberRect)
         }
         
-        // 🔹 캐럿이 위치한 현재 줄이 비어 있어도 번호가 보이도록 추가로 그린다
-        let tv = textView
-        let caretLine = self.lineNumber(at: tv.selectedRange.location, in: tv.string)
-        if !drawnLines.contains(caretLine) {
-            let caretGlyphIndex = layoutManager.glyphIndexForCharacter(at: tv.selectedRange.location)
-            let caretRect = layoutManager.lineFragmentRect(forGlyphAt: caretGlyphIndex, effectiveRange: nil)
-            let y = caretRect.minY + tv.textContainerOrigin.y - scrollOffset + (caretRect.height - lineHeight) / 2
-            let numberRect = NSRect(
-                x: self.padding,
-                y: y,
-                width: self.bounds.width - self.padding * 2,
-                height: lineHeight
-            )
-            NSAttributedString(string: "\(caretLine)", attributes: attributes).draw(in: numberRect)
-        }
+        // Draw current line number if not already drawn (for empty lines)
+        drawCurrentLineNumberIfNeeded(
+            textView: textView,
+            layoutManager: layoutManager,
+            scrollOffset: scrollOffset,
+            drawnLines: drawnLines,
+            renderer: lineNumberRenderer
+        )
     }
     
-    private func lineNumber(at index: Int, in string: String) -> Int {
+    private static func drawCurrentLineNumberIfNeeded(
+        textView: CodeTextView,
+        layoutManager: NSLayoutManager,
+        scrollOffset: CGFloat,
+        drawnLines: Set<Int>,
+        renderer: LineNumberRenderer
+    ) {
+        let caretLine = LineNumberCalculator.lineNumber(at: textView.selectedRange.location, in: textView.string)
+        
+        guard !drawnLines.contains(caretLine) else { return }
+        
+        let caretGlyphIndex = layoutManager.glyphIndexForCharacter(at: textView.selectedRange.location)
+        let caretRect = layoutManager.lineFragmentRect(forGlyphAt: caretGlyphIndex, effectiveRange: nil)
+        let y = caretRect.minY + textView.textContainerOrigin.y - scrollOffset
+        
+        renderer.drawLineNumber(caretLine, at: y, lineHeight: caretRect.height)
+    }
+}
+
+// MARK: - Line Number Calculator
+private struct LineNumberCalculator {
+    static func lineNumber(at index: Int, in string: String) -> Int {
         let safeIndex = min(index, string.count)
         return string.prefix(safeIndex).reduce(1) { count, char in
             char == "\n" ? count + 1 : count
@@ -349,198 +498,291 @@ class LineNumberGutter: NSRulerView {
     }
 }
 
-// MARK: - Preview
-#if DEBUG
-import SwiftUI
+// MARK: - Line Number Renderer
+private struct LineNumberRenderer {
+    private let attributes: [NSAttributedString.Key: Any]
+    private let padding: CGFloat
+    private let gutterWidth: CGFloat
+    private let lineHeight: CGFloat
+    
+    init(font: NSFont, padding: CGFloat, gutterWidth: CGFloat) {
+        self.padding = padding
+        self.gutterWidth = gutterWidth
+        self.lineHeight = font.pointSize
+        
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .right
+        
+        self.attributes = [
+            .font: font,
+            .foregroundColor: NSColor.secondaryLabelColor,
+            .paragraphStyle: paragraphStyle
+        ]
+    }
+    
+    func drawLineNumber(_ lineNumber: Int, at y: CGFloat, lineHeight: CGFloat) {
+        let adjustedY = y + (lineHeight - self.lineHeight) / 2
+        let numberRect = NSRect(
+            x: padding,
+            y: adjustedY,
+            width: gutterWidth - padding * 2,
+            height: self.lineHeight
+        )
+        
+        NSAttributedString(string: "\(lineNumber)", attributes: attributes).draw(in: numberRect)
+    }
+}
 
+// MARK: - Tag Generator
+class TagGenerator {
+    private let apiService: OpenAIService
+    
+    init(apiService: OpenAIService = OpenAIService()) {
+        self.apiService = apiService
+    }
+    
+    func generateTags(for code: String) async throws -> [String] {
+        let prompt = TagPromptBuilder.buildPrompt()
+        let response = try await apiService.generateCompletion(systemPrompt: prompt, userContent: code)
+        return TagParser.parseTags(from: response)
+    }
+}
+
+// MARK: - Tag Prompt Builder
+private struct TagPromptBuilder {
+    static func buildPrompt() -> String {
+        return """
+        You are a tagging assistant.  
+        Generate up to 5 short, specific tags for the given text (code or notes).  
+        
+        Rules:  
+        - Tags must be concise: prefer single words if possible.  
+        - Use hyphen only if two words are truly needed.  
+        - Do NOT include generic tags like "swift", "programming", "code", "notes".  
+        - For code: describe purpose/feature (e.g., "gutter","highlight","pdf-annotation").  
+        - For notes: describe the main topic (e.g., "meeting","error","design-feedback").  
+        - Output only a pure JSON array of strings.  
+        """
+    }
+}
+
+// MARK: - Tag
+private struct TagParser {
+    static func parseTags(from text: String) -> [String] {
+        // Try strict JSON parsing first
+        if let jsonTags = parseAsJSON(text) {
+            return Array(jsonTags.prefix(8))
+        }
+        
+        // Fallback to comma-separated parsing
+        return parseAsCommaSeparated(text)
+    }
+    
+    private static func parseAsJSON(_ text: String) -> [String]? {
+        guard let start = text.firstIndex(of: "["),
+              let end = text.lastIndex(of: "]") else { return nil }
+        
+        let jsonSlice = String(text[start...end])
+        guard let data = jsonSlice.data(using: .utf8),
+              let array = try? JSONSerialization.jsonObject(with: data) as? [String] else { return nil }
+        
+        return array
+    }
+    
+    private static func parseAsCommaSeparated(_ text: String) -> [String] {
+        return text
+            .replacingOccurrences(of: "[", with: "")
+            .replacingOccurrences(of: "]", with: "")
+            .replacingOccurrences(of: "\"", with: "")
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+}
+
+// MARK: - Preview Container
+#if DEBUG
 struct CodeEditorPreviewContainer: View {
-    @State private var code: String = "Hello, World!\nfunc greet() {\n    print(\"Hi\")\n    let message = \"Welcome to Swift!\"\n    return message\n}"
+    
+    // 텍스트 주입
+    @State private var code: String = """
+import PDFKit
+
+class PDFAnnotationHandler {
+    private var pdfView: PDFView
+    
+    init(view: PDFView) {
+        self.pdfView = view
+    }
+    
+    func addUnderline(to selection: PDFSelection) {
+        let underline = PDFAnnotation(bounds: selection.bounds(for: pdfView.currentPage!),
+                                      forType: .underline,
+                                      withProperties: nil)
+        pdfView.currentPage?.addAnnotation(underline)
+    }
+}
+"""
     @State private var tags: [String] = []
     @State private var showTags: Bool = false
-
+    @State private var isGeneratingTags: Bool = false
+    
+    private let tagGenerator = TagGenerator()
+    
     var body: some View {
         VStack(spacing: 12) {
-            // Header with toggle button
-            HStack {
-                Text("Code Editor")
-                    .font(.headline)
-                
-                Spacer()
-                
-                Button(action: {
-                    showTags.toggle()
-                    if showTags {
-                        // Trigger tag suggestion when enabling
-                        generateTags()
-                    } else {
-                        // Clear tags when disabling
-                        tags = []
+            //headerView
+            codeEditorView
+            if showTags {
+                tagSectionView
+            }
+        }
+    }
+    
+//    private var headerView: some View {
+//        HStack {
+//            Text("Code Editor")
+//                .font(.headline)
+//            
+//            Spacer()
+//            
+//            tagToggleButton
+//        }
+//        .padding(.horizontal)
+//    }
+    
+    private var tagToggleButton: some View {
+        Button(action: toggleTags) {
+            HStack(spacing: 6) {
+                Image(systemName: showTags ? "tag.fill" : "tag")
+                Text(showTags ? "Hide Tags" : "Show Tags")
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(showTags ? Color.blue : Color.gray.opacity(0.2))
+            .foregroundColor(showTags ? .white : .primary)
+            .cornerRadius(8)
+        }
+        .disabled(isGeneratingTags)
+    }
+    
+    private var codeEditorView: some View {
+        CodeEditor(text: $code, suggestedTags: $tags, showSuggestedTags: $showTags)
+            .frame(minWidth: 400, minHeight: 300)
+            .border(Color.gray)
+
+    }
+    
+    private var tagSectionView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            tagSectionHeader
+            if !tags.isEmpty {
+                tagChipsView
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(Color.gray.opacity(0.05))
+        .cornerRadius(8)
+        .padding(.horizontal)
+    }
+    
+    private var tagSectionHeader: some View {
+        HStack {
+            Text("Suggested Tags:")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            Button(isGeneratingTags ? "Generating..." : "Refresh", action: generateTags)
+                .font(.caption)
+                .foregroundColor(.blue)
+                .disabled(isGeneratingTags)
+        }
+    }
+    
+    private var tagChipsView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(tags, id: \.self) { tag in
+                    TagChip(tag: tag) {
+                        insertTag(tag)
                     }
-                }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: showTags ? "tag.fill" : "tag")
-                        Text(showTags ? "Hide Tags" : "Show Tags")
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(showTags ? Color.blue : Color.gray.opacity(0.2))
-                    .foregroundColor(showTags ? .white : .primary)
-                    .cornerRadius(8)
                 }
             }
             .padding(.horizontal)
-            
-            // Code editor
-            CodeEditor(text: $code, suggestedTags: $tags, showSuggestedTags: $showTags)
-                .frame(minWidth: 400, minHeight: 300)
-                .border(Color.gray)
-
-            // Show suggested tags as chips (only when showTags is true and tags exist)
-            if showTags && !tags.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Suggested Tags:")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        Spacer()
-                        
-                        Button("Refresh", action: generateTags)
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                    }
-                    
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 6) {
-                            ForEach(tags, id: \.self) { tag in
-                                Button(action: {
-                                    insertTag(tag)
-                                }) {
-                                    Text(tag)
-                                        .font(.caption)
-                                        .padding(.vertical, 4)
-                                        .padding(.horizontal, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 6)
-                                                .fill(Color.blue.opacity(0.1))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                                                )
-                                        )
-                                        .foregroundColor(.blue)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.05))
-                .cornerRadius(8)
-                .padding(.horizontal)
-            }
         }
-        .padding()
+    }
+    
+    // MARK: - Actions
+    private func toggleTags() {
+        showTags.toggle()
+        if showTags {
+            generateTags()
+        } else {
+            tags = []
+        }
     }
     
     private func generateTags() {
+        guard !isGeneratingTags else { return }
+        
+        isGeneratingTags = true
+        
         Task {
-            guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "openai") as? String, !apiKey.isEmpty else {
-                print("⚠️ OPENAI_API_KEY not found in Info.plist under 'openai'")
-                return
-            }
-            guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else { return }
-
-            // Local request/response models
-            struct ChatRequest: Codable {
-                let model: String
-                let messages: [[String: String]]
-                let temperature: Double
-                let max_tokens: Int
-            }
-            struct ChatResponse: Codable {
-                struct Choice: Codable { struct Message: Codable { let role: String; let content: String }; let index: Int?; let message: Message }
-                let choices: [Choice]
-            }
-
-            let system = """
-            You are a tagging assistant. Given arbitrary code/text, extract up to 8 short, general-purpose tags.
-            Rules:
-            - Lowercase
-            - Use hyphen instead of spaces (e.g., error-handling)
-            - No punctuation besides hyphen
-            - Output MUST be a pure JSON array of strings, e.g., [\\"swift\\",\\"pdfkit\\"].
-            Do not add any explanation.
-            """
-
-            let reqBody = ChatRequest(
-                model: "gpt-4o-mini",
-                messages: [
-                    ["role": "system", "content": system],
-                    ["role": "user", "content": code]
-                ],
-                temperature: 0.2,
-                max_tokens: 200
-            )
-
             do {
-                let data = try JSONEncoder().encode(reqBody)
-                var request = URLRequest(url: url)
-                request.httpMethod = "POST"
-                request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-                request.httpBody = data
-
-                let (respData, resp) = try await URLSession.shared.data(for: request)
-                if let http = resp as? HTTPURLResponse, http.statusCode != 200 {
-                    let body = String(data: respData, encoding: .utf8) ?? ""
-                    print("❌ OpenAI HTTP \(http.statusCode): \(body)")
-                    return
+                let generatedTags = try await tagGenerator.generateTags(for: code)
+                await MainActor.run {
+                    self.tags = generatedTags
+                    self.isGeneratingTags = false
                 }
-
-                let decoded = try JSONDecoder().decode(ChatResponse.self, from: respData)
-                let content = decoded.choices.first?.message.content ?? ""
-
-                // Try to parse strict JSON first
-                func parseTags(from text: String) -> [String] {
-                    if let start = text.firstIndex(of: "["), let end = text.lastIndex(of: "]") {
-                        let slice = String(text[start...end])
-                        if let d = slice.data(using: .utf8), let arr = try? JSONSerialization.jsonObject(with: d) as? [String] {
-                            return arr
-                        }
-                    }
-                    // Fallback: naive comma split
-                    return text
-                        .replacingOccurrences(of: "[", with: "")
-                        .replacingOccurrences(of: "]", with: "")
-                        .replacingOccurrences(of: "\"", with: "")
-                        .split(separator: ",")
-                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                        .filter { !$0.isEmpty }
-                }
-
-                let parsed = Array(parseTags(from: content).prefix(8))
-                await MainActor.run { self.tags = parsed }
             } catch {
-                print("❌ OpenAI error: \(error)")
+                await MainActor.run {
+                    print("Failed to generate tags: \(error)")
+                    self.isGeneratingTags = false
+                }
             }
         }
     }
     
     private func insertTag(_ tag: String) {
-        // Insert tag at current cursor position or append
         let insertion = "// #\(tag)\n"
         code += insertion
     }
 }
 
+// MARK: - Tag Chip View
+private struct TagChip: View {
+    let tag: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(tag)
+                .font(.caption)
+                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.blue.opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                        )
+                )
+                .foregroundColor(.blue)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Preview
 struct CodeEditor_Previews: PreviewProvider {
     static var previews: some View {
         CodeEditorPreviewContainer()
             .frame(width: 600, height: 420)
     }
 }
+
 #endif
