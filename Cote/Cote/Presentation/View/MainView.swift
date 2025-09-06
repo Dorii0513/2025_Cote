@@ -8,38 +8,43 @@
 import SwiftUI
 import AppKit
 
+struct WindowAccessor: NSViewRepresentable {
+    var callback: (NSWindow?) -> Void
+    
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { [weak view] in
+            callback(view?.window)
+        }
+        return view
+    }
+    
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
 struct MainView: View {
-    @State private var selectedButtonID: UUID?
-    private let favoritesBarID = "com.example.favoritesBar"
+    @State private var window: NSWindow?
     
     var body: some View {
         NavigationSplitView {
             ZStack {
+                
                 //블러 효과
                 BlurEffect().ignoresSafeArea()
                 Color.bgSidebar.ignoresSafeArea()
                 
-                Sidebar()
-            }
-            .toolbar(removing: .sidebarToggle)
-            .toolbar(content: {
-                ToolbarItem {
-                    Spacer()
+                VStack(spacing: 0) {
+                    Toolbar(window: window)
+                    Sidebar()
                 }
+                .ignoresSafeArea()
                 
-                ToolbarItem(placement: .primaryAction, content: {
-                    HStack(spacing: 4) {
-                        Spacer()
-                        ForEach (CoteIcon.toolbarIcons, id: \.id) { button in
-                            MenuButton(selected: Binding(
-                                get: { selectedButtonID == button.id },
-                                set: { if $0 { selectedButtonID = button.id }}),
-                                       icon: button
-                            )
-                        }
-                    }
-                })
-            })
+                
+            }
+            .background(
+                WindowAccessor { self.window = $0 }
+            )
+            .background(WindowConfigurator())
         } detail: {
             ZStack {
                 Color.bgToolbar
@@ -67,6 +72,25 @@ class PDFAnnotationHandler {
         }
     }
 }
+
+//MARK: - 사이드바
+private struct Sidebar: View {
+    var body: some View {
+        ZStack {
+            VStack(spacing: 4) {
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(.actionDefault)
+                FolderView()
+            }
+        }
+        .frame(minWidth: 210, minHeight: 700)
+        .background(Color.clear)
+    }
+}
+
+//MARK: - content
+
 
 #Preview {
     MainView()
