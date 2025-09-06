@@ -17,7 +17,7 @@ struct MainView: View {
             ZStack {
                 //블러 효과
                 BlurEffect().ignoresSafeArea()
-                Color.bgSurfaceSidebar.ignoresSafeArea()
+                Color.bgSidebar.ignoresSafeArea()
                 
                 Sidebar()
             }
@@ -42,9 +42,27 @@ struct MainView: View {
             })
         } detail: {
             ZStack {
-                Color.bgSurfaceToolbar
+                Color.bgToolbar
                     .ignoresSafeArea(edges: .top)
                 ContentView()
+                    .environmentObject(ContentViewModel(initialContent: """
+import PDFKit
+
+class PDFAnnotationHandler {
+    private var pdfView: PDFView
+    
+    init(view: PDFView) {
+        self.pdfView = view
+    }
+    
+    func addUnderline(to selection: PDFSelection) {
+        let underline = PDFAnnotation(bounds: selection.bounds(for: pdfView.currentPage!),
+                                      forType: .underline,
+                                      withProperties: nil)
+        pdfView.currentPage?.addAnnotation(underline)
+    }
+}
+"""))
             }
         }
     }

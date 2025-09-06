@@ -31,13 +31,13 @@ public enum CoteFontType {
     
     var font: String {
         switch self {
-        case .input, .tag, .title2:
+        case .input, .title2:
             return CoteFontType.pretendardMediumFont
         case .gutter:
             return CoteFontType.pretendardRegularFont
         case .title1:
             return CoteFontType.pretendardSemiBoldFont
-        case .code1:
+        case .code1, .tag:
             return CoteFontType.JetBrainsMonoMedium
         case .code2:
             return CoteFontType.JetBrainsMonoRegular
@@ -46,9 +46,9 @@ public enum CoteFontType {
     
     var fontSize: CGFloat {
         switch self {
-        case .input, .title2, .code1, .code2:
+        case .input, .title2, .code1, .code2, .tag:
             return CoteFontType.bodyM
-        case .tag, .gutter:
+        case .gutter:
             return CoteFontType.bodyS
         case .title1:
             return CoteFontType.head
