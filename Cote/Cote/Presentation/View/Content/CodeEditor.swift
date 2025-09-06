@@ -283,7 +283,12 @@ private struct NewlineDetector {
 
 // MARK: - Custom Text View
 class CodeTextView: NSTextView {
-    override var isOpaque: Bool { return false }
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        DispatchQueue.main.async {
+            self.window?.makeFirstResponder(nil) // 자동 포커스 제거
+        }
+    }
     
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
@@ -321,7 +326,7 @@ private struct CurrentLineHighlighter {
 class LineNumberGutter: NSRulerView {
     private weak var textView: CodeTextView?
     private let configuration: CodeEditorConfiguration
-    
+
     init(textView: CodeTextView, configuration: CodeEditorConfiguration) {
         self.textView = textView
         self.configuration = configuration
@@ -329,18 +334,25 @@ class LineNumberGutter: NSRulerView {
         self.clientView = textView
         self.ruleThickness = configuration.gutterWidth
     }
-    
+
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
+    // 분리선 그리는 기본 드로잉을 막는다
+    override var isOpaque: Bool { false }
+
+    override func draw(_ dirtyRect: NSRect) {
+        drawHashMarksAndLabels(in: dirtyRect)
+    }
+
     override func drawHashMarksAndLabels(in rect: NSRect) {
         ensureCorrectWidth()
-        
+
         guard let textView = textView,
               let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer else { return }
-        
+
         GutterRenderer.render(
             in: self,
             textView: textView,
@@ -349,7 +361,7 @@ class LineNumberGutter: NSRulerView {
             configuration: configuration
         )
     }
-    
+
     private func ensureCorrectWidth() {
         if ruleThickness != configuration.gutterWidth {
             ruleThickness = configuration.gutterWidth
@@ -382,16 +394,9 @@ private struct GutterRenderer {
     }
     
     private static func drawBackground(in gutter: LineNumberGutter) {
-        NSColor.controlBackgroundColor.setFill()
+        NSColor.black200.setFill()
         NSBezierPath(rect: gutter.bounds).fill()
         
-        // Separator line
-        NSColor.separatorColor.setStroke()
-        let separatorPath = NSBezierPath()
-        separatorPath.move(to: NSPoint(x: gutter.bounds.maxX - 0.5, y: gutter.bounds.minY))
-        separatorPath.line(to: NSPoint(x: gutter.bounds.maxX - 0.5, y: gutter.bounds.maxY))
-        separatorPath.lineWidth = 1.0
-        separatorPath.stroke()
     }
     
     private static func drawCurrentLineHighlight(
@@ -533,21 +538,6 @@ private struct LineNumberRenderer {
     }
 }
 
-// MARK: - Tag Generator
-class TagGenerator {
-    private let apiService: OpenAIService
-    
-    init(apiService: OpenAIService = OpenAIService()) {
-        self.apiService = apiService
-    }
-    
-    func generateTags(for code: String) async throws -> [String] {
-        let prompt = TagPromptBuilder.buildPrompt()
-        let response = try await apiService.generateCompletion(systemPrompt: prompt, userContent: code)
-        return TagParser.parseTags(from: response)
-    }
-}
-
 // MARK: - Tag Prompt Builder
 private struct TagPromptBuilder {
     static func buildPrompt() -> String {
@@ -599,190 +589,3 @@ private struct TagParser {
             .filter { !$0.isEmpty }
     }
 }
-
-// MARK: - Preview Container
-#if DEBUG
-struct CodeEditorPreviewContainer: View {
-    
-    // 텍스트 주입
-    @State private var code: String = """
-import PDFKit
-
-class PDFAnnotationHandler {
-    private var pdfView: PDFView
-    
-    init(view: PDFView) {
-        self.pdfView = view
-    }
-    
-    func addUnderline(to selection: PDFSelection) {
-        let underline = PDFAnnotation(bounds: selection.bounds(for: pdfView.currentPage!),
-                                      forType: .underline,
-                                      withProperties: nil)
-        pdfView.currentPage?.addAnnotation(underline)
-    }
-}
-"""
-    @State private var tags: [String] = []
-    @State private var showTags: Bool = false
-    @State private var isGeneratingTags: Bool = false
-    
-    private let tagGenerator = TagGenerator()
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            //headerView
-            codeEditorView
-            if showTags {
-                tagSectionView
-            }
-        }
-    }
-    
-//    private var headerView: some View {
-//        HStack {
-//            Text("Code Editor")
-//                .font(.headline)
-//            
-//            Spacer()
-//            
-//            tagToggleButton
-//        }
-//        .padding(.horizontal)
-//    }
-    
-    private var tagToggleButton: some View {
-        Button(action: toggleTags) {
-            HStack(spacing: 6) {
-                Image(systemName: showTags ? "tag.fill" : "tag")
-                Text(showTags ? "Hide Tags" : "Show Tags")
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(showTags ? Color.blue : Color.gray.opacity(0.2))
-            .foregroundColor(showTags ? .white : .primary)
-            .cornerRadius(8)
-        }
-        .disabled(isGeneratingTags)
-    }
-    
-    private var codeEditorView: some View {
-        CodeEditor(text: $code, suggestedTags: $tags, showSuggestedTags: $showTags)
-            .frame(minWidth: 400, minHeight: 300)
-            .border(Color.gray)
-
-    }
-    
-    private var tagSectionView: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            tagSectionHeader
-            if !tags.isEmpty {
-                tagChipsView
-            }
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(8)
-        .padding(.horizontal)
-    }
-    
-    private var tagSectionHeader: some View {
-        HStack {
-            Text("Suggested Tags:")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            Spacer()
-            
-            Button(isGeneratingTags ? "Generating..." : "Refresh", action: generateTags)
-                .font(.caption)
-                .foregroundColor(.blue)
-                .disabled(isGeneratingTags)
-        }
-    }
-    
-    private var tagChipsView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(tags, id: \.self) { tag in
-                    TagChip(tag: tag) {
-                        insertTag(tag)
-                    }
-                }
-            }
-            .padding(.horizontal)
-        }
-    }
-    
-    // MARK: - Actions
-    private func toggleTags() {
-        showTags.toggle()
-        if showTags {
-            generateTags()
-        } else {
-            tags = []
-        }
-    }
-    
-    private func generateTags() {
-        guard !isGeneratingTags else { return }
-        
-        isGeneratingTags = true
-        
-        Task {
-            do {
-                let generatedTags = try await tagGenerator.generateTags(for: code)
-                await MainActor.run {
-                    self.tags = generatedTags
-                    self.isGeneratingTags = false
-                }
-            } catch {
-                await MainActor.run {
-                    print("Failed to generate tags: \(error)")
-                    self.isGeneratingTags = false
-                }
-            }
-        }
-    }
-    
-    private func insertTag(_ tag: String) {
-        let insertion = "// #\(tag)\n"
-        code += insertion
-    }
-}
-
-// MARK: - Tag Chip View
-private struct TagChip: View {
-    let tag: String
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(tag)
-                .font(.caption)
-                .padding(.vertical, 4)
-                .padding(.horizontal, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.blue.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                        )
-                )
-                .foregroundColor(.blue)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-// MARK: - Preview
-struct CodeEditor_Previews: PreviewProvider {
-    static var previews: some View {
-        CodeEditorPreviewContainer()
-            .frame(width: 600, height: 420)
-    }
-}
-
-#endif

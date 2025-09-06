@@ -45,7 +45,7 @@ struct ListCell: View {
                     
                     Text(n.title)
                         .coteFont(.title2,
-                                  color: isHover ? .textDefault : .textLabelDefault)
+                                  color: isHover ? .textStrong : .textDefault)
                         .frame(height: 18) //tag 높이
                 }
                 .buttonStyle(.plain)
@@ -96,7 +96,7 @@ struct FolderCell: View {
             }
             Text(folder.name)
                 .coteFont(.title2,
-                          color: isHover ? .textDefault : .textLabelDefault)
+                          color: isHover ? .textStrong : .textDefault)
         }
     }
 }
