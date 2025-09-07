@@ -8,12 +8,10 @@
 import SwiftUI
 
 struct Toolbar: View {
-    let window: NSWindow?
     @State private var selectedButtonID: UUID?
     
     var body: some View {
         HStack(spacing: 4) {
-            WindowControls(window: window)
             
             Spacer()
             
@@ -28,6 +26,6 @@ struct Toolbar: View {
             }
             .padding(.trailing, 12)
         }
-        .frame(height: 42)
+        .frame(height: 38)
     }
 }
