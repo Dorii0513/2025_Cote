@@ -8,20 +8,6 @@
 import SwiftUI
 import AppKit
 
-struct WindowAccessor: NSViewRepresentable {
-    var callback: (NSWindow?) -> Void
-    
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async { [weak view] in
-            callback(view?.window)
-        }
-        return view
-    }
-    
-    func updateNSView(_ nsView: NSView, context: Context) {}
-}
-
 struct MainView: View {
     @State private var window: NSWindow?
     
@@ -34,17 +20,12 @@ struct MainView: View {
                 Color.bgSidebar.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    Toolbar(window: window)
+                    Toolbar()
                     Sidebar()
                 }
                 .ignoresSafeArea()
-                
-                
             }
-            .background(
-                WindowAccessor { self.window = $0 }
-            )
-            .background(WindowConfigurator())
+            .toolbar(removing: .sidebarToggle)
         } detail: {
             ZStack {
                 Color.bgToolbar
