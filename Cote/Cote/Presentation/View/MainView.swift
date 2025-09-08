@@ -20,7 +20,7 @@ struct MainView: View {
                 Color.bgSidebar.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    Toolbar()
+                    SideToolbar()
                     Sidebar()
                 }
                 .ignoresSafeArea()
