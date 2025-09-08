@@ -10,21 +10,26 @@ import SwiftUI
 struct TagChip: View {
     let tag: String
     let action: () -> Void
-
+    
     var body: some View {
-        
         Button {
             action()
         } label: {
             Text(tag)
                 .coteFont(.tag, color: .textTag)
+            
+                .buttonStyle(.plain)
+                .padding(.vertical, 2)
+                .padding(.horizontal, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(.bgTag)
+                )
         }
         .buttonStyle(.plain)
-        .padding(.vertical, 2)
-        .padding(.horizontal, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 4)
-                .fill(.bgTag)
-        )
     }
 }
+
+//#Preview {
+//    TagChip(tag: "어쩌고")
+//}

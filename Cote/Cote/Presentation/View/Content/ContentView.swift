@@ -6,28 +6,26 @@
 //
 
 import SwiftUI
+import AppKit
+
+private struct TagFieldAnchorKey: PreferenceKey {
+    static var defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = nextValue() ?? value
+    }
+}
 
 struct ContentView: View {
     @EnvironmentObject private var viewModel: ContentViewModel
-    @FocusState private var isFocused: Bool
-    
-    private var tagChipsView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(viewModel.generatedTags, id: \.self) { tag in
-                    TagChip(tag: tag) {
-                        viewModel.insertTag(tag)
-                    }
-                }
-            }
-            .padding(.horizontal)
-        }
-    }
+    @State private var isBtnTapped: Bool = false
     
     var body: some View {
         ZStack {
             Color.bgEditor
-            VStack {
+            VStack(alignment: .leading, spacing: 0) {
+                contentToolbar(isBtnTapped: $isBtnTapped)
+                    .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38)
+                    .background(.bgSidebar)
                 
                 // 에디터 뷰
                 CodeEditor(text: $viewModel.content, suggestedTags: $viewModel.generatedTags, showSuggestedTags: $viewModel.showTags)
@@ -71,52 +69,99 @@ struct ContentView: View {
                 .background(.bgEditor)
             }
         }
+        .ignoresSafeArea()
+        .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
+            GeometryReader { proxy in
+                if isBtnTapped, let anchor {
+                    let rect = proxy[anchor]
+                    TagSuggestionsView()
+                        .frame(maxWidth: 500, alignment: .leading)
+                        .position(x: rect.minX + 250,
+                                  y: rect.maxY + 60)
+                }
+            }
+        }
+    }
+}
 
-        
-        //MARK: - 툴 바
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                HStack {
-                    Text("Untitled")
-                        .coteFont(.title1,
-                                  color: .textStrong)
-                }
-                .ignoresSafeArea()
+private struct contentToolbar: View {
+    @EnvironmentObject private var viewModel: ContentViewModel
+    @FocusState private var isFocused: Bool
+    @State private var newTag: String = ""
+    @Binding var isBtnTapped: Bool
+    
+    private var tagChipsView: some View {
+        HStack(spacing: 6) {
+            ForEach(viewModel.noteTags, id: \.self) { tag in
+                TagChip(tag: tag){}
+            }
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            Text("Untitled")
+                .coteFont(.title1,
+                          color: .textStrong)
+                .padding(.trailing, 8)
+            
+            if !viewModel.noteTags.isEmpty {
+                tagChipsView
+                    .padding(.trailing, 8)
             }
             
-            ToolbarItem(placement: .automatic) {
-                if viewModel.isBtnTapped {
-                    TextField("", text: $viewModel.newTag)
-                        .focused($isFocused)
-                        .frame(width: 60)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.border, lineWidth: 1)
-                        )
-                }
-                
-                if !viewModel.generatedTags.isEmpty {
-                    tagChipsView
-                }
-            }
-            
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    viewModel.isBtnTapped = true
-                    DispatchQueue.main.async {
-                        isFocused = true
+            if isBtnTapped {
+                TextField("", text: $newTag)
+                    .focused($isFocused)
+                    .tint(.textDefault)
+                    .coteFont(.tag, color: .textDefault)
+                    .padding(.horizontal, 6)
+                    .frame(height: 20)
+                    .frame(minWidth: 60, alignment: .leading)
+                    .fixedSize()
+                    .textFieldStyle(.plain)
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear
+                                .anchorPreference(key: TagFieldAnchorKey.self,
+                                                  value: .bounds) { $0 }
+                        }
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(Color.border, lineWidth: isFocused ? 2 : 1)
+                    )
+                    .onSubmit(of: .text) {
+                        withAnimation(.smooth) {
+                            viewModel.addNewTag(newTag)
+                            newTag = ""
+                        }
                     }
-                    //                    viewModel.toggleTags()
+                    .onChange(of: isFocused, initial: false) { oldValue, newValue in
+                        if !newValue && newTag.isEmpty {
+                            withAnimation(.snappy) {
+                                isBtnTapped = false
+                            }
+                        }
+                    }
+            }
+            
+            if !isBtnTapped {
+                Button {
+                    isBtnTapped = true
+                    isFocused = true
+                    viewModel.toggleTags()
                 } label: {
                     Text("Add Tags")
                         .coteFont(.title2,
                                   color: .textDefault)
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 6)
-                
             }
+            
+            Spacer()
         }
+        .padding(.horizontal, 15)
     }
 }
 

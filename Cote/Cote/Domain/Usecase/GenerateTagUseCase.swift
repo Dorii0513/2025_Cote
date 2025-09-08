@@ -41,12 +41,18 @@ public final class DefaultGenerateTagsUseCase: GenerateTagsUseCase {
         static func buildPrompt() -> String {
             return """
     You are a tagging assistant.
-    Generate up to 5 short, specific tags for the given text (code or notes).
-    
+    Generate up to 3 short, specific tags for the given text (code or notes).
+
     Rules:
-    - Output must be ONLY a valid JSON array of strings.
-    - Do not add any explanation, markdown, or formatting (no backticks).
-    Example: ["tag1","tag2","tag3"]
+    - Output must be ONLY a valid JSON array of strings. No explanations, no markdown, no backticks.
+    - Each tag must be concise (preferably 1–2 words, not long sentences).
+    - If multiple words are needed in a tag, connect them with a hyphen (-) instead of spaces.
+    - Tags must be concrete and specific, not broad or generic.
+    - If the text is code:
+        - Do NOT generate tags about the programming language (e.g., "swift", "python").
+        - Focus on the code's purpose, functionality, or features to create tags.
+    - If the text is not code:
+        - Generate tags freely, based on the main topics or content.
     """
         }
     }

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Toolbar: View {
+struct SideToolbar: View {
     @State private var selectedButtonID: UUID?
     
     var body: some View {
