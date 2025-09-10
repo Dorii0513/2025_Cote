@@ -6,13 +6,9 @@
 //
 
 
-//TODO: - 주석 삭제
-
 import SwiftUI
 import AppKit
 import Foundation
-//import NaturalLanguage
-//import SystemConfiguration
 
 // MARK: - Configuration
 public struct CodeEditorConfiguration {
@@ -535,57 +531,5 @@ private struct LineNumberRenderer {
         )
         
         NSAttributedString(string: "\(lineNumber)", attributes: attributes).draw(in: numberRect)
-    }
-}
-
-// MARK: - Tag Prompt Builder
-private struct TagPromptBuilder {
-    static func buildPrompt() -> String {
-        return """
-        You are a tagging assistant.  
-        Generate up to 5 short, specific tags for the given text (code or notes).  
-        
-        Rules:  
-        - Tags must be concise: prefer single words if possible.  
-        - Use hyphen only if two words are truly needed.  
-        - Do NOT include generic tags like "swift", "programming", "code", "notes".  
-        - For code: describe purpose/feature (e.g., "gutter","highlight","pdf-annotation").  
-        - For notes: describe the main topic (e.g., "meeting","error","design-feedback").  
-        - Output only a pure JSON array of strings.  
-        """
-    }
-}
-
-// MARK: - Tag
-private struct TagParser {
-    static func parseTags(from text: String) -> [String] {
-        // Try strict JSON parsing first
-        if let jsonTags = parseAsJSON(text) {
-            return Array(jsonTags.prefix(8))
-        }
-        
-        // Fallback to comma-separated parsing
-        return parseAsCommaSeparated(text)
-    }
-    
-    private static func parseAsJSON(_ text: String) -> [String]? {
-        guard let start = text.firstIndex(of: "["),
-              let end = text.lastIndex(of: "]") else { return nil }
-        
-        let jsonSlice = String(text[start...end])
-        guard let data = jsonSlice.data(using: .utf8),
-              let array = try? JSONSerialization.jsonObject(with: data) as? [String] else { return nil }
-        
-        return array
-    }
-    
-    private static func parseAsCommaSeparated(_ text: String) -> [String] {
-        return text
-            .replacingOccurrences(of: "[", with: "")
-            .replacingOccurrences(of: "]", with: "")
-            .replacingOccurrences(of: "\"", with: "")
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
     }
 }
