@@ -23,7 +23,7 @@ struct ContentView: View {
         ZStack {
             Color.bgEditor
             VStack(alignment: .leading, spacing: 0) {
-                contentToolbar(isBtnTapped: $isBtnTapped)
+                Cote.contentToolbar(isBtnTapped: $isBtnTapped)
                     .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38)
                     .background(.bgSidebar)
                 

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MenuButton: View {
     @State var isHover = false
+    @EnvironmentObject private var state: UIState
     
     @Binding var selected: Bool
     let icon: Icon
@@ -36,6 +37,7 @@ struct MenuButton: View {
         ZStack {
             Button {
                 selected = true
+                icon.action(state)
             } label: {
                 Image(icon.name)
                     .foregroundStyle(iconColor)

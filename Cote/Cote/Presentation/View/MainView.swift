@@ -10,45 +10,49 @@ import AppKit
 
 struct MainView: View {
     @State private var window: NSWindow?
+    @EnvironmentObject var state: UIState
     
     var body: some View {
-        NavigationSplitView {
-            ZStack {
-                
-                //블러 효과
-                BlurEffect().ignoresSafeArea()
-                Color.bgSidebar.ignoresSafeArea()
-                
-                VStack(spacing: 0) {
-                    SideToolbar()
-                    Sidebar()
+        
+        HStack(spacing: 0) {
+            if state.isSidebarOpen {
+                ZStack {
+                    
+                    //블러 효과
+                    BlurEffect().ignoresSafeArea()
+                    Color.bgSidebar.ignoresSafeArea()
+                    
+                    VStack(spacing: 0) {
+                        SideToolbar()
+                        Sidebar()
+                    }
+                    .ignoresSafeArea()
+                    .frame(width: 210)
                 }
-                .ignoresSafeArea()
+                .frame(width: 210)
             }
-            .toolbar(removing: .sidebarToggle)
-        } detail: {
             ZStack {
                 Color.bgToolbar
                     .ignoresSafeArea(edges: .top)
                 ContentView()
                     .environmentObject(ContentViewModel(initialContent: """
-import PDFKit
-
-class PDFAnnotationHandler {
-    private var pdfView: PDFView
-    
-    init(view: PDFView) {
-        self.pdfView = view
-    }
-    
-    func addUnderline(to selection: PDFSelection) {
-        let underline = PDFAnnotation(bounds: selection.bounds(for: pdfView.currentPage!),
-                                      forType: .underline,
-                                      withProperties: nil)
-        pdfView.currentPage?.addAnnotation(underline)
-    }
-}
-"""))
+            import PDFKit
+            
+            class PDFAnnotationHandler {
+                private var pdfView: PDFView
+            
+                init(view: PDFView) {
+                    self.pdfView = view
+                }
+            
+                func addUnderline(to selection: PDFSelection) {
+                    let underline = PDFAnnotation(bounds: selection.bounds(for: pdfView.currentPage!),
+                                                  forType: .underline,
+                                                  withProperties: nil)
+                    pdfView.currentPage?.addAnnotation(underline)
+                }
+            }
+            """))
             }
         }
     }
