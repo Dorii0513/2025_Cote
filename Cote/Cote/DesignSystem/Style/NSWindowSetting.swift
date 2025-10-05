@@ -8,7 +8,7 @@
 import SwiftUI
 import AppKit
 
-struct WindowConfigurator: NSViewRepresentable {
+struct WindowConfigurator_1: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
         DispatchQueue.main.async {
@@ -30,5 +30,22 @@ struct WindowConfigurator: NSViewRepresentable {
         return view
     }
     
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+struct WindowConfigurator_2: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let v = NSView()
+        DispatchQueue.main.async {
+            if let w = v.window {
+                w.appearance = NSAppearance(named: .aqua)
+                w.titlebarAppearsTransparent = false
+                w.isOpaque = true
+                w.backgroundColor = .windowBackgroundColor
+                w.toolbarStyle = .unified
+            }
+        }
+        return v
+    }
     func updateNSView(_ nsView: NSView, context: Context) {}
 }
