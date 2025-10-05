@@ -5,7 +5,6 @@
 //  Created by 김예림 on 8/10/25.
 //
 
-
 import SwiftUI
 import AppKit
 import Foundation
@@ -54,24 +53,12 @@ public struct CodeEditor: NSViewRepresentable {
         text: Binding<String>,
         suggestedTags: Binding<[String]> = .constant([]),
         showSuggestedTags: Binding<Bool> = .constant(false),
-        configuration: CodeEditorConfiguration
+        configuration: CodeEditorConfiguration = .defaultConfig
     ) {
         self._text = text
         self._suggestedTags = suggestedTags
         self._showSuggestedTags = showSuggestedTags
         self.configuration = configuration
-    }
-    
-    // Convenience initializer with default configuration
-    public init(
-        text: Binding<String>,
-        suggestedTags: Binding<[String]> = .constant([]),
-        showSuggestedTags: Binding<Bool> = .constant(false)
-    ) {
-        self._text = text
-        self._suggestedTags = suggestedTags
-        self._showSuggestedTags = showSuggestedTags
-        self.configuration = .defaultConfig
     }
     
     // Legacy initializer with custom font
@@ -81,28 +68,30 @@ public struct CodeEditor: NSViewRepresentable {
         showSuggestedTags: Binding<Bool> = .constant(false),
         font: NSFont
     ) {
-        self._text = text
-        self._suggestedTags = suggestedTags
-        self._showSuggestedTags = showSuggestedTags
-        self.configuration = CodeEditorConfiguration(
-            font: font,
-            gutterWidth: CodeEditorConfiguration.defaultConfig.gutterWidth,
-            gutterPadding: CodeEditorConfiguration.defaultConfig.gutterPadding,
-            textInset: CodeEditorConfiguration.defaultConfig.textInset,
-            lineNumberFont: CodeEditorConfiguration.defaultConfig.lineNumberFont
+        self.init(
+            text: text,
+            suggestedTags: suggestedTags,
+            showSuggestedTags: showSuggestedTags,
+            configuration: CodeEditorConfiguration(
+                font: font,
+                gutterWidth: CodeEditorConfiguration.defaultConfig.gutterWidth,
+                gutterPadding: CodeEditorConfiguration.defaultConfig.gutterPadding,
+                textInset: CodeEditorConfiguration.defaultConfig.textInset,
+                lineNumberFont: CodeEditorConfiguration.defaultConfig.lineNumberFont
+            )
         )
     }
     
     public func makeCoordinator() -> Coordinator {
-        return Coordinator(self)
+        Coordinator(self)
     }
     
     public func makeNSView(context: Context) -> NSScrollView {
-        let scrollView = createScrollView()
-        let textView = createTextView(context: context)
+        let scrollView = ScrollViewFactory.create()
+        let textView = TextViewFactory.create(configuration: configuration, coordinator: context.coordinator)
         let gutter = LineNumberGutter(textView: textView, configuration: configuration)
         
-        setupScrollView(scrollView, textView: textView, gutter: gutter, context: context)
+        ScrollViewFactory.setup(scrollView, textView: textView, gutter: gutter, coordinator: context.coordinator)
         
         return scrollView
     }
@@ -112,10 +101,13 @@ public struct CodeEditor: NSViewRepresentable {
               textView.string != text else { return }
         
         textView.string = text
-        context.coordinator.gutter?.needsDisplay = true
+        context.coordinator.scheduleGutterRedraw()
     }
-    
-    private func createScrollView() -> NSScrollView {
+}
+
+// MARK: - Factory Methods
+private enum ScrollViewFactory {
+    static func create() -> NSScrollView {
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
         scrollView.autohidesScrollers = false
@@ -123,19 +115,29 @@ public struct CodeEditor: NSViewRepresentable {
         return scrollView
     }
     
-    private func createTextView(context: Context) -> CodeTextView {
+    static func setup(_ scrollView: NSScrollView, textView: CodeTextView, gutter: LineNumberGutter, coordinator: CodeEditor.Coordinator) {
+        scrollView.hasVerticalRuler = true
+        scrollView.rulersVisible = true
+        scrollView.verticalRulerView = gutter
+        scrollView.documentView = textView
+        
+        coordinator.configure(textView: textView, gutter: gutter, scrollView: scrollView)
+    }
+}
+
+private enum TextViewFactory {
+    static func create(configuration: CodeEditorConfiguration, coordinator: CodeEditor.Coordinator) -> CodeTextView {
         let textSystem = TextSystemFactory.create()
         let textView = CodeTextView(frame: .zero, textContainer: textSystem.textContainer)
         
-        configureTextView(textView, context: context)
+        configure(textView, with: configuration, coordinator: coordinator)
         
         return textView
     }
     
-    private func configureTextView(_ textView: CodeTextView, context: Context) {
-        textView.font = configuration.font
-        textView.string = text
-        textView.delegate = context.coordinator
+    private static func configure(_ textView: CodeTextView, with config: CodeEditorConfiguration, coordinator: CodeEditor.Coordinator) {
+        textView.font = config.font
+        textView.delegate = coordinator
         textView.isEditable = true
         textView.isSelectable = true
         textView.allowsUndo = true
@@ -143,25 +145,15 @@ public struct CodeEditor: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = true
         textView.autoresizingMask = [.width]
-        textView.textContainerInset = configuration.textInset
+        textView.textContainerInset = config.textInset
         textView.drawsBackground = false
-        textView.textColor = NSColor.labelColor
+        textView.textColor = .labelColor
         textView.insertionPointColor = .labelColor
-        textView.typingAttributes[.font] = configuration.font
-    }
-    
-    private func setupScrollView(_ scrollView: NSScrollView, textView: CodeTextView, gutter: LineNumberGutter, context: Context) {
-        scrollView.hasVerticalRuler = true
-        scrollView.rulersVisible = true
-        scrollView.verticalRulerView = gutter
-        scrollView.documentView = textView
-        
-        context.coordinator.configure(textView: textView, gutter: gutter, scrollView: scrollView)
+        textView.typingAttributes[.font] = config.font
     }
 }
 
-// MARK: - Text System Factory
-private struct TextSystemFactory {
+private enum TextSystemFactory {
     struct TextSystem {
         let textStorage: NSTextStorage
         let layoutManager: NSLayoutManager
@@ -196,6 +188,8 @@ extension CodeEditor {
         weak var textView: CodeTextView?
         weak var gutter: LineNumberGutter?
         
+        private var gutterRedrawScheduled = false
+        
         init(_ parent: CodeEditor) {
             self.parent = parent
             super.init()
@@ -205,12 +199,23 @@ extension CodeEditor {
             NotificationCenter.default.removeObserver(self)
         }
         
+        func scheduleGutterRedraw() {
+            guard !gutterRedrawScheduled else { return }
+            gutterRedrawScheduled = true
+            DispatchQueue.main.async { [weak self] in
+                self?.gutter?.needsDisplay = true
+                self?.gutterRedrawScheduled = false
+            }
+        }
+        
         func configure(textView: CodeTextView, gutter: LineNumberGutter, scrollView: NSScrollView) {
             self.textView = textView
             self.gutter = gutter
             self.scrollView = scrollView
+            textView.string = parent.text
             
             setupScrollObserver(scrollView)
+            setupLayoutObserver(textView)
         }
         
         private func setupScrollObserver(_ scrollView: NSScrollView) {
@@ -223,57 +228,49 @@ extension CodeEditor {
             )
         }
         
+        private func setupLayoutObserver(_ textView: NSTextView) {
+            guard let layoutManager = textView.layoutManager else { return }
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(layoutManagerDidCompleteLayout),
+                name: NSTextStorage.didProcessEditingNotification,
+                object: layoutManager.textStorage
+            )
+        }
+        
         // MARK: - Text View Delegate
         public func textView(_ textView: NSTextView,
                              shouldChangeTextIn affectedCharRange: NSRange,
                              replacementString: String?) -> Bool {
-            
-            if NewlineDetector.isNewline(replacementString) {
-                scheduleGutterUpdate()
-            }
             return true
         }
         
         public func textDidChange(_ notification: Notification) {
             guard let textView = textView else { return }
             parent.text = textView.string
-            updateLayoutAndGutter()
+            scheduleGutterRedraw()
+        }
+        
+        @objc func layoutManagerDidCompleteLayout(_ notification: Notification) {
+            scheduleGutterRedraw()
         }
         
         public func textViewDidChangeSelection(_ notification: Notification) {
-            gutter?.needsDisplay = true
+            scheduleGutterRedraw()
         }
         
         @objc func scrollViewDidScroll(_ notification: Notification) {
-            gutter?.needsDisplay = true
-        }
-        
-        // MARK: - Private Methods
-        private func scheduleGutterUpdate() {
-            DispatchQueue.main.async { [weak self] in
-                self?.updateLayoutAndGutter()
-            }
-        }
-        
-        private func updateLayoutAndGutter() {
-            guard let textView = textView,
-                  let layoutManager = textView.layoutManager,
-                  let textContainer = textView.textContainer else { return }
-            
-            let textLength = (textView.string as NSString).length
-            layoutManager.ensureGlyphs(forCharacterRange: NSRange(location: 0, length: textLength))
-            layoutManager.ensureLayout(for: textContainer)
-            
-            gutter?.invalidateHashMarks()
-            gutter?.needsDisplay = true
+            scheduleGutterRedraw()
         }
     }
 }
 
-// MARK: - Newline Detection Utility
-private struct NewlineDetector {
-    static func isNewline(_ string: String?) -> Bool {
-        return string == "\n" || string == "\r"
+
+// MARK: - String Extension
+private extension String {
+    func lineNumber(at index: Int) -> Int {
+        let safeIndex = min(index, count)
+        return prefix(safeIndex).reduce(1) { $1 == "\n" ? $0 + 1 : $0 }
     }
 }
 
@@ -281,40 +278,33 @@ private struct NewlineDetector {
 class CodeTextView: NSTextView {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        DispatchQueue.main.async {
-            self.window?.makeFirstResponder(nil) // 자동 포커스 제거
+        DispatchQueue.main.async { [weak self] in
+            self?.window?.makeFirstResponder(nil)
         }
     }
     
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        CurrentLineHighlighter.draw(in: self)
-    }
-}
-
-// MARK: - Current Line Highlighter
-private struct CurrentLineHighlighter {
-    static func draw(in textView: CodeTextView) {
-        guard let lineRect = getCurrentLineRect(in: textView) else { return }
-        
-        NSColor.selectedTextBackgroundColor.withAlphaComponent(0.1).setFill()
-        NSBezierPath(rect: lineRect).fill()
+        drawCurrentLineHighlight()
     }
     
-    private static func getCurrentLineRect(in textView: CodeTextView) -> NSRect? {
-        guard textView.selectedRange.length == 0,
-              let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer else { return nil }
+    private func drawCurrentLineHighlight() {
+        guard selectedRange.length == 0,
+              let layoutManager = layoutManager,
+              let textContainer = textContainer else { return }
         
-        let glyphIndex = layoutManager.glyphIndexForCharacter(at: textView.selectedRange.location)
+        let glyphIndex = layoutManager.glyphIndexForCharacter(at: selectedRange.location)
         let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil)
         
-        return NSRect(
+        let highlightRect = NSRect(
             x: 0,
-            y: lineRect.minY + textView.textContainerOrigin.y,
-            width: textView.bounds.width,
+            y: lineRect.minY + textContainerOrigin.y,
+            width: bounds.width,
             height: lineRect.height
         )
+        
+        NSColor.selectedTextBackgroundColor.withAlphaComponent(0.1).setFill()
+        NSBezierPath(rect: highlightRect).fill()
     }
 }
 
@@ -335,25 +325,28 @@ class LineNumberGutter: NSRulerView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // 분리선 그리는 기본 드로잉을 막는다
     override var isOpaque: Bool { false }
-
-    override func draw(_ dirtyRect: NSRect) {
-        drawHashMarksAndLabels(in: dirtyRect)
-    }
+    
+//    override func draw(_ dirtyRect: NSRect) {
+//        print("draw")
+//        drawHashMarksAndLabels(in: dirtyRect)
+//    }
 
     override func drawHashMarksAndLabels(in rect: NSRect) {
-        ensureCorrectWidth()
+        //ensureCorrectWidth()
 
         guard let textView = textView,
               let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer else { return }
+              let textContainer = textView.textContainer,
+              let scrollView = scrollView else { return }
+        
 
         GutterRenderer.render(
             in: self,
             textView: textView,
             layoutManager: layoutManager,
             textContainer: textContainer,
+            scrollView: scrollView,
             configuration: configuration
         )
     }
@@ -366,107 +359,122 @@ class LineNumberGutter: NSRulerView {
 }
 
 // MARK: - Gutter Renderer
-private struct GutterRenderer {
+private enum GutterRenderer {
     static func render(
         in gutter: LineNumberGutter,
         textView: CodeTextView,
         layoutManager: NSLayoutManager,
         textContainer: NSTextContainer,
+        scrollView: NSScrollView,
         configuration: CodeEditorConfiguration
     ) {
         drawBackground(in: gutter)
-        drawCurrentLineHighlight(in: gutter, textView: textView, layoutManager: layoutManager)
+//        drawCurrentLineHighlight(in: gutter, textView: textView, layoutManager: layoutManager, scrollView: scrollView)
         
-        let visibleGlyphRange = getVisibleGlyphRange(gutter: gutter, layoutManager: layoutManager, textContainer: textContainer)
+//        print("gutterRender")
+        
+        // glyphRange는 텍스트가 입력될 수 있는 한 글자씩의 단위들이 모여 이루는 하나의 범위를 말 함.
+        let visibleGlyphRange = layoutManager.glyphRange(
+            forBoundingRect: scrollView.contentView.bounds,
+            in: textContainer
+        )
         guard visibleGlyphRange.length > 0 else { return }
+        
+//        drawBounds(bounds: scrollView.contentView.bounds)
         
         drawLineNumbers(
             in: gutter,
             textView: textView,
             layoutManager: layoutManager,
+            scrollView: scrollView,
             glyphRange: visibleGlyphRange,
             configuration: configuration
         )
     }
     
+//    //📌 체크하기
+//    private static func drawBounds(bounds: CGRect) {
+//        // 디버그용 색상 설정
+//        NSColor.systemRed.setStroke()
+//        let path = NSBezierPath(rect: bounds)
+//        path.lineWidth = 1
+//        path.stroke()
+//    }
+    
     private static func drawBackground(in gutter: LineNumberGutter) {
         NSColor.black200.setFill()
         NSBezierPath(rect: gutter.bounds).fill()
-        
     }
     
-    private static func drawCurrentLineHighlight(
-        in gutter: LineNumberGutter,
-        textView: CodeTextView,
-        layoutManager: NSLayoutManager
-    ) {
-        guard let scrollView = gutter.scrollView,
-              textView.selectedRange.length == 0 else { return }
-        
-        let glyphIndex = layoutManager.glyphIndexForCharacter(at: textView.selectedRange.location)
-        let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil)
-        
-        let scrollOffset = scrollView.contentView.bounds.minY
-        let highlightRect = NSRect(
-            x: 0,
-            y: lineRect.minY + textView.textContainerOrigin.y - scrollOffset,
-            width: gutter.bounds.width,
-            height: lineRect.height
-        )
-        
-        NSColor.selectedTextBackgroundColor.withAlphaComponent(0.2).setFill()
-        NSBezierPath(rect: highlightRect).fill()
-    }
-    
-    private static func getVisibleGlyphRange(
-        gutter: LineNumberGutter,
-        layoutManager: NSLayoutManager,
-        textContainer: NSTextContainer
-    ) -> NSRange {
-        guard let scrollView = gutter.scrollView else { return NSRange() }
-        let visibleRect = scrollView.contentView.bounds
-        return layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-    }
+//    private static func drawCurrentLineHighlight(
+//        in gutter: LineNumberGutter,
+//        textView: CodeTextView,
+//        layoutManager: NSLayoutManager,
+//        scrollView: NSScrollView
+//    ) {
+//        guard textView.selectedRange.length == 0 else { return }
+//        
+//        let glyphIndex = layoutManager.glyphIndexForCharacter(at: textView.selectedRange.location)
+//        let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil)
+//        let scrollOffset = scrollView.contentView.bounds.minY
+//        
+//        let highlightRect = NSRect(
+//            x: 0,
+//            y: lineRect.minY + textView.textContainerOrigin.y - scrollOffset,
+//            width: gutter.bounds.width,
+//            height: lineRect.height
+//        )
+//        
+//        NSColor.selectedTextBackgroundColor.withAlphaComponent(0.2).setFill()
+//        NSBezierPath(rect: highlightRect).fill()
+//    }
     
     private static func drawLineNumbers(
         in gutter: LineNumberGutter,
         textView: CodeTextView,
         layoutManager: NSLayoutManager,
+        scrollView: NSScrollView,
         glyphRange: NSRange,
         configuration: CodeEditorConfiguration
     ) {
-        guard let scrollView = gutter.scrollView else { return }
-        
-        let lineNumberRenderer = LineNumberRenderer(
+        let renderer = LineNumberRenderer(
             font: configuration.lineNumberFont,
             padding: configuration.gutterPadding,
             gutterWidth: gutter.bounds.width
         )
         
+//        print("그리기")
+        
         let scrollOffset = scrollView.contentView.bounds.minY
         var drawnLines = Set<Int>()
         
-        // Draw line numbers for visible fragments
-        layoutManager.enumerateLineFragments(forGlyphRange: glyphRange) { rect, _, _, glyphRange, _ in
+        // glyphRange를 한 줄씩 순회
+        layoutManager.enumerateLineFragments(forGlyphRange: glyphRange) { rect, usedRect, _, glyphRange, _ in
+            // 해당 줄의 첫 번째 글자의 index 알아내기
             let charIndex = layoutManager.characterIndexForGlyph(at: glyphRange.location)
-            let lineNumber = LineNumberCalculator.lineNumber(at: charIndex, in: textView.string)
+            // 해당 줄의 첫번 째 글자(charIndex)가 몇 번째 줄에 있는지
+            let lineNumber = textView.string.lineNumber(at: charIndex)
+            
+            print(lineNumber)
             
             guard drawnLines.insert(lineNumber).inserted else { return }
             
-            lineNumberRenderer.drawLineNumber(
+            let actualHeight = usedRect.height > 0 ? usedRect.height : rect.height
+            let yPosition = rect.minY + textView.textContainerOrigin.y - scrollOffset
+            
+            renderer.drawLineNumber(
                 lineNumber,
-                at: rect.minY + textView.textContainerOrigin.y - scrollOffset,
-                lineHeight: rect.height
+                at: yPosition,
+                lineHeight: actualHeight
             )
         }
         
-        // Draw current line number if not already drawn (for empty lines)
         drawCurrentLineNumberIfNeeded(
             textView: textView,
             layoutManager: layoutManager,
             scrollOffset: scrollOffset,
             drawnLines: drawnLines,
-            renderer: lineNumberRenderer
+            renderer: renderer
         )
     }
     
@@ -477,25 +485,22 @@ private struct GutterRenderer {
         drawnLines: Set<Int>,
         renderer: LineNumberRenderer
     ) {
-        let caretLine = LineNumberCalculator.lineNumber(at: textView.selectedRange.location, in: textView.string)
-        
+        let caretLocation = textView.selectedRange.location
+        let caretLine = textView.string.lineNumber(at: caretLocation)
         guard !drawnLines.contains(caretLine) else { return }
-        
-        let caretGlyphIndex = layoutManager.glyphIndexForCharacter(at: textView.selectedRange.location)
-        let caretRect = layoutManager.lineFragmentRect(forGlyphAt: caretGlyphIndex, effectiveRange: nil)
-        let y = caretRect.minY + textView.textContainerOrigin.y - scrollOffset
-        
-        renderer.drawLineNumber(caretLine, at: y, lineHeight: caretRect.height)
-    }
-}
 
-// MARK: - Line Number Calculator
-private struct LineNumberCalculator {
-    static func lineNumber(at index: Int, in string: String) -> Int {
-        let safeIndex = min(index, string.count)
-        return string.prefix(safeIndex).reduce(1) { count, char in
-            char == "\n" ? count + 1 : count
+        let caretGlyphIndex = layoutManager.glyphIndexForCharacter(at: caretLocation)
+
+        // If the caret is on the extra (empty) line at the end, use extraLineFragmentRect
+        let caretRect: NSRect
+        if caretGlyphIndex < layoutManager.numberOfGlyphs {
+            caretRect = layoutManager.lineFragmentRect(forGlyphAt: caretGlyphIndex, effectiveRange: nil)
+        } else {
+            caretRect = layoutManager.extraLineFragmentRect
         }
+
+        let y = caretRect.minY + textView.textContainerOrigin.y - scrollOffset
+        renderer.drawLineNumber(caretLine, at: y, lineHeight: caretRect.height)
     }
 }
 
@@ -525,7 +530,7 @@ private struct LineNumberRenderer {
         let adjustedY = y + (lineHeight - self.lineHeight) / 2
         let numberRect = NSRect(
             x: padding,
-            y: adjustedY,
+            y: max(0, adjustedY), // 음수 방지
             width: gutterWidth - padding * 2,
             height: self.lineHeight
         )
@@ -533,3 +538,4 @@ private struct LineNumberRenderer {
         NSAttributedString(string: "\(lineNumber)", attributes: attributes).draw(in: numberRect)
     }
 }
+
