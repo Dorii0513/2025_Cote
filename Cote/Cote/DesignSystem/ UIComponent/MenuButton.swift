@@ -36,8 +36,13 @@ struct MenuButton: View {
         
         ZStack {
             Button {
-                selected = true
-                icon.action(state)
+                withAnimation {
+                    if icon.name != "sidebar" {
+                        selected = true
+                    }
+                    icon.action(state)
+                }
+                print("버튼누름")
             } label: {
                 Image(icon.name)
                     .foregroundStyle(iconColor)
