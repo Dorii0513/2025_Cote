@@ -15,10 +15,19 @@ struct Folder: Identifiable {
 }
 
 struct Note: Identifiable {
-    let id = UUID()
-    var date: Date = Date()
+    let id: UUID
+    var date: Date
     var title: String
     var content: String
+    var tags: [Tag]
+
+    init(id: UUID = UUID(), date: Date = Date(), title: String, content: String, tags: [Tag]) {
+        self.id = id
+        self.date = date
+        self.title = title
+        self.content = content
+        self.tags = tags
+    }
 }
 
 enum NoteItems: Identifiable {

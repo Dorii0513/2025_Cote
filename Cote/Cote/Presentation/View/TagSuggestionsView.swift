@@ -16,7 +16,7 @@ struct TagSuggestionsView: View {
             HStack(spacing: 6) {
                 ForEach(viewModel.generatedTags, id: \.self) { tag in
                     TagChip(tag: tag){
-                        viewModel.addNewTag(tag)
+                        //viewModel.addNewTag(tag)
                     }
                 }
             }

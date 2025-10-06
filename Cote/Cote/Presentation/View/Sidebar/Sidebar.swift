@@ -18,11 +18,11 @@ struct FolderView: View {
     
     // dummy
     let roots: [NoteItems] = [
-        .folder(Folder(name: "Untitled1", notes: [Note(title: "Untitled2", content: "앱 아이디어")], folders: [Folder(name: "Untitled3", notes: [], folders: [])])),
-        .note(Note(title: "Untitled4", content: "SwiftUI 공부")),
+        .folder(Folder(name: "Untitled1", notes: [Note(title: "Untitled2", content: "앱 아이디어", tags: [])], folders: [Folder(name: "Untitled3", notes: [], folders: [])])),
+        .note(Note(title: "Untitled4", content: "SwiftUI 공부", tags: [])),
         .folder(Folder(name: "Untitled5", notes: [], folders: [])),
-        .note(Note(title: "Untitled6", content: "앱 아이디어")),
-        .note(Note(title: "Untitled7", content: "..."))
+        .note(Note(title: "Untitled6", content: "앱 아이디어", tags: [])),
+        .note(Note(title: "Untitled7", content: "...", tags: []))
     ]
     
     var body: some View {

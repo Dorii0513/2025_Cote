@@ -20,6 +20,27 @@ struct ContentView: View {
                 
                 // 에디터 뷰
                 CodeEditor(text: $viewModel.content, suggestedTags: $viewModel.generatedTags, showSuggestedTags: $viewModel.showTags)
+                .onChange(of: viewModel.content) { oldValue, newValue in
+                    // Debounced autosave: schedule a save 0.8s after last edit
+                    AutosaveScheduler.shared.schedule {
+                        Task { await viewModel.saveCurrentNote() }
+                    }
+                }
+                .onChange(of: viewModel.title) { oldValue, newValue in
+                    AutosaveScheduler.shared.schedule {
+                        Task { await viewModel.saveCurrentNote() }
+                    }
+                }
+                .task {
+                    await viewModel.loadMostRecentNote()
+                }
+
+                // Hidden Save button for Command-S
+                Button("") {
+                    Task { await viewModel.saveCurrentNote() }
+                }
+                .keyboardShortcut("s", modifiers: [.command])
+                .hidden()
                 
                 // 하단 바
                 HStack {
@@ -64,3 +85,15 @@ struct ContentView: View {
     }
 }
 
+fileprivate final class AutosaveScheduler {
+    static let shared = AutosaveScheduler()
+    private var workItem: DispatchWorkItem?
+    private let delay: TimeInterval = 0.8
+
+    func schedule(_ action: @escaping () -> Void) {
+        workItem?.cancel()
+        let item = DispatchWorkItem(block: action)
+        workItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: item)
+    }
+}
