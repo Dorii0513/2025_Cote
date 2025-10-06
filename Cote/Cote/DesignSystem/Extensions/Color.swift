@@ -8,6 +8,8 @@
 import SwiftUI
 
 extension ShapeStyle where Self == Color {
+    static var border: Self { Color("gray90") }
+    
     // icon
     static var iconDefault: Self { Color("gray80") }
     static var iconSelected: Self { Color("gray50") }
@@ -15,21 +17,20 @@ extension ShapeStyle where Self == Color {
     static var iconSecondary:Self { Color("gray90") }
     
     // text
-    static var textDefault:       Self { Color("gray50") }
-    static var textLabelSelected: Self { Color("gray50") }
-    static var textLabelDefault:  Self { Color("gray80") }
-    static var textLabelSecondary:Self { Color("gray60") }
-    static var textLabelInfo:     Self { Color("gray100") }
-    static var textTagSelected:   Self { Color("gray70") }
-    static var textTagDefault:    Self { Color("gray80") }
+    static var textStrong:       Self { Color("gray50") }
+    static var textSelected: Self { Color("gray50") }
+    static var textDefault:  Self { Color("gray80") }
+    static var textSecondary:Self { Color("gray60") }
+    static var textInfo:     Self { Color("gray100") }
+    static var textTag:   Self { Color("purple20") }
     
     // background
-    static var bgTag:            Self { Color("gray80_15pct") }
-    static var bgInputDefault:   Self { Color("black90") }
+    static var bgTag:            Self { Color("purple100_15") }
+    static var bgEditor:   Self { Color("black100") }
     static var bgElevatedDefault:Self { Color("black70") }
-    static var bgSurfaceGutter:  Self { Color("black100") }
-    static var bgSurfaceToolbar: Self { Color("black80") }
-    static var bgSurfaceSidebar: Self { Color("black100_80pct") }
+    static var bgGutter:  Self { Color("black200") }
+    static var bgToolbar: Self { Color("black90") }
+    static var bgSidebar: Self { Color("black90_80") }
     static var bgSurfaceScroll:  Self { Color("black70") }
     static var bgSurfaceBar:     Self { Color("gray90") }
     

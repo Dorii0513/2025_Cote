@@ -1,0 +1,172 @@
+//
+//  MainView.swift
+//  Cote
+//
+//  Created by 김예림 on 7/26/25.
+//
+
+import SwiftUI
+import AppKit
+
+struct MainView: View {
+    @State private var isBtnTapped: Bool = false
+    @State private var window: NSWindow?
+    @StateObject private var viewModel = ContentViewModel(initialContent: "...")
+    @EnvironmentObject var state: UIState
+    
+    var body: some View {
+        
+        HStack(spacing: 0) {
+            if state.isSidebarOpen {
+                ZStack {
+                    //블러 효과
+                    BlurEffect().ignoresSafeArea()
+                    Color.bgSidebar.ignoresSafeArea()
+                    
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 38)
+                        Sidebar()
+                    }
+                    .ignoresSafeArea()
+                    .frame(width: 210)
+                }
+                .frame(width: 210)
+            }
+            ZStack {
+                Color.bgToolbar
+                    .ignoresSafeArea(edges: .top)
+                ContentView()
+            }
+        }
+        .overlay(alignment: .topLeading){
+            HStack(spacing: 0) {
+                SideToolbar()
+                Cote.contentToolbar(isBtnTapped: $isBtnTapped)
+            }
+        }
+        .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
+            GeometryReader { proxy in
+                if isBtnTapped, let anchor {
+                    let rect = proxy[anchor]
+                    TagSuggestionsView()
+                        .frame(maxWidth: 500, alignment: .leading)
+                        .position(x: rect.minX + 250,
+                                  y: rect.maxY + 60)
+                }
+            }
+        }
+        .environmentObject(viewModel)
+        .ignoresSafeArea()
+    }
+}
+
+//MARK: - contentToolbar
+private struct contentToolbar: View {
+    @EnvironmentObject private var viewModel: ContentViewModel
+    @FocusState private var isFocused: Bool
+    @State private var newTag: String = ""
+    @Binding var isBtnTapped: Bool
+    
+    private var tagChipsView: some View {
+        HStack(spacing: 6) {
+            ForEach(viewModel.noteTags, id: \.self) { tag in
+                TagChip(tag: tag){}
+            }
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            Text("Untitled")
+                .coteFont(.title1,
+                          color: .textStrong)
+                .padding(.trailing, 8)
+            
+            if !viewModel.noteTags.isEmpty {
+                tagChipsView
+                    .padding(.trailing, 8)
+            }
+            
+            if isBtnTapped {
+                TextField("", text: $newTag)
+                    .focused($isFocused)
+                    .tint(.textDefault)
+                    .coteFont(.tag, color: .textDefault)
+                    .padding(.horizontal, 6)
+                    .frame(height: 20)
+                    .frame(minWidth: 60, alignment: .leading)
+                    .fixedSize()
+                    .textFieldStyle(.plain)
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear
+                                .anchorPreference(key: TagFieldAnchorKey.self,
+                                                  value: .bounds) { $0 }
+                        }
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(Color.border, lineWidth: isFocused ? 2 : 1)
+                    )
+                    .onSubmit(of: .text) {
+                        withAnimation(.smooth) {
+                            viewModel.addNewTag(newTag)
+                            newTag = ""
+                        }
+                    }
+                    .onChange(of: isFocused, initial: false) { oldValue, newValue in
+                        if !newValue && newTag.isEmpty {
+                            withAnimation(.snappy) {
+                                isBtnTapped = false
+                            }
+                        }
+                    }
+            }
+            
+            if !isBtnTapped {
+                Button {
+                    isBtnTapped = true
+                    isFocused = true
+                    viewModel.toggleTags()
+                } label: {
+                    Text("Add Tags")
+                        .coteFont(.title2,
+                                  color: .textDefault)
+                }
+                .buttonStyle(.plain)
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal, 15)
+    }
+}
+
+private struct TagFieldAnchorKey: PreferenceKey {
+    static var defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = nextValue() ?? value
+    }
+}
+
+
+//MARK: - Sidebar
+private struct Sidebar: View {
+    var body: some View {
+        ZStack {
+            VStack(spacing: 4) {
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(.actionDefault)
+                FolderView()
+            }
+        }
+        .frame(minWidth: 210, minHeight: 700)
+        .background(Color.clear)
+    }
+}
+
+
+#Preview {
+    MainView()
+}
