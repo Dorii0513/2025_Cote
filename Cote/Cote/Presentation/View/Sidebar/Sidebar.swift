@@ -7,25 +7,9 @@
 
 import SwiftUI
 
-struct Sidebar: View {
-    var body: some View {
-        ZStack {
-            VStack(spacing: 4) {
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundStyle(.actionDefault)
-                FolderView()
-            }
-        }
-        .frame(minWidth: 210, minHeight: 700)
-        .background(Color.clear)
-    }
-}
-
-
 //MARK: - Folder뷰
 
-private struct FolderView: View {
+struct FolderView: View {
     @State var addFolderSelected: Bool = false
     @State var addNoteSelected: Bool = false
     @State var filterSelected: Bool = false
@@ -78,5 +62,5 @@ private struct FolderView: View {
 
 
 #Preview {
-    Sidebar()
+    FolderView()
 }

@@ -1,5 +1,5 @@
 //
-//  Note.swift
+//  Note+Folder.swift
 //  Cote
 //
 //  Created by 김예림 on 7/25/25.
@@ -16,6 +16,7 @@ struct Folder: Identifiable {
 
 struct Note: Identifiable {
     let id = UUID()
+    var date: Date = Date()
     var title: String
     var content: String
 }

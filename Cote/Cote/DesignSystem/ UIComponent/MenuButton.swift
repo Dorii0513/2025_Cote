@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MenuButton: View {
     @State var isHover = false
+    @EnvironmentObject private var state: UIState
     
     @Binding var selected: Bool
     let icon: Icon
@@ -16,9 +17,9 @@ struct MenuButton: View {
     private var iconColor: Color {
         switch icon.size {
         case .large:
-            return selected ? .iconSelected : (isHover ? .iconSelected : .textLabelDefault)
+            return selected ? .iconSelected : (isHover ? .iconSelected : .textDefault)
         case .small:
-            return isHover ? .iconSelected : .textLabelDefault
+            return isHover ? .iconSelected : .textDefault
         }
     }
     
@@ -35,15 +36,21 @@ struct MenuButton: View {
         
         ZStack {
             Button {
-                selected = true
+                withAnimation {
+                    if icon.name != "sidebar" {
+                        selected = true
+                    }
+                    icon.action(state)
+                }
+                print("버튼누름")
             } label: {
                 Image(icon.name)
                     .foregroundStyle(iconColor)
-                    .padding(icon.size == .large ? 6 : 4)
+                    .padding(icon.size == .large ? 6 : 5)
             }
             .buttonStyle(.plain)
             .background(backgroundColor)
-            .cornerRadius(icon.size == .large ? 8 : 4)
+            .cornerRadius(8)
             .onHover(perform: { hovering in
                 self.isHover = hovering
             })
