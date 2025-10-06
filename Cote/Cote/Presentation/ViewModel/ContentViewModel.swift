@@ -17,7 +17,7 @@ final class ContentViewModel: ObservableObject {
     
     @Published var content: String
     @Published var title: String = "Untitled"
-    @Published var generatedTags: [String] = []
+    @Published var generatedTags: [Tag] = []
     @Published var noteTags: [Tag] = []
     @Published var showTags: Bool = false
     @Published var isGenerating: Bool = false
@@ -33,7 +33,7 @@ final class ContentViewModel: ObservableObject {
         self.saveUseCase = saveUseCase
         self.fetchUseCase = fetchUseCase
     }
-
+    
     convenience init(initialContent: String) {
         self.init(
             initialContent: initialContent,
@@ -62,9 +62,11 @@ final class ContentViewModel: ObservableObject {
         isGenerating = true
         defer { isGenerating = false }
         do {
-            generatedTags = try await tagUseCase.generateTags(content: content)
+            let tagNames = try await tagUseCase.generateTags(content: content) // [String] 이라고 가정
+            generatedTags = tagNames.map { Tag(name: $0) }                      // String → Tag 로 변환
         } catch {
             print("[TagGeneration] failed: \(error)")
+            generatedTags = []
         }
     }
     
@@ -78,13 +80,14 @@ final class ContentViewModel: ObservableObject {
             print("[NoteSave] failed: \(error)")
         }
     }
-
+    
     func loadMostRecentNote() async {
         do {
             let notes = try await fetchUseCase.execute()
             if let first = notes.first {
                 self.title = first.title
                 self.content = first.content
+                self.noteTags = first.tags
             }
         } catch {
             print("[NoteFetch] failed: \(error)")

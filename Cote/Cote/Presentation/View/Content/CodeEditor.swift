@@ -42,35 +42,24 @@ public struct CodeEditorConfiguration {
 // MARK: - SwiftUI Code Editor
 public struct CodeEditor: NSViewRepresentable {
     @Binding var text: String
-    @Binding var suggestedTags: [String]
-    @Binding var showSuggestedTags: Bool
-    
     private let configuration: CodeEditorConfiguration
     
     // Primary initializer with configuration
     public init(
         text: Binding<String>,
-        suggestedTags: Binding<[String]> = .constant([]),
-        showSuggestedTags: Binding<Bool> = .constant(false),
         configuration: CodeEditorConfiguration = .defaultConfig
     ) {
         self._text = text
-        self._suggestedTags = suggestedTags
-        self._showSuggestedTags = showSuggestedTags
         self.configuration = configuration
     }
     
     // Legacy initializer with custom font
     public init(
         text: Binding<String>,
-        suggestedTags: Binding<[String]> = .constant([]),
-        showSuggestedTags: Binding<Bool> = .constant(false),
         font: NSFont
     ) {
         self.init(
             text: text,
-            suggestedTags: suggestedTags,
-            showSuggestedTags: showSuggestedTags,
             configuration: CodeEditorConfiguration(
                 font: font,
                 gutterWidth: CodeEditorConfiguration.defaultConfig.gutterWidth,

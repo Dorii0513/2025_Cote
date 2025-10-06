@@ -15,8 +15,8 @@ struct TagSuggestionsView: View {
                 .coteFont(.title2, color: .textDefault)
             HStack(spacing: 6) {
                 ForEach(viewModel.generatedTags, id: \.self) { tag in
-                    TagChip(tag: tag){
-                        //viewModel.addNewTag(tag)
+                    TagChip(tag: tag.name){
+                        viewModel.addNewTag(tag)
                     }
                 }
             }

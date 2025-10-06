@@ -19,9 +19,8 @@ struct ContentView: View {
                 Spacer().frame(height: 38)
                 
                 // 에디터 뷰
-                CodeEditor(text: $viewModel.content, suggestedTags: $viewModel.generatedTags, showSuggestedTags: $viewModel.showTags)
+                CodeEditor(text: $viewModel.content)
                 .onChange(of: viewModel.content) { oldValue, newValue in
-                    // Debounced autosave: schedule a save 0.8s after last edit
                     AutosaveScheduler.shared.schedule {
                         Task { await viewModel.saveCurrentNote() }
                     }
@@ -31,11 +30,16 @@ struct ContentView: View {
                         Task { await viewModel.saveCurrentNote() }
                     }
                 }
+                .onChange(of: viewModel.noteTags) { oldValue, newValue in
+                    AutosaveScheduler.shared.schedule {
+                        Task { await viewModel.saveCurrentNote() }
+                    }
+                }
                 .task {
                     await viewModel.loadMostRecentNote()
                 }
 
-                // Hidden Save button for Command-S
+                // Command-S 저장
                 Button("") {
                     Task { await viewModel.saveCurrentNote() }
                 }
