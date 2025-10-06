@@ -64,20 +64,20 @@ struct MainView: View {
 private struct contentToolbar: View {
     @EnvironmentObject private var viewModel: ContentViewModel
     @FocusState private var isFocused: Bool
-    @State private var newTag: String = ""
+    @State private var newTag: Tag = .init(name: "")
     @Binding var isBtnTapped: Bool
     
     private var tagChipsView: some View {
         HStack(spacing: 6) {
             ForEach(viewModel.noteTags, id: \.self) { tag in
-                TagChip(tag: tag){}
+                TagChip(tag: tag.name){}
             }
         }
     }
     
     var body: some View {
         HStack(spacing: 0) {
-            Text("Untitled")
+            Text(viewModel.title.isEmpty ? "Untitled" : viewModel.title)
                 .coteFont(.title1,
                           color: .textStrong)
                 .padding(.trailing, 8)
@@ -88,7 +88,7 @@ private struct contentToolbar: View {
             }
             
             if isBtnTapped {
-                TextField("", text: $newTag)
+                TextField("", text: $newTag.name)
                     .focused($isFocused)
                     .tint(.textDefault)
                     .coteFont(.tag, color: .textDefault)
@@ -111,11 +111,11 @@ private struct contentToolbar: View {
                     .onSubmit(of: .text) {
                         withAnimation(.smooth) {
                             viewModel.addNewTag(newTag)
-                            newTag = ""
+                            newTag.name = ""
                         }
                     }
                     .onChange(of: isFocused, initial: false) { oldValue, newValue in
-                        if !newValue && newTag.isEmpty {
+                        if !newValue && newTag.name.isEmpty {
                             withAnimation(.snappy) {
                                 isBtnTapped = false
                             }
@@ -170,3 +170,4 @@ private struct Sidebar: View {
 #Preview {
     MainView()
 }
+
