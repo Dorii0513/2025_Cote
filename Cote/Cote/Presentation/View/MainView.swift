@@ -60,7 +60,7 @@ struct MainView: View {
     }
 }
 
-
+//MARK: - contentToolbar
 private struct contentToolbar: View {
     @EnvironmentObject private var viewModel: ContentViewModel
     @FocusState private var isFocused: Bool
@@ -150,7 +150,7 @@ private struct TagFieldAnchorKey: PreferenceKey {
 }
 
 
-//MARK: - 사이드바
+//MARK: - Sidebar
 private struct Sidebar: View {
     var body: some View {
         ZStack {
@@ -165,8 +165,6 @@ private struct Sidebar: View {
         .background(Color.clear)
     }
 }
-
-//MARK: - content
 
 
 #Preview {
