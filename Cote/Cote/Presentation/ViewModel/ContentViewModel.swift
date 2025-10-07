@@ -62,15 +62,15 @@ final class ContentViewModel: ObservableObject {
         isGenerating = true
         defer { isGenerating = false }
         do {
-            let tagNames = try await tagUseCase.generateTags(content: content) // [String] 이라고 가정
-            generatedTags = tagNames.map { Tag(name: $0) }                      // String → Tag 로 변환
+            let tagNames = try await tagUseCase.generateTags(content: content)
+            generatedTags = tagNames.map { Tag(name: $0) }      // String → Tag 로 변환
         } catch {
             print("[TagGeneration] failed: \(error)")
             generatedTags = []
         }
     }
     
-    // MARK: - Persistence (Save / Load)
+    // MARK: 저장 / 로드
     func saveCurrentNote() async {
         let safeTitle = title.isEmpty ? "Untitled" : title
         let note = Note(title: safeTitle, content: content, tags: noteTags)
