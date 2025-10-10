@@ -12,10 +12,10 @@ struct ListCell: View {
     @Binding var expandedIDs: Set<UUID>
     
     let noteID: UUID?
-    let onSelect: (UUID) -> Void
-    
     let item: NoteItems
     let depth: Int
+    
+    let onSelect: (UUID) -> Void
     
     // expandedIDs 값이 존재할 때 true
     private var isExpanded: Bool {
@@ -66,7 +66,7 @@ struct ListCell: View {
         .padding(.vertical, 5)
         .padding(.horizontal, 5)
         .frame(maxWidth: .infinity, minHeight: 26)
-        .background(                       
+        .background(
             isSelected ? Color.actionDefault
             : (isHover ? Color.actionDefault : Color.clear)
         )
@@ -77,12 +77,14 @@ struct ListCell: View {
         
         if isExpanded {
             ForEach(item.children) { child in
-                ListCell(isHover: false,
-                         expandedIDs: $expandedIDs,
-                         noteID: noteID,
-                         onSelect: onSelect,
-                         item: child,
-                         depth: depth + 1)
+                ListCell(
+                    isHover: false,
+                    expandedIDs: $expandedIDs,
+                    noteID: noteID,
+                    item: child,
+                    depth: depth + 1,
+                    onSelect: onSelect
+                )
             }
         }
     }

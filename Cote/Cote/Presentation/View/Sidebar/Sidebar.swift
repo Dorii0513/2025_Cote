@@ -40,13 +40,18 @@ struct FolderView: View {
                 Spacer()
                     .frame(height:5)
                 
-                VStack(alignment: .leading, spacing: 0) {
+                // 지금 selectedNoteID 비어있음 ;;
+                VStack(alignment: .leading, spacing: 2) {
                     ForEach(viewModel.roots) { item in
                         ListCell(expandedIDs: $expandedIDs,
                                  noteID: state.selectedNoteID, // 선택된 노트 전달
-                                 onSelect: { id in state.selectedNoteID = id }, // 선택한 노트 업데이트
                                  item: item,
-                                 depth: 0)
+                                 depth: 0) {
+                            id in state.selectedNoteID = id
+                            viewModel.select(id)
+                            print("탭")
+                            print(state.selectedNoteID ?? "nil")
+                        }
                     }
                 }
                 
@@ -56,7 +61,7 @@ struct FolderView: View {
         .padding(.horizontal, 10)
         .padding(0)
         .onAppear {
-            viewModel.attach(state)
+//            viewModel.attach(state)
         }
     }
 }

@@ -9,8 +9,8 @@ import RealmSwift
 import Foundation
 
 final class TagObject: Object {
-        @Persisted(primaryKey: true) var name: String   //중복 방지
-        @Persisted(originProperty: "tags") var notes: LinkingObjects<NoteObject>
+    @Persisted(primaryKey: true) var name: String   //중복 방지
+    @Persisted(originProperty: "tags") var notes: LinkingObjects<NoteObject>
 }
 
 final class FolderObject: Object {
@@ -31,7 +31,7 @@ final class NoteObject: Object {
     @Persisted var tags = List<TagObject>()
     @Persisted var sortIndex: Int = 0
     @Persisted var updatedAt: Date = .now
-//    @Persisted(originProperty: "notes") var parentFolders: LinkingObjects<FolderObject>
+    @Persisted(originProperty: "notes") var parentFolders: LinkingObjects<FolderObject>
 }
 
 extension NoteObject {
@@ -40,7 +40,7 @@ extension NoteObject {
         self.id = note.id
         self.title = note.title
         self.content = note.content
-
+        
         let noteTags = List<TagObject>()
         for tag in note.tags {
             let obj = TagObject()
@@ -51,7 +51,7 @@ extension NoteObject {
         self.updatedAt = note.updatedAt
         // 필요하면 sortIndex도 note에서 받아서 설정
     }
-
+    
     func toDomain() -> Note {
         let domainTags: [Tag] = tags.map { Tag(name: $0.name) }
         return Note(
