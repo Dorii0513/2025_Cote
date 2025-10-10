@@ -11,6 +11,7 @@ import RealmSwift
 @main
 struct CoteApp: SwiftUI.App {
     init() {
+        
         let config = Realm.Configuration(
             schemaVersion: 1,
             migrationBlock: { migration, oldSchemaVersion in
@@ -26,12 +27,13 @@ struct CoteApp: SwiftUI.App {
     }
     var body: some Scene {
         WindowGroup {
-            MainView()
-                .toolbar(removing: .title)
-                .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+            HomeView()
+                .navigationTitle("")
+                .toolbarBackground(.hidden, for: .windowToolbar)
                 .environmentObject(UIState())
                 .environment(\.realmConfiguration, Realm.Configuration.defaultConfiguration)
         }
         .windowResizability(.contentSize)
     }
 }
+

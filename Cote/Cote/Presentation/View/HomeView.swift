@@ -1,5 +1,5 @@
 //
-//  MainView.swift
+//  HomeView.swift
 //  Cote
 //
 //  Created by 김예림 on 7/26/25.
@@ -8,7 +8,7 @@
 import SwiftUI
 import AppKit
 
-struct MainView: View {
+struct HomeView: View {
     @State private var isBtnTapped: Bool = false
     @State private var window: NSWindow?
     @StateObject private var viewModel = ContentViewModel(initialContent: "...")
@@ -152,6 +152,7 @@ private struct TagFieldAnchorKey: PreferenceKey {
 
 //MARK: - Sidebar
 private struct Sidebar: View {
+
     var body: some View {
         ZStack {
             VStack(spacing: 4) {
@@ -167,7 +168,7 @@ private struct Sidebar: View {
 }
 
 
-#Preview {
-    MainView()
-}
-
+//#Preview {
+//    MainView()
+//        .environmentObject(UIState())
+//}

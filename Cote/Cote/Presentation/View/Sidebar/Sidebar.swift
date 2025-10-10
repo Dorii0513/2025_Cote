@@ -10,20 +10,14 @@ import SwiftUI
 //MARK: - Folder뷰
 
 struct FolderView: View {
+    @EnvironmentObject var state: UIState
+    @StateObject private var viewModel = SideBarViewModel()
+    
     @State var addFolderSelected: Bool = false
     @State var addNoteSelected: Bool = false
     @State var filterSelected: Bool = false
     
     @State private var expandedIDs = Set<UUID>()
-    
-    // dummy
-    let roots: [NoteItems] = [
-        .folder(Folder(name: "Untitled1", notes: [Note(title: "Untitled2", content: "앱 아이디어", tags: [])], folders: [Folder(name: "Untitled3", notes: [], folders: [])])),
-        .note(Note(title: "Untitled4", content: "SwiftUI 공부", tags: [])),
-        .folder(Folder(name: "Untitled5", notes: [], folders: [])),
-        .note(Note(title: "Untitled6", content: "앱 아이디어", tags: [])),
-        .note(Note(title: "Untitled7", content: "...", tags: []))
-    ]
     
     var body: some View {
         ScrollView {
@@ -47,8 +41,12 @@ struct FolderView: View {
                     .frame(height:5)
                 
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(roots) { item in
-                        ListCell(expandedIDs: $expandedIDs, item: item, depth: 0)
+                    ForEach(viewModel.roots) { item in
+                        ListCell(expandedIDs: $expandedIDs,
+                                 noteID: state.selectedNoteID, // 선택된 노트 전달
+                                 onSelect: { id in state.selectedNoteID = id }, // 선택한 노트 업데이트
+                                 item: item,
+                                 depth: 0)
                     }
                 }
                 
@@ -57,10 +55,13 @@ struct FolderView: View {
         }
         .padding(.horizontal, 10)
         .padding(0)
+        .onAppear {
+            viewModel.attach(state)
+        }
     }
 }
 
 
-#Preview {
-    FolderView()
-}
+//#Preview {
+//    FolderView()
+//}
