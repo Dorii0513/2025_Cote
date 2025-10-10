@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import RealmSwift
 
 @MainActor
 final class ContentViewModel: ObservableObject {
@@ -15,13 +16,14 @@ final class ContentViewModel: ObservableObject {
     private let saveUseCase: SaveNoteUseCase
     private let fetchUseCase: FetchNotesUseCase
     
-    //해야 하는 것 : 사이드바에서 선택된 노트 아이디 값이랑 콘텐트 뷰랑 연결시키기. state 값 가져와서 띄우면 됨
     @Published var content: String
     @Published var title: String = "Untitled"
     @Published var generatedTags: [Tag] = []
     @Published var noteTags: [Tag] = []
     @Published var showTags: Bool = false
     @Published var isGenerating: Bool = false
+    @Published private(set) var currentNoteID: UUID? = nil
+    @Published var isLoading: Bool = false
     
     init(
         initialContent: String,
@@ -79,26 +81,43 @@ final class ContentViewModel: ObservableObject {
     }
     
     //MARK: - 노트 저장 / 로드
-    func saveCurrentNote(noteID: UUID) async {
+    func saveCurrentNote(by: UUID) async {
         let safeTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Untitled" : title
-        let note = Note(id: noteID, title: safeTitle, content: content, tags: noteTags)
+        let note = Note(id: by, title: safeTitle, content: content, tags: noteTags)
         do {
             try await saveUseCase.execute(note: note)
         } catch {
-            print("[NoteSave] failed: \(error.localizedDescription)")
+            print("[NoteSave] failed: \(type(of: error)) - \(error.localizedDescription)")
         }
     }
     
-    func loadMostRecentNote() async {
+    func loadNote(by id: UUID) async {
+            if currentNoteID == id && !content.isEmpty { return }
+            isLoading = true
+            defer { isLoading = false; currentNoteID = id }
+            do {
+                print("[VM] loadNote id=", id)
+                guard let note = try await fetchUseCase.execute(noteID: id) else { return }
+                self.title = note.title
+                self.content = note.content
+                self.noteTags = note.tags
+                print("[VM] loaded title=\(title) len=\(content.count)")
+            } catch {
+                print("[VM] load error=", error)
+            }
+        }
+    
+    func probeNoteDirect(id: UUID) {
         do {
-            let notes = try await fetchUseCase.execute()
-            if let first = notes.first {
-                self.title = first.title
-                self.content = first.content
-                self.noteTags = first.tags
+            let realm = try Realm()
+            if let obj = realm.object(ofType: NoteObject.self, forPrimaryKey: id) {
+                print("[Probe] FOUND id=", obj.id, " title=", obj.title)
+            } else {
+                print("[Probe] NOT FOUND id=", id)
             }
         } catch {
-            print("[NoteFetch] failed: \(error.localizedDescription)")
+            print("[Probe] Realm open error:", error)
         }
     }
 }
+

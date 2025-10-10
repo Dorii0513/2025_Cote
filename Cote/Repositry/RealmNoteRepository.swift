@@ -11,8 +11,6 @@ import RealmSwift
 @MainActor
 struct RealmNoteRepository: NoteRepository {
     
-    //    private let realm: Realm
-    
     private func openRealm() throws -> Realm { try Realm() }
     
     
@@ -22,57 +20,33 @@ struct RealmNoteRepository: NoteRepository {
                 let realm = try openRealm()
                 let folders = realm.objects(FolderObject.self)
                 let notes   = realm.objects(NoteObject.self)
-
+                
                 func emit() {
-                    // dummy
-                    if folders.isEmpty && notes.isEmpty {
-                        let dummyNotes: [NoteItems] = [
-                            .folder(
-                                Folder(
-                                    id: UUID(),
-                                    name: "테스트 폴더",
-                                    sortIndex: 0,
-                                    updatedAt: .now,
-                                    notes: [
-                                        Note(id: UUID(), title: "노트1", content: "첫 번째 더미 노트", tags: [], updatedAt: .now),
-                                        Note(id: UUID(), title: "노트2", content: "두 번째 더미 노트", tags: [], updatedAt: .now)
-                                    ],
-                                    children: []
-                                )
-                            ),
-                            .note(
-                                Note(id: UUID(), title: "루트 노트", content: "폴더 밖 노트", tags: [], updatedAt: .now)
-                            )
-                        ]
-
-                        continuation.yield(dummyNotes)
-                        return
-                    }
-
+                    
                     // 1) 루트 폴더(부모 없음)
                     let rootFolders = realm.objects(FolderObject.self)
                         .filter("parent.@count == 0")
                         .sorted(byKeyPath: "sortIndex", ascending: true)
                         .map { FolderMapper.folder(from: $0) }
                         .map(NoteItems.folder)
-
+                    
                     // 2) 루트 노트(어떤 폴더에도 속하지 않음)
                     let rootNotes = realm.objects(NoteObject.self)
                         .where { $0.parentFolders.count == 0 }
                         .sorted(byKeyPath: "sortIndex", ascending: true)
                         .map { Note($0) }
                         .map(NoteItems.note)
-
+                    
                     // 3) 합치고 정렬 규칙 적용
                     let merged = Array(rootFolders) + Array(rootNotes)
                     continuation.yield(merged.sortNotes())
                 }
-
+                
                 emit() // 초기 1회
-
+                
                 let t1 = folders.observe { _ in emit() }
                 let t2 = notes.observe   { _ in emit() }
-
+                
                 continuation.onTermination = { _ in
                     t1.invalidate(); t2.invalidate()
                 }
@@ -115,24 +89,11 @@ struct RealmNoteRepository: NoteRepository {
         return obj.toDomain()
     }
     
-    //    func notes(in folderID: String?) throws -> [Note] {
-    //        // 폴더별로 관리한다면 FolderObject.notes를 통해 가져오도록 구현
-    //        // 우선 단순 전역 정렬 예시:
-    //        let results = realm.objects(NoteObject.self).sorted(byKeyPath: "sortIndex")
-    //        return results.map { $0.toDomain() }
-    //    }
-    //
-    //    func nextSortIndex(for folderID: String?) throws -> Int {
-    //        // 폴더별 정렬이라면 해당 폴더의 notes.max(ofProperty:) 등으로 계산
-    //        let maxIndex = realm.objects(NoteObject.self).max(ofProperty: "sortIndex") as Int? ?? -1
-    //        return maxIndex + 1
-    //    }
-    
     func save(note: Note) async throws {
         let realm = try openRealm()
         try await realm.asyncWrite {
             let obj = NoteObject(from: note)
-            realm.add(obj, update: .modified)
+            realm.add(obj, update: .modified) // ✅ 동일 PK로 업서트
         }
     }
     
@@ -146,15 +107,7 @@ struct RealmNoteRepository: NoteRepository {
     // 선택한 노트 fetch
     func fetchNote(by id: UUID) async throws -> Note? {
         let realm = try openRealm()
-        let idString = id.uuidString
-        
-        print("[Repo.fetchNote] id=", id)
-        
-        guard let note = realm.object(ofType: NoteObject.self, forPrimaryKey: id) else {
-            return nil
-        }
-        
-        return note.toDomain()
+        return realm.object(ofType: NoteObject.self, forPrimaryKey: id)?.toDomain()
     }
     
     func delete(id: UUID) async throws {

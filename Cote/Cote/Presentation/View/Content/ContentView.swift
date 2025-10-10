@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AppKit
+import RealmSwift
 
 //MARK: - ContentView
 
@@ -23,18 +24,26 @@ struct ContentView: View {
                 
                 // 에디터 뷰
                 CodeEditor(text: $viewModel.content)
+                    .id(viewModel.currentNoteID)
                     .onChange(of: viewModel.content, scheduleAutosave)
                     .onChange(of: viewModel.title, scheduleAutosave)
                     .onChange(of: viewModel.noteTags, scheduleAutosave)
-                    .task {
-                        await viewModel.loadMostRecentNote()
+                // ✅ 첫 진입 시에도 로드
+                    .onChange(of: state.selectedNoteID) { newID in
+                        guard let id = newID else { return }
+                        // 🔎 fetch 직전 직접 probe
+                        let r = try! Realm()
+                        print("[Probe] exist?", r.object(ofType: NoteObject.self, forPrimaryKey: id) != nil)
+                        Task { await viewModel.loadNote(by: id) }
                     }
-                
+                    .task {
+                        if let id = state.selectedNoteID { await viewModel.loadNote(by: id) }
+                    }
                 // Command-S 저장
                 Button("") {
                     Task {
                         if let id = state.selectedNoteID {
-                            await viewModel.saveCurrentNote(noteID: id)
+                            await viewModel.saveCurrentNote(by: id)
                         }
                     }
                 }
@@ -49,12 +58,17 @@ struct ContentView: View {
         .ignoresSafeArea()
     }
     
+    private func clearEditor() {
+        viewModel.title = "Untitled"
+        viewModel.content = ""
+        viewModel.noteTags = []
+    }
+    
     private func scheduleAutosave(oldValue: Any, newValue: Any) {
+        // 로딩 중엔 autosave 금지
+        guard !viewModel.isLoading else { return }
         AutosaveScheduler.shared.schedule {
-            Task {
-                guard let id = state.selectedNoteID else { return }
-                await viewModel.saveCurrentNote(noteID: id)
-            }
+            Task { if let id = state.selectedNoteID { await viewModel.saveCurrentNote(by: id) } }
         }
     }
 }
