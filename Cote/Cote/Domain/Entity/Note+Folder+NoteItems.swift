@@ -7,19 +7,8 @@
 
 import Foundation
 
-
-//final class FolderNode: Identifiable {
-//    let id: UUID = UUID()
-//    var parentID: UUID?  // 루트는 nil
-//    var name: String
-//    var sortIndex: Int = 0
-//    var notes: [Note] = []
-//    var children: [FolderNode] = []
-//    init(name: String) { self.name = name }
-//}
-
 struct Folder: Identifiable {
-    let id = UUID()
+    let id: UUID
     var parentID: UUID? = nil
     var name: String
     var sortIndex: Int = 0
@@ -27,12 +16,14 @@ struct Folder: Identifiable {
     var notes: [Note] = []
     var children: [Folder] = []
     
-    init(name: String, sortIndex: Int, updatedAt: Date, notes: [Note], children: [Folder]) {
+    init(id: UUID, name: String, sortIndex: Int, updatedAt: Date, notes: [Note], children: [Folder], parentID: UUID? = nil) {
+        self.id = id
         self.name = name
         self.sortIndex = sortIndex
         self.updatedAt = updatedAt
         self.notes = notes
         self.children = children
+        self.parentID = parentID
     }
 }
 
@@ -67,6 +58,8 @@ enum NoteItems: Identifiable {
             return []
         }
     }
+    
+    var childrenSorted: [NoteItems] { children.sortNotes() }
 }
 
 // 정렬 규칙

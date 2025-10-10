@@ -9,9 +9,8 @@ import RealmSwift
 import Foundation
 
 final class TagObject: Object {
-    @Persisted(primaryKey: true) var id: UUID
-    @Persisted var name: String
-    @Persisted(originProperty: "tags") var parent: LinkingObjects<FolderObject>
+        @Persisted(primaryKey: true) var name: String   //중복 방지
+        @Persisted(originProperty: "tags") var notes: LinkingObjects<NoteObject>
 }
 
 final class FolderObject: Object {
@@ -20,7 +19,6 @@ final class FolderObject: Object {
     @Persisted var sortIndex: Int = 0
     @Persisted var updatedAt: Date = .now
     @Persisted var notes = List<NoteObject>()
-    @Persisted var tags = List<TagObject>()
     @Persisted var children = List<FolderObject>()
     @Persisted(originProperty: "children") var parent: LinkingObjects<FolderObject>
     //LinkingObjects(fromType: FolderObject.self, property: "children")
@@ -30,9 +28,10 @@ final class NoteObject: Object {
     @Persisted(primaryKey: true) var id: UUID
     @Persisted var title: String
     @Persisted var content: String
-    @Persisted var tags: List<TagObject>
+    @Persisted var tags = List<TagObject>()
     @Persisted var sortIndex: Int = 0
     @Persisted var updatedAt: Date = .now
+//    @Persisted(originProperty: "notes") var parentFolders: LinkingObjects<FolderObject>
 }
 
 extension NoteObject {
