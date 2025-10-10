@@ -11,8 +11,8 @@ import AppKit
 struct HomeView: View {
     @State private var isBtnTapped: Bool = false
     @State private var window: NSWindow?
-    @StateObject private var viewModel = ContentViewModel(initialContent: "...")
-    @EnvironmentObject var state: UIState
+    @StateObject private var viewModel = ContentViewModel(initialContent: "")
+    @StateObject private var state = UIState()
     
     var body: some View {
         
@@ -56,6 +56,7 @@ struct HomeView: View {
             }
         }
         .environmentObject(viewModel)
+        .environmentObject(state)
         .ignoresSafeArea()
     }
 }

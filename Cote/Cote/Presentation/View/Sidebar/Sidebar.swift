@@ -61,7 +61,6 @@ struct FolderView: View {
         .padding(.horizontal, 10)
         .padding(0)
         .onAppear {
-//            viewModel.attach(state)
         }
     }
 }

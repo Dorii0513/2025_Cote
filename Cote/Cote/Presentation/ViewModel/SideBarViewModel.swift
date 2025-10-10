@@ -57,14 +57,11 @@ final class SideBarViewModel: ObservableObject {
     }
     
     func select(_ id: UUID) {
-//        selectedNoteID = id
         print("select id =", id)
         noteTask?.cancel()
         noteTask = Task { [weak self] in
             guard let self else { return }
             for await _ in repo.noteStream(id: id) {
-                // 콘텐츠 뷰 바인딩을 다른 ViewModel로 전달하거나, AppState를 통해 반영
-                // 현재 우선순위 목적에서는 id 전달만으로 충분하므로 비워둠
             }
         }
     }
@@ -80,33 +77,4 @@ final class SideBarViewModel: ObservableObject {
         }
         return roots.contains(where: dfs)
     }
-    
-    
-//    private func bindSelectionToAppState() {
-//        // 선택이 외부(AppState)에서 바뀌면 반영 (양방향 동기화가 필요할 때)
-//        guard let app = state else { return }
-//        // 간단히 값 동기화(지속 구독이 필요하면 Combine으로 sink 추가)
-//        selectedNoteID = app.selectedNoteID
-//    }
-    
-    // MARK: - Create
-//    func addNote(inFolderID folderID: String? = nil, title: String = "새 노트")
-//    async
-//    {
-//        let note = Note(
-//            id: UUID(),
-//            title: title,
-//            content: "",
-//            tags: [],
-//            updatedAt: .now
-//        )
-//        do {
-//            try await createNoteUseCase.execute(note: note)
-//            // 생성 직후 해당 노트로 포커스 이동
-//            selectedNoteID = note.id
-//            state?.selectedNoteID = note.id
-//        } catch {
-//            print("[SideBar] addNote failed:", error)
-//        }
-//    }
 }
