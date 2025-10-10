@@ -11,6 +11,9 @@ struct ListCell: View {
     @State var isHover = false
     @Binding var expandedIDs: Set<UUID>
     
+    let noteID: UUID?
+    let onSelect: (UUID) -> Void
+    
     let item: NoteItems
     let depth: Int
     
@@ -19,6 +22,13 @@ struct ListCell: View {
         switch item {
         case .folder(let f): return expandedIDs.contains(f.id)
         case .note: return false
+        }
+    }
+    
+    private var isSelected: Bool {
+        switch item {
+        case .folder: return false
+        case .note(let n): return noteID == n.id
         }
     }
     
@@ -38,7 +48,7 @@ struct ListCell: View {
                 
             case.note(let n):
                 Button {
-                    
+                    onSelect(n.id)
                 } label: {
                     Spacer()
                         .frame(width: 18)
@@ -56,7 +66,10 @@ struct ListCell: View {
         .padding(.vertical, 5)
         .padding(.horizontal, 5)
         .frame(maxWidth: .infinity, minHeight: 26)
-        .background(isHover ? Color.actionDefault : Color.clear)
+        .background(                       
+            isSelected ? Color.actionDefault
+            : (isHover ? Color.actionDefault : Color.clear)
+        )
         .cornerRadius(8)
         .onHover { (entered) in
             isHover = entered
@@ -64,12 +77,12 @@ struct ListCell: View {
         
         if isExpanded {
             ForEach(item.children) { child in
-                ListCell(
-                    isHover: false,
-                    expandedIDs: $expandedIDs,
-                    item: child,
-                    depth: depth + 1
-                )
+                ListCell(isHover: false,
+                         expandedIDs: $expandedIDs,
+                         noteID: noteID,
+                         onSelect: onSelect,
+                         item: child,
+                         depth: depth + 1)
             }
         }
     }

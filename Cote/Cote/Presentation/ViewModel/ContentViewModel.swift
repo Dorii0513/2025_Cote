@@ -15,6 +15,7 @@ final class ContentViewModel: ObservableObject {
     private let saveUseCase: SaveNoteUseCase
     private let fetchUseCase: FetchNotesUseCase
     
+    //해야 하는 것 : 사이드바에서 선택된 노트 아이디 값이랑 콘텐트 뷰랑 연결시키기. state 값 가져와서 띄우면 됨
     @Published var content: String
     @Published var title: String = "Untitled"
     @Published var generatedTags: [Tag] = []
@@ -43,13 +44,19 @@ final class ContentViewModel: ObservableObject {
         )
     }
     
+    //MARK: - 태그 관련
     func addNewTag(_ tag: Tag) {
+        guard !noteTags.contains(where: { $0.id == tag.id }) else { return } // 중복 태그 방지
         noteTags.append(tag)
     }
     
     func toggleTags() {
-        showTags = true
-        if showTags { Task { await generateTags() } } else { generatedTags = [] }
+        showTags.toggle()
+        if showTags {
+            Task { await generateTags() }
+        } else {
+            generatedTags = []
+        }
     }
     
     func insertTag(_ tag: String) {
@@ -58,26 +65,27 @@ final class ContentViewModel: ObservableObject {
     }
     
     func generateTags() async {
-        guard !isGenerating else { return }
+        guard !isGenerating, !content.isEmpty else { return }
         isGenerating = true
         defer { isGenerating = false }
+        
         do {
             let tagNames = try await tagUseCase.generateTags(content: content)
-            generatedTags = tagNames.map { Tag(name: $0) }      // String → Tag 로 변환
+            generatedTags = tagNames.map { Tag(name: $0) }
         } catch {
-            print("[TagGeneration] failed: \(error)")
+            print("[TagGeneration] Error: \(error.localizedDescription)")
             generatedTags = []
         }
     }
     
-    // MARK: 저장 / 로드
-    func saveCurrentNote() async {
-        let safeTitle = title.isEmpty ? "Untitled" : title
-        let note = Note(title: safeTitle, content: content, tags: noteTags)
+    //MARK: - 노트 저장 / 로드
+    func saveCurrentNote(noteID: UUID) async {
+        let safeTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Untitled" : title
+        let note = Note(id: noteID, title: safeTitle, content: content, tags: noteTags)
         do {
             try await saveUseCase.execute(note: note)
         } catch {
-            print("[NoteSave] failed: \(error)")
+            print("[NoteSave] failed: \(error.localizedDescription)")
         }
     }
     
@@ -90,8 +98,7 @@ final class ContentViewModel: ObservableObject {
                 self.noteTags = first.tags
             }
         } catch {
-            print("[NoteFetch] failed: \(error)")
+            print("[NoteFetch] failed: \(error.localizedDescription)")
         }
     }
 }
-
