@@ -13,7 +13,6 @@ struct RealmNoteRepository: NoteRepository {
     
     private func openRealm() throws -> Realm { try Realm() }
     
-    
     func itemStream() -> AsyncStream<[NoteItems]> {
         AsyncStream { continuation in
             do {
@@ -80,20 +79,20 @@ struct RealmNoteRepository: NoteRepository {
         }
     }
     
-    func create(note: Note) throws -> Note {
-        let obj = NoteObject(from: note)
-        let realm = try Realm()
-        let reslut: () = try realm.write(){
-            realm.add(obj)
+    
+    func create(note: Note) async throws {
+        let realm = try await Realm()
+        try realm.write {
+            let obj = NoteObject(from: note)
+            realm.add(obj, update: .modified)
         }
-        return obj.toDomain()
     }
     
     func save(note: Note) async throws {
         let realm = try openRealm()
         try await realm.asyncWrite {
             let obj = NoteObject(from: note)
-            realm.add(obj, update: .modified) // ✅ 동일 PK로 업서트
+            realm.add(obj, update: .modified)
         }
     }
     

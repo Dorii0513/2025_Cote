@@ -89,7 +89,16 @@ final class ContentViewModel: ObservableObject {
     // 노트 저장
     func saveCurrentNote(by id: UUID) async {
         let safeTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Untitled" : title
-        let note = Note(id: id, title: safeTitle, content: content, tags: noteTags)
+        let safeDate = updatedAt ?? Date()
+        
+        let note = Note(
+            id: id,
+            title: safeTitle,
+            content: content,
+            tags: noteTags,
+            sortIndex: 0,
+            updatedAt: safeDate
+        )
         do {
             try await saveUseCase.execute(note: note)
         } catch {
@@ -116,3 +125,4 @@ final class ContentViewModel: ObservableObject {
         }
     }
 }
+

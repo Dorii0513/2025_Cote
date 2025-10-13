@@ -59,6 +59,7 @@ extension NoteObject {
             title: title,
             content: content,
             tags: domainTags,
+            sortIndex: sortIndex,
             updatedAt: updatedAt
         )
     }

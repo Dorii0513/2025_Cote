@@ -45,7 +45,6 @@ public struct CodeEditor: NSViewRepresentable {
     @Binding var text: String
     private let configuration: CodeEditorConfiguration
     
-    // Primary initializer with configuration
     public init(
         text: Binding<String>,
         configuration: CodeEditorConfiguration = .defaultConfig
@@ -54,7 +53,6 @@ public struct CodeEditor: NSViewRepresentable {
         self.configuration = configuration
     }
     
-    // Legacy initializer with custom font
     public init(
         text: Binding<String>,
         font: NSFont
