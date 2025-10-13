@@ -34,6 +34,15 @@ struct Note: Identifiable {
     var tags: [Tag] = []
     var sortIndex: Int = 0
     var updatedAt: Date = .now
+    
+    init(id: UUID, title: String, content: String, tags: [Tag], sortIndex: Int, updatedAt: Date) {
+        self.id = id
+        self.title = title
+        self.content = content
+        self.tags = tags
+        self.sortIndex = sortIndex
+        self.updatedAt = updatedAt
+    }
 }
 
 // UI용
@@ -69,10 +78,10 @@ extension Array where Element == NoteItems {
             switch ($0, $1) {
             case (.folder(let a), .folder(let b)):
                 if a.sortIndex != b.sortIndex { return a.sortIndex < b.sortIndex }
-                return a.updatedAt > b.updatedAt
+                return a.updatedAt < b.updatedAt    // 최신이 아래로
             case (.note(let a), .note(let b)):
                 if a.sortIndex != b.sortIndex { return a.sortIndex < b.sortIndex }
-                return a.updatedAt > b.updatedAt
+                return a.updatedAt < b.updatedAt
             case (.folder, .note): return true    // 폴더가 노트보다 앞
             case (.note, .folder): return false
             }

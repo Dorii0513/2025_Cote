@@ -11,11 +11,12 @@ import Foundation
 @MainActor
 final class SideBarViewModel: ObservableObject {
     private let createNoteUseCase: CreateNoteUseCase
-    
     private let repo: NoteRepository
     
     @Published var roots: [NoteItems] = []
     @Published var selectedNoteID: UUID? = nil
+    
+    private var newNote: Note
     
     private var itemsTask: Task<Void, Never>?   // 리스트 업데이트
     private var noteTask: Task<Void, Never>?    // 노트 업데이트
@@ -27,6 +28,7 @@ final class SideBarViewModel: ObservableObject {
     ) {
         self.createNoteUseCase = createNoteUseCase
         self.repo = repo
+        self.newNote = .init(NoteObject.init())
         observeItems()
         if let s = state { selectedNoteID = s.selectedNoteID }
     }
@@ -76,5 +78,28 @@ final class SideBarViewModel: ObservableObject {
             }
         }
         return roots.contains(where: dfs)
+    }
+    
+    //MARK: - Add new Note
+    
+    func addNewNote(note: Note) {
+        noteTask?.cancel()
+        itemsTask?.cancel() // 선택적: 직후 스트림 재시작 원하면
+        
+        Task {
+            do {
+                // 생성
+                try await createNoteUseCase.execute(note: note)
+                
+                // 선택 갱신(뷰가 이 값 바인딩해서 에디터 로드)
+                self.selectedNoteID = note.id
+                
+                // 스트림 다시 구독(선택)
+                observeItems()
+                select(note.id)
+            } catch {
+                print("[SideBarVM] addNewNote failed:", error.localizedDescription)
+            }
+        }
     }
 }

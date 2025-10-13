@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct Icon: Identifiable {
     let id = UUID()
@@ -21,10 +22,10 @@ enum IconSize: String {
 
 enum CoteIcon {
     static let toolbarIcons: [Icon] = [
-        Icon(name: "folder", size: .large) {_ in 
+        Icon(name: "folder", size: .large) {_ in
             print("폴더 열기")
         },
-        Icon(name: "search", size: .large) {_ in 
+        Icon(name: "search", size: .large) {_ in
             print("검색 열기")
         },
         Icon(name: "sidebar", size: .large) {state in
@@ -33,13 +34,14 @@ enum CoteIcon {
         }
     ]
     
-    static let addNote = Icon(name: "addNote", size: .small) {_ in 
+    static let addNote = Icon(name: "addNote", size: .small) {state in
         print("노트 추가")
+        state.addNewNote = true
     }
-    static let addFolder = Icon(name: "addFolder", size: .small) {_ in 
+    static let addFolder = Icon(name: "addFolder", size: .small) {_ in
         print("폴더 추가")
     }
-    static let filter = Icon(name: "filter", size: .small) {_ in 
+    static let filter = Icon(name: "filter", size: .small) {_ in
         print("필터 열기")
     }
 }
