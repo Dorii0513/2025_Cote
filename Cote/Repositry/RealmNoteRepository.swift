@@ -143,6 +143,81 @@ struct RealmNoteRepository: @preconcurrency NoteRepository {
         }
         return id
     }
+    
+    // MARK: - Drag & Drop
+    func moveNote(noteID: UUID, toFolderID folderID: UUID) async throws {
+        let realm = try openRealm()
+        guard let note = realm.object(ofType: NoteObject.self, forPrimaryKey: noteID),
+              let folder = realm.object(ofType: FolderObject.self, forPrimaryKey: folderID) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        
+        try await realm.asyncWrite {
+            if folder.notes.contains(where: { $0.id == noteID }) {
+                return
+            }
+            
+            for parent in note.parentFolders {
+                if let idx = parent.notes.firstIndex(of: note) {
+                    parent.notes.remove(at: idx)
+                }
+            }
+            
+            let maxIndex = folder.notes.max(ofProperty: "sortIndex") as Int? ?? -1
+            note.sortIndex = maxIndex + 1
+            
+            folder.notes.append(note)
+            folder.updatedAt = Date()
+            note.updatedAt = Date()
+        }
+    }
+    
+    // MARK: - Root Move
+    func moveNoteToRoot(noteID: UUID) async throws {
+        let realm = try openRealm()
+        guard let note = realm.object(ofType: NoteObject.self, forPrimaryKey: noteID) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        try await realm.asyncWrite {
+            // 모든 부모 폴더에서 제거
+            for parent in note.parentFolders {
+                if let idx = parent.notes.firstIndex(of: note) {
+                    parent.notes.remove(at: idx)
+                    parent.updatedAt = Date()
+                }
+            }
+            // 루트 정렬 인덱스: 루트 노트들 중 최대 sortIndex + 1
+            let rootNotes = realm.objects(NoteObject.self).where { $0.parentFolders.count == 0 }
+            let maxIndex = rootNotes.max(ofProperty: "sortIndex") as Int? ?? -1
+            note.sortIndex = maxIndex + 1
+            note.updatedAt = Date()
+        }
+    }
+    
+    // MARK: - Folder Delete
+    func deleteFolder(id folderID: UUID) async throws {
+        let realm = try openRealm()
+        guard let folder = realm.object(ofType: FolderObject.self, forPrimaryKey: folderID) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        try await realm.asyncWrite {
+            self.recursiveDelete(folder: folder, in: realm)
+        }
+    }
+    
+    private func recursiveDelete(folder: FolderObject, in realm: Realm) {
+        // 1) 하위 폴더 재귀 삭제
+        for child in folder.children {
+            recursiveDelete(folder: child, in: realm)
+        }
+        // 2) 폴더가 보유한 노트들을 전부 삭제
+        //    (노트가 다른 폴더에도 속해 있을 수 있다면, 여기서는 해당 노트에 대한 소유권을 폴더 기준으로 판단하여 삭제합니다)
+        for note in folder.notes {
+            realm.delete(note)
+        }
+        // 3) 자신 삭제
+        realm.delete(folder)
+    }
 }
 
 enum FolderMapper {
@@ -176,3 +251,4 @@ extension Note {
                   updatedAt: o.updatedAt)
     }
 }
+

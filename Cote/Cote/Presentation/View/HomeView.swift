@@ -157,6 +157,7 @@ private struct TagFieldAnchorKey: PreferenceKey {
 
 //MARK: - Sidebar
 private struct Sidebar: View {
+    @EnvironmentObject private var state: UIState
 
     var body: some View {
         ZStack {
@@ -164,7 +165,12 @@ private struct Sidebar: View {
                 Rectangle()
                     .frame(height: 1)
                     .foregroundStyle(.actionDefault)
-                FolderView()
+                if state.isFolderView {
+                    FolderView()
+                }
+                if state.isSearchView {
+                    SearchView()
+                }
             }
         }
         .frame(minWidth: 210, minHeight: 700)
@@ -177,3 +183,4 @@ private struct Sidebar: View {
 //    MainView()
 //        .environmentObject(UIState())
 //}
+
