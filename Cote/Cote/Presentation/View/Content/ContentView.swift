@@ -28,10 +28,8 @@ struct ContentView: View {
                     .onChange(of: viewModel.content, scheduleAutosave)
                     .onChange(of: viewModel.title, scheduleAutosave)
                     .onChange(of: viewModel.noteTags, scheduleAutosave)
-                // ✅ 첫 진입 시에도 로드
                     .onChange(of: state.selectedNoteID) { newID in
                         guard let id = newID else { return }
-                        // 🔎 fetch 직전 직접 probe
                         let r = try! Realm()
                         print("[Probe] exist?", r.object(ofType: NoteObject.self, forPrimaryKey: id) != nil)
                         Task { await viewModel.loadNote(by: id) }
@@ -39,23 +37,14 @@ struct ContentView: View {
                     .task {
                         if let id = state.selectedNoteID { await viewModel.loadNote(by: id) }
                     }
-                // Command-S 저장
-                Button("") {
-                    Task {
-                        if let id = state.selectedNoteID {
-                            await viewModel.saveCurrentNote(by: id)
-                        }
-                    }
-                }
-                .keyboardShortcut("s", modifiers: [.command])
-                .hidden()
                 
                 // 하단 바
-                BottomBar()
+                BottomBar(date: viewModel.updatedAt ?? nil)
                 
             }
         }
         .ignoresSafeArea()
+        .frame(minWidth: 540)
     }
     
     private func clearEditor() {
@@ -75,11 +64,16 @@ struct ContentView: View {
 
 //MARK: - BottomBar
 private struct BottomBar: View {
+    let date: Date?
     var body: some View {
         HStack {
             HStack(spacing: 15) {
-                Text("2025/05/27")
-                Text("3:40pm")
+                if let date {
+                    Text(date, style: .date)
+                    Text(date, style: .time)
+                } else {
+                    Text("")
+                }
             }
             
             Spacer()
@@ -108,9 +102,9 @@ private struct BottomBar: View {
                 .buttonStyle(.plain)
             }
         }
-        .coteFont(.code2, color: .textDefault)
+        .coteFont(.code2, color: .textSecondary)
         .padding(.horizontal, 15)
-        .padding(.vertical, 2)
+        .padding(.vertical, 10)
         .background(.bgEditor)
     }
 }

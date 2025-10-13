@@ -24,7 +24,7 @@ struct HomeView: View {
                     Color.bgSidebar.ignoresSafeArea()
                     
                     VStack(spacing: 0) {
-                        Spacer().frame(height: 38)
+                        Spacer().frame(height: 42)  //높이 고정
                         Sidebar()
                     }
                     .ignoresSafeArea()
@@ -38,11 +38,13 @@ struct HomeView: View {
                 ContentView()
             }
         }
+        .frame(alignment: .leading)
         .overlay(alignment: .topLeading){
             HStack(spacing: 0) {
                 SideToolbar()
                 Cote.contentToolbar(isBtnTapped: $isBtnTapped)
             }
+            .background(state.isSidebarOpen ? Color.clear : Color.bgToolbar)
         }
         .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
             GeometryReader { proxy in
@@ -140,6 +142,8 @@ private struct contentToolbar: View {
             Spacer()
         }
         .padding(.horizontal, 15)
+        .frame(height: 42)  //높이 고정
+        .background(Color.bgToolbar)
     }
 }
 
