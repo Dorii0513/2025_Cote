@@ -11,10 +11,12 @@ import Foundation
 @MainActor
 final class SideBarViewModel: ObservableObject {
     private let createNoteUseCase: CreateNoteUseCase
+    private let createFolderUseCase: CreateFolderUseCase
     private let repo: NoteRepository
     
     @Published var roots: [NoteItems] = []
     @Published var selectedNoteID: UUID? = nil
+    @Published var selectedFolderID: UUID? = nil
     
     private var newNote: Note
     
@@ -23,10 +25,12 @@ final class SideBarViewModel: ObservableObject {
     
     init(
         createNoteUseCase: CreateNoteUseCase,
+        createFolderUseCase: CreateFolderUseCase,
         repo: NoteRepository,
         state: UIState? = nil
     ) {
         self.createNoteUseCase = createNoteUseCase
+        self.createFolderUseCase = createFolderUseCase
         self.repo = repo
         self.newNote = .init(NoteObject.init())
         observeItems()
@@ -36,7 +40,7 @@ final class SideBarViewModel: ObservableObject {
     convenience init() {
         let repo = RealmNoteRepository()
         self.init(
-            createNoteUseCase: DefaultCreateNoteUseCase(repository: repo),
+            createNoteUseCase: DefaultCreateNoteUseCase(repository: repo), createFolderUseCase: DefaultCreateFolderUseCase(repository: repo),
             repo: repo,
             state: nil
         )
@@ -80,25 +84,46 @@ final class SideBarViewModel: ObservableObject {
         return roots.contains(where: dfs)
     }
     
-    //MARK: - Add new Note
+    //MARK: - Note
     
-    func addNewNote(note: Note) {
+    func createNote(note: Note) {
         noteTask?.cancel()
-        itemsTask?.cancel() // 선택적: 직후 스트림 재시작 원하면
+        itemsTask?.cancel()
         
         Task {
             do {
-                // 생성
                 try await createNoteUseCase.execute(note: note)
-                
-                // 선택 갱신(뷰가 이 값 바인딩해서 에디터 로드)
                 self.selectedNoteID = note.id
-                
-                // 스트림 다시 구독(선택)
                 observeItems()
                 select(note.id)
             } catch {
                 print("[SideBarVM] addNewNote failed:", error.localizedDescription)
+            }
+        }
+    }
+    
+    func deleteNote(id: UUID) {
+        noteTask?.cancel()
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await repo.delete(id: id)
+                if self.selectedNoteID == id { self.selectedNoteID = nil }
+            } catch {
+                print("[SideBarVM] delete failed: \(error)")
+            }
+        }
+    }
+    
+    //MARK: - Folder
+    func createFolder(name: String, parentID: UUID? = nil) {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let id = try await repo.createFolder(name: name, parentID: parentID)
+                self.selectedFolderID = id
+            } catch {
+                print("[SideBarVM] createFolder failed:", error.localizedDescription)
             }
         }
     }

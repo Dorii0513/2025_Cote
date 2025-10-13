@@ -12,8 +12,10 @@ protocol NoteRepository {
     func noteStream(id: UUID) -> AsyncStream<Note?>
     
     func save(note: Note) async throws
-    func create(note: Note) async throws
-    func fetchAllSortedByDateDesc() async throws -> [Note]
-    func fetchNote(by id: UUID) async throws -> Note?
     func delete(id: UUID) async throws
+    
+    func createNote(note: Note) async throws
+    func fetchNote(by id: UUID) async throws -> Note?
+    
+    func createFolder(name: String, parentID: UUID?) async throws -> UUID
 }

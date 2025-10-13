@@ -9,7 +9,7 @@ import Foundation
 import RealmSwift
 
 @MainActor
-struct RealmNoteRepository: NoteRepository {
+struct RealmNoteRepository: @preconcurrency NoteRepository {
     
     private func openRealm() throws -> Realm { try Realm() }
     
@@ -80,7 +80,8 @@ struct RealmNoteRepository: NoteRepository {
     }
     
     
-    func create(note: Note) async throws {
+    //MARK: - Note
+    func createNote(note: Note) async throws {
         let realm = try await Realm()
         try realm.write {
             let obj = NoteObject(from: note)
@@ -96,13 +97,6 @@ struct RealmNoteRepository: NoteRepository {
         }
     }
     
-    func fetchAllSortedByDateDesc() async throws -> [Note] {
-        let realm = try openRealm()
-        let results = realm.objects(NoteObject.self)
-            .sorted(byKeyPath: "updatedAt", ascending: false)
-        return results.map { $0.toDomain() }
-    }
-    
     // 선택한 노트 fetch
     func fetchNote(by id: UUID) async throws -> Note? {
         let realm = try openRealm()
@@ -116,6 +110,38 @@ struct RealmNoteRepository: NoteRepository {
                 realm.delete(obj)
             }
         }
+    }
+    
+    //MARK: - Folder
+    func createFolder(name: String, parentID: UUID?) async throws -> UUID {
+        let realm = try openRealm()
+        let id = UUID()
+
+        try await realm.asyncWrite {
+            let folder = FolderObject()
+            folder.id = id
+            folder.name = name
+            folder.updatedAt = Date()
+
+            if let pid = parentID, let parent = realm.object(ofType: FolderObject.self, forPrimaryKey: pid) {
+                // 부모가 있는 경우: 부모의 children에서 max(sortIndex)
+                let maxIndex = parent.children.max(ofProperty: "sortIndex") as Int? ?? -1
+                folder.sortIndex = maxIndex + 1
+
+                parent.children.append(folder)      // 관계 설정은 이걸로 충분
+                parent.updatedAt = Date()
+                // parent는 LinkingObjects 역참조 대상이므로 별도 add(update:) 불필요
+                realm.add(folder)                   // 새 폴더만 add
+            } else {
+                // 루트 폴더: parent가 없는 애들에서 max(sortIndex)
+                let rootFolders = realm.objects(FolderObject.self).where { $0.parent.count == 0 }
+                let maxIndex = rootFolders.max(ofProperty: "sortIndex") as Int? ?? -1
+                folder.sortIndex = maxIndex + 1
+
+                realm.add(folder)
+            }
+        }
+        return id
     }
 }
 
@@ -137,7 +163,6 @@ enum FolderMapper {
             updatedAt: o.updatedAt,
             notes: notes,
             children: children,
-            parentID: o.parent.first?.id
         )
     }
 }

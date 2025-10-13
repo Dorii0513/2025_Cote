@@ -17,15 +17,15 @@ struct FolderView: View {
     @State var addFolderSelected: Bool = false
     @State var addNoteSelected: Bool = false
     
-    // 노트
     @State private var newNote: Note = .init(NoteObject.init())
+    @State private var newFolder: Folder = .init(FolderObject.init())
     
     @FocusState private var isFocused: Bool
     @State private var hasLoaded = false    // cell
     @State private var expandedIDs = Set<UUID>()
     
     private func focousChanged() {
-        if addNoteSelected {
+        if addNoteSelected || addFolderSelected {
             isFocused = true
         }
     }
@@ -54,9 +54,23 @@ struct FolderView: View {
                     print("탭")
                     print(state.selectedNoteID ?? "nil")
                 }
+                // 위치 관련 수정 필요
+                .contextMenu {
+                    switch item {
+                    case .note(let n):
+                        Button(role: .destructive) {
+                            viewModel.deleteNote(id: n.id)
+                        } label: {
+                            Label("삭제하기", systemImage: "trash")
+                        }
+                        
+                    case .folder:
+                        EmptyView()
+                    }
+                }
                 .transition(.asymmetric(
                     insertion: .move(edge: .leading).combined(with: .opacity),
-                    removal: .move(edge: .trailing).combined(with: .opacity)
+                    removal: .move(edge: .leading).combined(with: .opacity)
                 ))
             }
             .animation(hasLoaded ? .smooth(duration: 0.5) : nil, value: viewModel.roots.count)
@@ -64,8 +78,54 @@ struct FolderView: View {
     }
     
     @ViewBuilder
+    private var newFolderRow: some View {
+        if state.addFolder {
+            HStack(spacing: 0) {
+                Image("arrow_right")
+                    .foregroundStyle(.iconSecondary)
+                TextField("", text: $newFolder.name)
+                    .focused($isFocused)
+                    .tint(.textDefault)
+                    .coteFont(.title2, color: .textDefault)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 5)
+                    .frame(height: 20)
+                    .frame(minWidth: 60, alignment: .leading)
+                    .fixedSize()
+                    .textFieldStyle(.plain)
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear
+                                .anchorPreference(key: TitleFieldAnchorKey.self, value: .bounds) { $0 }
+                        }
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(Color.border, lineWidth: isFocused ? 2 : 1)
+                    )
+                    .onSubmit(of: .text) {
+                        withAnimation(.smooth) {
+                            viewModel.createFolder(name: newFolder.name)
+                            newFolder.name = ""
+                            state.addFolder = false
+                        }
+                    }
+                    .onChange(of: isFocused, initial: false) { _, newValue in
+                        if !newValue && newFolder.name.isEmpty {
+                            withAnimation(.snappy) {
+                                state.addFolder = false
+                            }
+                        }
+                    }
+            }
+        }
+    }
+    
+    
+    
+    @ViewBuilder
     private var newNoteRow: some View {
-        if state.addNewNote {
+        if state.addNote {
             HStack {
                 Spacer().frame(width: 20)
                 TextField("", text: $newNote.title)
@@ -90,15 +150,15 @@ struct FolderView: View {
                     )
                     .onSubmit(of: .text) {
                         withAnimation(.smooth) {
-                            viewModel.addNewNote(note: newNote)
+                            viewModel.createNote(note: newNote)
                             newNote.title = ""
-                            state.addNewNote = false
+                            state.addNote = false
                         }
                     }
                     .onChange(of: isFocused, initial: false) { _, newValue in
                         if !newValue && newNote.title.isEmpty {
                             withAnimation(.snappy) {
-                                state.addNewNote = false
+                                state.addNote = false
                             }
                         }
                     }
@@ -113,6 +173,7 @@ struct FolderView: View {
                 Spacer().frame(height: 5)
                 rootsList
                 newNoteRow
+                newFolderRow
                 Spacer()
             }
             .onChange(of: addNoteSelected) {

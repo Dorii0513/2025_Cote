@@ -15,15 +15,18 @@ struct Folder: Identifiable {
     var updatedAt: Date = .now
     var notes: [Note] = []
     var children: [Folder] = []
-    
-    init(id: UUID, name: String, sortIndex: Int, updatedAt: Date, notes: [Note], children: [Folder], parentID: UUID? = nil) {
-        self.id = id
-        self.name = name
-        self.sortIndex = sortIndex
-        self.updatedAt = updatedAt
-        self.notes = notes
-        self.children = children
-        self.parentID = parentID
+}
+
+extension Folder {
+    init(_ o: FolderObject) {
+        self.init(
+            id: o.id,
+            name: o.name,
+            sortIndex: o.sortIndex,
+            updatedAt: o.updatedAt,
+            notes: o.notes.map(Note.init(_:)),
+            children: o.children.map(Folder.init(_:)),
+        )
     }
 }
 
