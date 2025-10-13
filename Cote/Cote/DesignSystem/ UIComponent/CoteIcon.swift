@@ -36,10 +36,11 @@ enum CoteIcon {
     
     static let addNote = Icon(name: "addNote", size: .small) {state in
         print("노트 추가")
-        state.addNewNote = true
+        state.addNote = true
     }
-    static let addFolder = Icon(name: "addFolder", size: .small) {_ in
+    static let addFolder = Icon(name: "addFolder", size: .small) {state in
         print("폴더 추가")
+        state.addFolder = true
     }
     static let filter = Icon(name: "filter", size: .small) {_ in
         print("필터 열기")
