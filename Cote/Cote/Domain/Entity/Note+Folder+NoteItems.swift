@@ -81,10 +81,10 @@ extension Array where Element == NoteItems {
             switch ($0, $1) {
             case (.folder(let a), .folder(let b)):
                 if a.sortIndex != b.sortIndex { return a.sortIndex < b.sortIndex }
-                return a.updatedAt < b.updatedAt    // 최신이 아래로
+                return a.updatedAt > b.updatedAt    // 최신이 위로
             case (.note(let a), .note(let b)):
                 if a.sortIndex != b.sortIndex { return a.sortIndex < b.sortIndex }
-                return a.updatedAt < b.updatedAt
+                return a.updatedAt < b.updatedAt    // 최신이 아래로
             case (.folder, .note): return true    // 폴더가 노트보다 앞
             case (.note, .folder): return false
             }

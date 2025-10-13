@@ -45,6 +45,15 @@ struct ListCell: View {
                     FolderCell(isExpanded: isExpanded, folder: f, isHover: $isHover)
                 }
                 .buttonStyle(.plain)
+                .dropDestination(for: String.self) { items, location in
+                    if let first = items.first, let noteID = UUID(uuidString: first) {
+                        NotificationCenter.default.post(name: .moveNoteRequest, object: nil, userInfo: ["noteID": noteID, "folderID": f.id])
+                        return true
+                    }
+                    return false
+                } isTargeted: { _ in
+                    true
+                }
                 
             case.note(let n):
                 Button {
@@ -59,6 +68,7 @@ struct ListCell: View {
                         .frame(height: 18) //tag 높이
                 }
                 .buttonStyle(.plain)
+                .draggable(n.id.uuidString)
             }
             
             Spacer()
@@ -114,4 +124,8 @@ struct FolderCell: View {
                           color: isHover ? .textStrong : .textDefault)
         }
     }
+}
+
+extension Notification.Name {
+    static let moveNoteRequest = Notification.Name("MoveNoteRequest")
 }

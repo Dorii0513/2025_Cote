@@ -16,6 +16,9 @@ protocol NoteRepository {
     
     func createNote(note: Note) async throws
     func fetchNote(by id: UUID) async throws -> Note?
+    func moveNote(noteID: UUID, toFolderID: UUID) async throws
+    func moveNoteToRoot(noteID: UUID) async throws
     
     func createFolder(name: String, parentID: UUID?) async throws -> UUID
+    func deleteFolder(id: UUID) async throws
 }

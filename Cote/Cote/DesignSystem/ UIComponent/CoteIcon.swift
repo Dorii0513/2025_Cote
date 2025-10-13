@@ -22,11 +22,15 @@ enum IconSize: String {
 
 enum CoteIcon {
     static let toolbarIcons: [Icon] = [
-        Icon(name: "folder", size: .large) {_ in
+        Icon(name: "folder", size: .large) {state in
             print("폴더 열기")
+            state.isFolderView = true
+            state.isSearchView = false
         },
-        Icon(name: "search", size: .large) {_ in
+        Icon(name: "search", size: .large) {state in
             print("검색 열기")
+            state.isSearchView = true
+            state.isFolderView = false
         },
         Icon(name: "sidebar", size: .large) {state in
             state.toggleSidebar()

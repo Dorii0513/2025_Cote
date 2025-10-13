@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SideToolbar: View {
     @State private var selectedButtonID: UUID?
+    
     @EnvironmentObject private var state: UIState
 
     private var visibleIcons: [Icon] {
@@ -39,5 +40,12 @@ struct SideToolbar: View {
         .frame(alignment: .leading)
         .frame(width: state.isSidebarOpen ? 210 : 125, height: 42)  //높이 고정
         .animation(.snappy(duration: 0.2), value: state.isSidebarOpen)
+        .onAppear {
+            if selectedButtonID == nil {
+                if let folder = visibleIcons.first(where: { $0.name == "folder" }) {
+                    selectedButtonID = folder.id
+                }
+            }
+        }
     }
 }

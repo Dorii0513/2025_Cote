@@ -127,4 +127,43 @@ final class SideBarViewModel: ObservableObject {
             }
         }
     }
+    
+    func deleteFolder(id: UUID) {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await repo.deleteFolder(id: id)
+                if self.selectedFolderID == id { self.selectedFolderID = nil }
+            } catch {
+                print("[SideBarVM] deleteFolder failed: \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Drag & Drop
+    func moveNote(noteID: UUID, toFolder folderID: UUID) {
+        noteTask?.cancel()
+        noteTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await repo.moveNote(noteID: noteID, toFolderID: folderID)
+                self.selectedNoteID = noteID
+            } catch {
+                print("[SideBarVM] moveNote failed: \(error)")
+            }
+        }
+    }
+    
+    func moveNoteToRoot(noteID: UUID) {
+        noteTask?.cancel()
+        noteTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await repo.moveNoteToRoot(noteID: noteID)
+                self.selectedNoteID = noteID
+            } catch {
+                print("[SideBarVM] moveNoteToRoot failed: \(error)")
+            }
+        }
+    }
 }

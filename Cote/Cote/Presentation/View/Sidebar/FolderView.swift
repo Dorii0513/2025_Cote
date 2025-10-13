@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 //MARK: - Folder뷰
 
@@ -27,6 +28,7 @@ struct FolderView: View {
     private func focousChanged() {
         if addNoteSelected || addFolderSelected {
             isFocused = true
+            print(isFocused)
         }
     }
     
@@ -61,11 +63,15 @@ struct FolderView: View {
                         Button(role: .destructive) {
                             viewModel.deleteNote(id: n.id)
                         } label: {
-                            Label("삭제하기", systemImage: "trash")
+                            Label("노트 삭제하기", systemImage: "trash")
                         }
                         
-                    case .folder:
-                        EmptyView()
+                    case .folder(let f):
+                        Button(role: .destructive) {
+                            viewModel.deleteFolder(id: f.id)
+                        } label: {
+                            Label("폴더 삭제하기", systemImage: "trash")
+                        }
                     }
                 }
                 .transition(.asymmetric(
@@ -73,8 +79,15 @@ struct FolderView: View {
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
             }
-            .animation(hasLoaded ? .smooth(duration: 0.5) : nil, value: viewModel.roots.count)
         }
+        .dropDestination(for: String.self) { items, _ in
+            if let first = items.first, let noteID = UUID(uuidString: first) {
+                // 바깥(루트)으로 이동
+                viewModel.moveNoteToRoot(noteID: noteID)
+                return true
+            }
+            return false
+        } isTargeted: { _ in }
     }
     
     @ViewBuilder
@@ -171,12 +184,12 @@ struct FolderView: View {
             VStack(alignment: .leading, spacing: 0) {
                 topMenuBar
                 Spacer().frame(height: 5)
+                newFolderRow
                 rootsList
                 newNoteRow
-                newFolderRow
                 Spacer()
             }
-            .onChange(of: addNoteSelected) {
+            .onChange(of: addNoteSelected || addFolderSelected) {
                 focousChanged()
             }
             .onChange(of: viewModel.roots.count) {
@@ -185,6 +198,13 @@ struct FolderView: View {
         }
         .padding(.horizontal, 10)
         .padding(0)
+        .onReceive(NotificationCenter.default.publisher(for: .moveNoteRequest)) { notification in
+            if let userInfo = notification.userInfo,
+               let n = userInfo["noteID"] as? UUID,
+               let f = userInfo["folderID"] as? UUID {
+                viewModel.moveNote(noteID: n, toFolder: f)
+            }
+        }
     }
 }
 
