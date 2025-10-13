@@ -31,13 +31,13 @@ public enum CoteFontType {
     
     var font: String {
         switch self {
-        case .input, .title2:
+        case .input, .title2, .tag:
             return CoteFontType.pretendardMediumFont
-        case .gutter:
+        case .gutter :
             return CoteFontType.pretendardRegularFont
         case .title1:
             return CoteFontType.pretendardSemiBoldFont
-        case .code1, .tag:
+        case .code1 :
             return CoteFontType.JetBrainsMonoMedium
         case .code2:
             return CoteFontType.JetBrainsMonoRegular

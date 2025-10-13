@@ -36,8 +36,8 @@ struct SideToolbar: View {
             }
             .padding(.trailing, 12)
         }
-        //위치고정
-        .frame(width: state.isSidebarOpen ? 210 : 125, height: 38)
+        .frame(alignment: .leading)
+        .frame(width: state.isSidebarOpen ? 210 : 125, height: 42)  //높이 고정
         .animation(.snappy(duration: 0.2), value: state.isSidebarOpen)
     }
 }

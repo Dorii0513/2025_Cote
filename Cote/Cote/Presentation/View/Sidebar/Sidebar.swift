@@ -40,7 +40,6 @@ struct FolderView: View {
                 Spacer()
                     .frame(height:5)
                 
-                // 지금 selectedNoteID 비어있음 ;;
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(viewModel.roots) { item in
                         ListCell(expandedIDs: $expandedIDs,
@@ -60,8 +59,6 @@ struct FolderView: View {
         }
         .padding(.horizontal, 10)
         .padding(0)
-        .onAppear {
-        }
     }
 }
 

@@ -14,21 +14,22 @@ public struct CodeEditorConfiguration {
     public let font: NSFont
     public let gutterWidth: CGFloat
     public let gutterPadding: CGFloat
-    public let textInset: NSSize
+    public let textInset: NSEdgeInsets
     public let lineNumberFont: NSFont
     
     public static let defaultConfig = CodeEditorConfiguration(
-        font: NSFont(name: "JetBrainsMono-Regular", size: 14) ?? .monospacedSystemFont(ofSize: 14, weight: .regular),
+        font: NSFont(name: "JetBrainsMono-Regular", size: 13) ?? .monospacedSystemFont(ofSize: 13, weight: .regular),
         gutterWidth: 35,
         gutterPadding: 8,
-        textInset: NSSize(width: 10, height: 8),
-        lineNumberFont: NSFont(name: "JetBrainsMono-Regular", size: 14) ?? .monospacedSystemFont(ofSize: 14, weight: .regular),    )
+        textInset: NSEdgeInsets(top: 40, left: 10, bottom: 0, right: 10),
+        lineNumberFont: NSFont(name: "JetBrainsMono-Regular", size: 12) ?? .monospacedSystemFont(ofSize: 12, weight: .regular)
+    )
     
     public init(
         font: NSFont,
         gutterWidth: CGFloat,
         gutterPadding: CGFloat,
-        textInset: NSSize,
+        textInset: NSEdgeInsets,
         lineNumberFont: NSFont
     ) {
         self.font = font
@@ -98,8 +99,10 @@ private enum ScrollViewFactory {
     static func create() -> NSScrollView {
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
-        scrollView.autohidesScrollers = false
+        scrollView.hasHorizontalScroller = false
+        scrollView.verticalScrollElasticity = .automatic
         scrollView.drawsBackground = false
+        scrollView.autohidesScrollers = false
         return scrollView
     }
     
@@ -108,6 +111,10 @@ private enum ScrollViewFactory {
         scrollView.rulersVisible = true
         scrollView.verticalRulerView = gutter
         scrollView.documentView = textView
+        
+        // 잘림 방지: 크기 자동 조정
+        scrollView.contentView.autoresizingMask = [.width, .height]
+        scrollView.autoresizesSubviews = true
         
         coordinator.configure(textView: textView, gutter: gutter, scrollView: scrollView)
     }
@@ -130,13 +137,21 @@ private enum TextViewFactory {
         textView.isSelectable = true
         textView.allowsUndo = true
         textView.usesFindBar = true
+        
+        
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
-        textView.textContainerInset = config.textInset
+        textView.minSize = NSSize(width: 0, height: 0)
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        
+        let horizontalInset = config.textInset.left + config.textInset.right
+        let verticalInset = config.textInset.top + config.textInset.bottom
+        textView.textContainerInset = NSSize(width: horizontalInset / 2, height: verticalInset / 2)
+        
         textView.drawsBackground = false
-        textView.textColor = .labelColor
-        textView.insertionPointColor = .labelColor
+        textView.textColor = .gray80    // codeColor
+        textView.insertionPointColor = .gray50
         textView.typingAttributes[.font] = config.font
         textView.isRichText = false         // 서식 비활성화
         textView.importsGraphics = false    // 이미지 첨부 금지
@@ -159,6 +174,14 @@ private enum TextViewFactory {
         // 4) 레이아웃 강제 갱신 + 다시 그리기
         textView.layoutManager?.ensureLayout(for: textView.textContainer!)
         textView.needsDisplay = true
+        
+        // 레이아웃/컨테이너 크기: 수직 무한 + 너비는 뷰에 추적
+        if let lm = textView.layoutManager, let tc = textView.textContainer {
+            tc.widthTracksTextView = true
+            tc.heightTracksTextView = false
+            tc.containerSize = NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
+            lm.ensureLayout(for: tc)
+        }
     }
 }
 
@@ -309,26 +332,6 @@ class CodeTextView: NSTextView {
     
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        drawCurrentLineHighlight()
-    }
-    
-    private func drawCurrentLineHighlight() {
-        guard selectedRange.length == 0,
-              let layoutManager = layoutManager,
-              let textContainer = textContainer else { return }
-        
-        let glyphIndex = layoutManager.glyphIndexForCharacter(at: selectedRange.location)
-        let lineRect = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil)
-        
-        let highlightRect = NSRect(
-            x: 0,
-            y: lineRect.minY + textContainerOrigin.y,
-            width: bounds.width,
-            height: lineRect.height
-        )
-        
-        NSColor.selectedTextBackgroundColor.withAlphaComponent(0.1).setFill()
-        NSBezierPath(rect: highlightRect).fill()
     }
 }
 
@@ -498,7 +501,7 @@ private struct LineNumberRenderer {
         
         self.attributes = [
             .font: font,
-            .foregroundColor: NSColor.secondaryLabelColor,
+            .foregroundColor: NSColor.black70,  // gutterColor
             .paragraphStyle: paragraphStyle
         ]
     }

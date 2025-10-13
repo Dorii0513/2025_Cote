@@ -16,13 +16,17 @@ final class ContentViewModel: ObservableObject {
     private let saveUseCase: SaveNoteUseCase
     private let fetchUseCase: FetchNotesUseCase
     
+    // 노트 편집
+    @Published private(set) var currentNoteID: UUID? = nil
     @Published var content: String
     @Published var title: String = "Untitled"
-    @Published var generatedTags: [Tag] = []
     @Published var noteTags: [Tag] = []
+    @Published var updatedAt: Date? = nil
+    
+    // 태그 생성
+    @Published var generatedTags: [Tag] = []
     @Published var showTags: Bool = false
     @Published var isGenerating: Bool = false
-    @Published private(set) var currentNoteID: UUID? = nil
     @Published var isLoading: Bool = false
     
     init(
@@ -80,10 +84,12 @@ final class ContentViewModel: ObservableObject {
         }
     }
     
-    //MARK: - 노트 저장 / 로드
-    func saveCurrentNote(by: UUID) async {
+    // MARK: - Note
+    
+    // 노트 저장
+    func saveCurrentNote(by id: UUID) async {
         let safeTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Untitled" : title
-        let note = Note(id: by, title: safeTitle, content: content, tags: noteTags)
+        let note = Note(id: id, title: safeTitle, content: content, tags: noteTags)
         do {
             try await saveUseCase.execute(note: note)
         } catch {
@@ -91,33 +97,22 @@ final class ContentViewModel: ObservableObject {
         }
     }
     
+    // 선택 노트 로드
     func loadNote(by id: UUID) async {
-            if currentNoteID == id && !content.isEmpty { return }
-            isLoading = true
-            defer { isLoading = false; currentNoteID = id }
-            do {
-                print("[VM] loadNote id=", id)
-                guard let note = try await fetchUseCase.execute(noteID: id) else { return }
-                self.title = note.title
-                self.content = note.content
-                self.noteTags = note.tags
-                print("[VM] loaded title=\(title) len=\(content.count)")
-            } catch {
-                print("[VM] load error=", error)
-            }
-        }
-    
-    func probeNoteDirect(id: UUID) {
+        if currentNoteID == id && !content.isEmpty { return }
+        isLoading = true
+        defer { isLoading = false; currentNoteID = id }
         do {
-            let realm = try Realm()
-            if let obj = realm.object(ofType: NoteObject.self, forPrimaryKey: id) {
-                print("[Probe] FOUND id=", obj.id, " title=", obj.title)
-            } else {
-                print("[Probe] NOT FOUND id=", id)
-            }
+            guard let note = try await fetchUseCase.execute(noteID: id) else { return }
+            
+            // 주입
+            self.title = note.title
+            self.content = note.content
+            self.noteTags = note.tags
+            self.updatedAt = note.updatedAt
+            
         } catch {
-            print("[Probe] Realm open error:", error)
+            print("[VM] load error=", error)
         }
     }
 }
-

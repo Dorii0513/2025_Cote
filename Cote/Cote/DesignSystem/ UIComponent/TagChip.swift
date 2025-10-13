@@ -17,9 +17,10 @@ struct TagChip: View {
         } label: {
             Text(tag)
                 .coteFont(.tag, color: .textTag)
+                .tracking(0.5)
             
                 .buttonStyle(.plain)
-                .padding(.vertical, 2)
+                .padding(.vertical, 3)
                 .padding(.horizontal, 6)
                 .background(
                     RoundedRectangle(cornerRadius: 4)
