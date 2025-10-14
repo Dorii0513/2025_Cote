@@ -166,6 +166,7 @@ struct FolderView: View {
                             viewModel.createNote(note: newNote)
                             newNote.title = ""
                             state.addNote = false
+                            state.selectedNoteID = newNote.id
                         }
                     }
                     .onChange(of: isFocused, initial: false) { _, newValue in

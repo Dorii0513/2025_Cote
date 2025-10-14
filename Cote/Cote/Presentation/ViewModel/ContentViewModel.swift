@@ -18,7 +18,7 @@ final class ContentViewModel: ObservableObject {
     
     // 노트 편집
     @Published private(set) var currentNoteID: UUID? = nil
-    @Published var content: String
+    @Published var content: String = ""
     @Published var title: String = "Untitled"
     @Published var noteTags: [Tag] = []
     @Published var updatedAt: Date? = nil
@@ -30,20 +30,17 @@ final class ContentViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     
     init(
-        initialContent: String,
         tagUseCase: GenerateTagsUseCase,
         saveUseCase: SaveNoteUseCase,
         fetchUseCase: FetchNotesUseCase
     ) {
-        self.content = initialContent
         self.tagUseCase = tagUseCase
         self.saveUseCase = saveUseCase
         self.fetchUseCase = fetchUseCase
     }
     
-    convenience init(initialContent: String) {
+    convenience init() {
         self.init(
-            initialContent: initialContent,
             tagUseCase: DefaultGenerateTagsUseCase(),
             saveUseCase: DefaultSaveNoteUseCase(),
             fetchUseCase: DefaultFetchNotesUseCase()
@@ -56,13 +53,18 @@ final class ContentViewModel: ObservableObject {
         noteTags.append(tag)
     }
     
-    func toggleTags() {
-        showTags.toggle()
-        if showTags {
-            Task { await generateTags() }
-        } else {
-            generatedTags = []
-        }
+    /// Explicitly show the suggestions panel and (re)generate tags
+    func showSuggestions() {
+        guard !showTags else { return }
+        showTags = true
+        Task { await generateTags() }
+    }
+
+    /// Hide the suggestions panel and clear generated tags
+    func hideSuggestions() {
+        guard showTags else { return }
+        showTags = false
+        generatedTags = []
     }
     
     func insertTag(_ tag: String) {
@@ -108,21 +110,29 @@ final class ContentViewModel: ObservableObject {
     
     // 선택 노트 로드
     func loadNote(by id: UUID) async {
-        if currentNoteID == id && !content.isEmpty { return }
+        if currentNoteID == id { return }
         isLoading = true
         defer { isLoading = false; currentNoteID = id }
         do {
-            guard let note = try await fetchUseCase.execute(noteID: id) else { return }
-            
-            // 주입
-            self.title = note.title
-            self.content = note.content
-            self.noteTags = note.tags
-            self.updatedAt = note.updatedAt
-            
+            if let note = try await fetchUseCase.execute(noteID: id) {
+                apply(note)
+                return
+            }
+            // 대기 후 시도
+            try await Task.sleep(nanoseconds: 150_000_000) // 150ms
+            if let note = try await fetchUseCase.execute(noteID: id) {
+                apply(note)
+                return
+            }
         } catch {
             print("[VM] load error=", error)
         }
+    }
+    private func apply(_ note: Note) {
+        self.title = note.title
+        self.content = note.content
+        self.noteTags = note.tags
+        self.updatedAt = note.updatedAt
     }
 }
 
