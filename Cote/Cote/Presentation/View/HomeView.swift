@@ -11,7 +11,7 @@ import AppKit
 struct HomeView: View {
     @State private var isBtnTapped: Bool = false
     @State private var window: NSWindow?
-    @StateObject private var viewModel = ContentViewModel(initialContent: "")
+    @StateObject private var viewModel = ContentViewModel()
     @StateObject private var state = UIState()
     
     var body: some View {
@@ -48,12 +48,13 @@ struct HomeView: View {
         }
         .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
             GeometryReader { proxy in
-                if isBtnTapped, let anchor {
+                if viewModel.showTags, let anchor {
                     let rect = proxy[anchor]
                     TagSuggestionsView()
-                        .frame(maxWidth: 500, alignment: .leading)
-                        .position(x: rect.minX + 250,
-                                  y: rect.maxY + 60)
+                        .onDisappear { viewModel.hideSuggestions() }
+                        .frame(maxWidth: 300, alignment: .leading)
+                        .position(x: rect.minX + 150,
+                                  y: rect.maxY + 80)
                 }
             }
         }
@@ -130,7 +131,7 @@ private struct contentToolbar: View {
                 Button {
                     isBtnTapped = true
                     isFocused = true
-                    viewModel.toggleTags()
+                    viewModel.showSuggestions()
                 } label: {
                     Text("Add Tags")
                         .coteFont(.title2,

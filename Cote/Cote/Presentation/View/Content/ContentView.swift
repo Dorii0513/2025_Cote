@@ -28,10 +28,9 @@ struct ContentView: View {
                     .onChange(of: viewModel.content, scheduleAutosave)
                     .onChange(of: viewModel.title, scheduleAutosave)
                     .onChange(of: viewModel.noteTags, scheduleAutosave)
-                    .onChange(of: state.selectedNoteID) { newID in
+                    .onChange(of: state.selectedNoteID) { _, newID in
                         guard let id = newID else { return }
                         let r = try! Realm()
-                        print("[Probe] exist?", r.object(ofType: NoteObject.self, forPrimaryKey: id) != nil)
                         Task { await viewModel.loadNote(by: id) }
                     }
                     .task {
