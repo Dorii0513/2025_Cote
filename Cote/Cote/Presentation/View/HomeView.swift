@@ -113,9 +113,14 @@ private struct contentToolbar: View {
                             .stroke(Color.border, lineWidth: isFocused ? 2 : 1)
                     )
                     .onSubmit(of: .text) {
-                        withAnimation(.smooth) {
-                            viewModel.addNewTag(newTag)
-                            newTag.name = ""
+                        let tagToAdd = newTag
+                        if !tagToAdd.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            withAnimation(.smooth) {
+                                viewModel.addNewTag(tagToAdd)
+                                newTag = .init(name: "")
+                                isFocused = true
+                                viewModel.showSuggestions()
+                            }
                         }
                     }
                     .onChange(of: isFocused, initial: false) { oldValue, newValue in
