@@ -53,14 +53,12 @@ final class ContentViewModel: ObservableObject {
         noteTags.append(tag)
     }
     
-    /// Explicitly show the suggestions panel and (re)generate tags
     func showSuggestions() {
         guard !showTags else { return }
         showTags = true
         Task { await generateTags() }
     }
 
-    /// Hide the suggestions panel and clear generated tags
     func hideSuggestions() {
         guard showTags else { return }
         showTags = false
