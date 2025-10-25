@@ -66,7 +66,6 @@ extension NoteObject {
 }
 
 extension FolderObject {
-    // Domain -> Realm
     convenience init(from folder: Folder) {
         self.init()
         self.id        = folder.id
@@ -74,13 +73,11 @@ extension FolderObject {
         self.sortIndex = folder.sortIndex
         self.updatedAt = folder.updatedAt
 
-        // 자식 노트/폴더 주입 (깊은 변환)
         self.notes.removeAll()
         self.notes.append(objectsIn: folder.notes.map { NoteObject(from: $0) })
 
         self.children.removeAll()
         self.children.append(objectsIn: folder.children.map { FolderObject(from: $0) })
-        // parent 는 LinkingObjects라 직접 설정하지 않음
     }
 
     // Realm -> Domain
@@ -90,12 +87,11 @@ extension FolderObject {
             name: name,
             sortIndex: sortIndex,
             updatedAt: updatedAt,
-            notes: notes.map { Note($0) },                 // NoteObject -> Note
-            children: children.map { $0.toDomain() },      // 재귀 변환
+            notes: notes.map { Note($0) },
+            children: children.map { $0.toDomain() },
         )
     }
 
-    /// 기존 객체에 도메인 값을 덮어쓰고 싶을 때(업데이트용)
     func apply(from folder: Folder) {
         self.name      = folder.name
         self.sortIndex = folder.sortIndex

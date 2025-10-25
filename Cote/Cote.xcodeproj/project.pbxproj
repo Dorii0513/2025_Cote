@@ -9,14 +9,10 @@
 /* Begin PBXBuildFile section */
 		B30957EA2E008A2600517E17 /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = B30957E92E008A2600517E17 /* OpenAI */; };
 		B31E8F822E9402090015E819 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B31E8F812E9402090015E819 /* RealmSwift */; };
-		B31E8F842E9402510015E819 /* RealmTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31E8F832E9402510015E819 /* RealmTask.swift */; };
-		B36FAFF42E900A0300A91AAD /* UIState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36FAFF32E900A0300A91AAD /* UIState.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		B30957D62E0089E800517E17 /* Cote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cote.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B31E8F832E9402510015E819 /* RealmTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmTask.swift; sourceTree = "<group>"; };
-		B36FAFF32E900A0300A91AAD /* UIState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIState.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -28,6 +24,11 @@
 		B31E8F872E9406C10015E819 /* Repositry */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Repositry;
+			sourceTree = "<group>";
+		};
+		B321890B2EACED10000D3692 /* State */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = State;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -48,11 +49,10 @@
 		B30957CD2E0089E800517E17 = {
 			isa = PBXGroup;
 			children = (
-				B31E8F832E9402510015E819 /* RealmTask.swift */,
 				B31E8F872E9406C10015E819 /* Repositry */,
-				B36FAFF32E900A0300A91AAD /* UIState.swift */,
 				B30957D82E0089E800517E17 /* Cote */,
 				B30957D72E0089E800517E17 /* Products */,
+				B321890B2EACED10000D3692 /* State */,
 			);
 			sourceTree = "<group>";
 		};
@@ -82,6 +82,7 @@
 			fileSystemSynchronizedGroups = (
 				B30957D82E0089E800517E17 /* Cote */,
 				B31E8F872E9406C10015E819 /* Repositry */,
+				B321890B2EACED10000D3692 /* State */,
 			);
 			name = Cote;
 			packageProductDependencies = (
@@ -145,8 +146,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B36FAFF42E900A0300A91AAD /* UIState.swift in Sources */,
-				B31E8F842E9402510015E819 /* RealmTask.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

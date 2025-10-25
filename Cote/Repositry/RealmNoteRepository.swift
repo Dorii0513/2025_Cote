@@ -60,7 +60,6 @@ struct RealmNoteRepository: @preconcurrency NoteRepository {
         AsyncStream { continuation in
             do {
                 let realm = try openRealm()
-                // PK 타입은 UUID 그대로 사용 (uuidString 아님)
                 let result = realm.objects(NoteObject.self).where { $0.id == id }
                 
                 print("[Repo.noteStream] subscribe id=", id)
@@ -124,16 +123,15 @@ struct RealmNoteRepository: @preconcurrency NoteRepository {
             folder.updatedAt = Date()
 
             if let pid = parentID, let parent = realm.object(ofType: FolderObject.self, forPrimaryKey: pid) {
-                // 부모가 있는 경우: 부모의 children에서 max(sortIndex)
+                // 부모가 있는 경우
                 let maxIndex = parent.children.max(ofProperty: "sortIndex") as Int? ?? -1
                 folder.sortIndex = maxIndex + 1
 
-                parent.children.append(folder)      // 관계 설정은 이걸로 충분
+                parent.children.append(folder)
                 parent.updatedAt = Date()
-                // parent는 LinkingObjects 역참조 대상이므로 별도 add(update:) 불필요
                 realm.add(folder)                   // 새 폴더만 add
             } else {
-                // 루트 폴더: parent가 없는 애들에서 max(sortIndex)
+                // 루트 폴더
                 let rootFolders = realm.objects(FolderObject.self).where { $0.parent.count == 0 }
                 let maxIndex = rootFolders.max(ofProperty: "sortIndex") as Int? ?? -1
                 folder.sortIndex = maxIndex + 1
@@ -179,14 +177,12 @@ struct RealmNoteRepository: @preconcurrency NoteRepository {
             throw CocoaError(.fileNoSuchFile)
         }
         try await realm.asyncWrite {
-            // 모든 부모 폴더에서 제거
             for parent in note.parentFolders {
                 if let idx = parent.notes.firstIndex(of: note) {
                     parent.notes.remove(at: idx)
                     parent.updatedAt = Date()
                 }
             }
-            // 루트 정렬 인덱스: 루트 노트들 중 최대 sortIndex + 1
             let rootNotes = realm.objects(NoteObject.self).where { $0.parentFolders.count == 0 }
             let maxIndex = rootNotes.max(ofProperty: "sortIndex") as Int? ?? -1
             note.sortIndex = maxIndex + 1
@@ -211,7 +207,6 @@ struct RealmNoteRepository: @preconcurrency NoteRepository {
             recursiveDelete(folder: child, in: realm)
         }
         // 2) 폴더가 보유한 노트들을 전부 삭제
-        //    (노트가 다른 폴더에도 속해 있을 수 있다면, 여기서는 해당 노트에 대한 소유권을 폴더 기준으로 판단하여 삭제합니다)
         for note in folder.notes {
             realm.delete(note)
         }
@@ -230,7 +225,6 @@ enum FolderMapper {
             .sorted(byKeyPath: "sortIndex", ascending: true)
             .map(FolderMapper.folder(from:))
         
-        // Domain Folder가 id 주입 생성자를 가지도록(권고된 수정안)
         return Folder(
             id: o.id,
             name: o.name,
