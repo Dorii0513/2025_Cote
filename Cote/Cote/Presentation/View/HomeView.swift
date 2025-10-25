@@ -35,7 +35,12 @@ struct HomeView: View {
             ZStack {
                 Color.bgToolbar
                     .ignoresSafeArea(edges: .top)
-                ContentView()
+                if state.selectedNoteID == nil {
+                    Text("Tap a note or create one")
+                        .coteFont(.code1, color: .textDefault)
+                } else {
+                    ContentView()
+                }
             }
         }
         .frame(alignment: .leading)
@@ -52,8 +57,8 @@ struct HomeView: View {
                     let rect = proxy[anchor]
                     TagSuggestionsView()
                         .onDisappear { viewModel.hideSuggestions() }
-                        .frame(maxWidth: 300, alignment: .leading)
-                        .position(x: rect.minX + 150,
+                        .frame(maxWidth: 400, alignment: .leading)
+                        .position(x: rect.minX + 200,
                                   y: rect.maxY + 80)
                 }
             }
@@ -67,6 +72,7 @@ struct HomeView: View {
 //MARK: - contentToolbar
 private struct contentToolbar: View {
     @EnvironmentObject private var viewModel: ContentViewModel
+    @EnvironmentObject private var state: UIState
     @FocusState private var isFocused: Bool
     @State private var newTag: Tag = .init(name: "")
     @Binding var isBtnTapped: Bool
@@ -81,7 +87,7 @@ private struct contentToolbar: View {
     
     var body: some View {
         HStack(spacing: 0) {
-            Text(viewModel.title.isEmpty ? "Untitled" : viewModel.title)
+            Text(viewModel.title.isEmpty ? "" : viewModel.title)
                 .coteFont(.title1,
                           color: .textStrong)
                 .padding(.trailing, 8)
@@ -132,7 +138,7 @@ private struct contentToolbar: View {
                     }
             }
             
-            if !isBtnTapped {
+            if !isBtnTapped && state.selectedNoteID != nil {
                 Button {
                     isBtnTapped = true
                     isFocused = true

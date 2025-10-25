@@ -131,6 +131,7 @@ struct FolderView: View {
                         }
                     }
             }
+            .padding([.horizontal, .vertical], 5)
         }
     }
     
@@ -177,6 +178,7 @@ struct FolderView: View {
                         }
                     }
             }
+            .padding(.top, 5)
         }
     }
     
@@ -184,7 +186,6 @@ struct FolderView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 topMenuBar
-                Spacer().frame(height: 5)
                 newFolderRow
                 rootsList
                 newNoteRow

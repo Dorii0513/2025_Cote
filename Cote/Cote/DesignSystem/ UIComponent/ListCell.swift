@@ -35,7 +35,7 @@ struct ListCell: View {
     var body: some View {
         HStack(spacing: 0) {
             Spacer()
-                .frame(width: 20 * CGFloat(depth))
+                .frame(width: 10 * CGFloat(depth))
             
             switch item {
             case.folder(let f):
@@ -64,7 +64,7 @@ struct ListCell: View {
                     
                     Text(n.title)
                         .coteFont(.title2,
-                                  color: isHover ? .textStrong : .textDefault)
+                                  color: isHover || isSelected ? .textStrong : .textDefault)
                         .frame(height: 18) //tag 높이
                 }
                 .buttonStyle(.plain)
