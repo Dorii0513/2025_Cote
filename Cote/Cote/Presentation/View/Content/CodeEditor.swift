@@ -7,7 +7,7 @@
 
 import SwiftUI
 import AppKit
-import Foundation
+import Highlightr
 
 // MARK: - Configuration
 public struct CodeEditorConfiguration {
@@ -16,13 +16,16 @@ public struct CodeEditorConfiguration {
     public let gutterPadding: CGFloat
     public let textInset: NSEdgeInsets
     public let lineNumberFont: NSFont
+    public let theme: String
+    
     
     public static let defaultConfig = CodeEditorConfiguration(
         font: NSFont(name: "JetBrainsMono-Regular", size: 13) ?? .monospacedSystemFont(ofSize: 13, weight: .regular),
         gutterWidth: 35,
         gutterPadding: 8,
         textInset: NSEdgeInsets(top: 40, left: 10, bottom: 0, right: 10),
-        lineNumberFont: NSFont(name: "JetBrainsMono-Regular", size: 12) ?? .monospacedSystemFont(ofSize: 12, weight: .regular)
+        lineNumberFont: NSFont(name: "JetBrainsMono-Regular", size: 12) ?? .monospacedSystemFont(ofSize: 12, weight: .regular),
+        theme: "paraiso-dark"
     )
     
     public init(
@@ -30,13 +33,15 @@ public struct CodeEditorConfiguration {
         gutterWidth: CGFloat,
         gutterPadding: CGFloat,
         textInset: NSEdgeInsets,
-        lineNumberFont: NSFont
+        lineNumberFont: NSFont,
+        theme: String
     ) {
         self.font = font
         self.gutterWidth = gutterWidth
         self.gutterPadding = gutterPadding
         self.textInset = textInset
         self.lineNumberFont = lineNumberFont
+        self.theme = theme
     }
 }
 
@@ -64,7 +69,8 @@ public struct CodeEditor: NSViewRepresentable {
                 gutterWidth: CodeEditorConfiguration.defaultConfig.gutterWidth,
                 gutterPadding: CodeEditorConfiguration.defaultConfig.gutterPadding,
                 textInset: CodeEditorConfiguration.defaultConfig.textInset,
-                lineNumberFont: CodeEditorConfiguration.defaultConfig.lineNumberFont
+                lineNumberFont: CodeEditorConfiguration.defaultConfig.lineNumberFont,
+                theme: CodeEditorConfiguration.defaultConfig.theme
             )
         )
     }
@@ -183,6 +189,7 @@ private enum TextViewFactory {
     }
 }
 
+
 private enum TextSystemFactory {
     struct TextSystem {
         let textStorage: NSTextStorage
@@ -191,7 +198,11 @@ private enum TextSystemFactory {
     }
     
     static func create() -> TextSystem {
-        let textStorage = NSTextStorage()
+        
+        // syntaxHighligth
+        let textStorage = CodeAttributedString()
+        textStorage.language = "Swift"
+        textStorage.highlightr.setTheme(to: "paraiso-dark")
         let layoutManager = NSLayoutManager()
         textStorage.addLayoutManager(layoutManager)
         
