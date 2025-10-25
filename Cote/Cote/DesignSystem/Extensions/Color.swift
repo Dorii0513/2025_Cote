@@ -20,8 +20,8 @@ extension ShapeStyle where Self == Color {
     static var textStrong:       Self { Color("gray50") }
     static var textSelected: Self { Color("gray50") }
     static var textDefault:  Self { Color("gray80") }
-    static var textSecondary:Self { Color("gray60") }
-    static var textInfo:     Self { Color("gray100") }
+    static var textSecondary:Self { Color("gray100") }
+    static var textInfo:     Self { Color("black60") }
     static var textTag:   Self { Color("purple20") }
     
     // background
