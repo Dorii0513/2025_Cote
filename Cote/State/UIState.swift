@@ -10,5 +10,13 @@ import SwiftUI
 @MainActor
 final class UIState: ObservableObject {
     @Published var isSidebarOpen = true
+    @Published var isFolderView = true
+    @Published var isSearchView = false
+    
+    @Published var addNote = false
+    @Published var addFolder = false
+    
+    @Published var selectedNoteID: UUID?
+
     func toggleSidebar() { isSidebarOpen.toggle() }
 }
