@@ -19,7 +19,7 @@ final class ContentViewModel: ObservableObject {
     // 노트 편집
     @Published private(set) var currentNoteID: UUID? = nil
     @Published var content: String = ""
-    @Published var title: String = "Untitled"
+    @Published var title: String = ""
     @Published var noteTags: [Tag] = []
     @Published var updatedAt: Date? = nil
     

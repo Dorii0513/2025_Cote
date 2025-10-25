@@ -47,7 +47,7 @@ struct ContentView: View {
     }
     
     private func clearEditor() {
-        viewModel.title = "Untitled"
+        viewModel.title = ""
         viewModel.content = ""
         viewModel.noteTags = []
     }
