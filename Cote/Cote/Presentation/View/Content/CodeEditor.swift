@@ -20,7 +20,7 @@ public struct CodeEditorConfiguration {
     
     
     public static let defaultConfig = CodeEditorConfiguration(
-        font: NSFont(name: "JetBrainsMono-Regular", size: 13) ?? .monospacedSystemFont(ofSize: 13, weight: .regular),
+        font: NSFont(name: "JetBrainsMono-Medium", size: 12) ?? .monospacedSystemFont(ofSize: 13, weight: .regular),
         gutterWidth: 35,
         gutterPadding: 8,
         textInset: NSEdgeInsets(top: 40, left: 10, bottom: 0, right: 10),
@@ -59,13 +59,12 @@ public struct CodeEditor: NSViewRepresentable {
     }
     
     public init(
-        text: Binding<String>,
-        font: NSFont
+        text: Binding<String>
     ) {
         self.init(
             text: text,
             configuration: CodeEditorConfiguration(
-                font: font,
+                font: CodeEditorConfiguration.defaultConfig.font,
                 gutterWidth: CodeEditorConfiguration.defaultConfig.gutterWidth,
                 gutterPadding: CodeEditorConfiguration.defaultConfig.gutterPadding,
                 textInset: CodeEditorConfiguration.defaultConfig.textInset,
@@ -142,7 +141,6 @@ private enum TextViewFactory {
         textView.allowsUndo = true
         textView.usesFindBar = true
         
-        
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
@@ -202,7 +200,15 @@ private enum TextSystemFactory {
         // syntaxHighligth
         let textStorage = CodeAttributedString()
         textStorage.language = "Swift"
-        textStorage.highlightr.setTheme(to: "paraiso-dark")
+        textStorage.highlightr.setTheme(to: "atelier-heath")
+        
+//        let highlightr = Highlightr()!
+//        let themes = highlightr.availableThemes()
+//        print(themes)
+        
+        // 폰트 재적용
+        textStorage.highlightr.theme.codeFont = NSFont(name: "JetBrainsMono-Medium", size: 13) ?? .monospacedSystemFont(ofSize: 13, weight: .regular)
+        
         let layoutManager = NSLayoutManager()
         textStorage.addLayoutManager(layoutManager)
         
