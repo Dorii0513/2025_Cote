@@ -8,6 +8,7 @@
 import SwiftUI
 import AppKit
 import RealmSwift
+import Highlightr
 
 //MARK: - ContentView
 
@@ -23,14 +24,16 @@ struct ContentView: View {
                 Spacer().frame(height: 38)
                 
                 // 에디터 뷰
-                CodeEditor(text: $viewModel.content)
+                CodeEditor(text: $viewModel.content,
+                           language: $viewModel.language)
                     .id(viewModel.currentNoteID)
                     .onChange(of: viewModel.content, scheduleAutosave)
                     .onChange(of: viewModel.title, scheduleAutosave)
                     .onChange(of: viewModel.noteTags, scheduleAutosave)
+                    .onChange(of: viewModel.language, scheduleAutosave)
                     .onChange(of: state.selectedNoteID) { _, newID in
                         guard let id = newID else { return }
-                        let r = try! Realm()
+                        _ = try! Realm()
                         Task { await viewModel.loadNote(by: id) }
                     }
                     .task {
@@ -38,8 +41,9 @@ struct ContentView: View {
                     }
                 
                 // 하단 바
-                BottomBar(date: viewModel.updatedAt ?? nil)
-                
+                BottomBar(date: viewModel.updatedAt ?? nil, language: $viewModel.language){ select in
+                    viewModel.language = select
+                }
             }
         }
         .ignoresSafeArea()
@@ -50,6 +54,7 @@ struct ContentView: View {
         viewModel.title = ""
         viewModel.content = ""
         viewModel.noteTags = []
+        viewModel.language = "plainText"
     }
     
     private func scheduleAutosave(oldValue: Any, newValue: Any) {
@@ -64,7 +69,15 @@ struct ContentView: View {
 //MARK: - BottomBar
 private struct BottomBar: View {
     let date: Date?
+    let highlightr = Highlightr()!
+    @Binding var language: String
+    let onSelect: (String) -> Void
+    
+    @State private var isHover: Bool = false
+
     var body: some View {
+        let languages = highlightr.supportedLanguages()
+        
         HStack {
             HStack(spacing: 15) {
                 if let date {
@@ -78,32 +91,57 @@ private struct BottomBar: View {
             Spacer()
             
             HStack(spacing: 15) {
-                HStack(spacing: 4) {
-                    Text("Line")
-                        .foregroundStyle(.textInfo)
-                    Text("123")
-                }
+//                HStack(spacing: 4) {
+//                    Text("Line")
+//                        .foregroundStyle(.textInfo)
+//                    Text("123")
+//                }
+//                
+//                HStack(spacing: 4) {
+//                    Text("Col")
+//                        .foregroundStyle(.textInfo)
+//                    Text("299")
+//                }
                 
-                HStack(spacing: 4) {
-                    Text("Col")
-                        .foregroundStyle(.textInfo)
-                    Text("299")
-                }
-                
-                Button {
-                    
+                // language 선택
+                Menu {
+                    ForEach(languages, id: \.self) { select in
+                        Button {
+                            onSelect(select)
+                        } label: {
+                            HStack {
+                                Text(select)
+                                if select == language {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                    .frame(height: 100)
                 } label: {
                     HStack(spacing: 4) {
                         Image("language")
-                        Text("Swift")
+                        Text(language)
+                            .coteFont(.code2, color: .textSecondary)
                     }
                 }
-                .buttonStyle(.plain)
+                .menuStyle(.borderlessButton)
+                .tint(isHover ? .textDefault : .textSecondary)
+                .padding(.vertical, 2)
+                .padding(.horizontal, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .foregroundStyle(.actionDefault)
+                        .opacity(isHover ? 1.0 : 0)
+                )
+                .onHover(perform: { hover in
+                    isHover = hover
+                })
             }
         }
         .coteFont(.code2, color: .textSecondary)
-        .padding(.horizontal, 15)
-        .padding(.vertical, 10)
+        .padding(.leading, 15)
+        .padding([.vertical, .trailing], 8)
         .background(.bgEditor)
     }
 }
