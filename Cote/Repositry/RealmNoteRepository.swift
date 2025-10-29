@@ -242,7 +242,8 @@ extension Note {
                   content: o.content,
                   tags: o.tags.map { Tag(name: $0.name) },
                   sortIndex: o.sortIndex,
-                  updatedAt: o.updatedAt)
+                  updatedAt: o.updatedAt,
+                  language: o.language)
     }
 }
 

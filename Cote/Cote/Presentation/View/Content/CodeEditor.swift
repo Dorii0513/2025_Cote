@@ -48,21 +48,26 @@ public struct CodeEditorConfiguration {
 // MARK: - SwiftUI Code Editor
 public struct CodeEditor: NSViewRepresentable {
     @Binding var text: String
+    @Binding var language: String
     private let configuration: CodeEditorConfiguration
     
     public init(
         text: Binding<String>,
+        language: Binding<String>,
         configuration: CodeEditorConfiguration = .defaultConfig
     ) {
         self._text = text
+        self._language = language
         self.configuration = configuration
     }
     
     public init(
-        text: Binding<String>
+        text: Binding<String>,
+        language: Binding<String>
     ) {
         self.init(
             text: text,
+            language: language,
             configuration: CodeEditorConfiguration(
                 font: CodeEditorConfiguration.defaultConfig.font,
                 gutterWidth: CodeEditorConfiguration.defaultConfig.gutterWidth,
@@ -80,7 +85,7 @@ public struct CodeEditor: NSViewRepresentable {
     
     public func makeNSView(context: Context) -> NSScrollView {
         let scrollView = ScrollViewFactory.create()
-        let textView = TextViewFactory.create(configuration: configuration, coordinator: context.coordinator)
+        let textView = TextViewFactory.create(configuration: configuration, coordinator: context.coordinator, language: language)
         let gutter = LineNumberGutter(textView: textView, configuration: configuration)
         
         ScrollViewFactory.setup(scrollView, textView: textView, gutter: gutter, coordinator: context.coordinator)
@@ -89,12 +94,32 @@ public struct CodeEditor: NSViewRepresentable {
     }
     
     public func updateNSView(_ nsView: NSScrollView, context: Context) {
-        guard let textView = context.coordinator.textView,
-              textView.string != text else { return }
+        guard let textView = context.coordinator.textView else { return }
         
-        textView.string = text
+        // 1) 언어 변경 반영
+        if let storage = textView.textStorage as? CodeAttributedString, storage.language != language {
+            storage.beginEditing()
+            storage.language = language
+            storage.endEditing()
+            
+            // 2) 레이아웃 강제 보장
+            if let lm = textView.layoutManager, let tc = textView.textContainer {
+                lm.ensureLayout(for: tc)
+            }
+            
+            textView.setNeedsDisplay(textView.bounds)
+            context.coordinator.gutter?.needsDisplay = true
+        }
+        
+        // 텍스트 내용 변경 반영
+        if textView.string != text {
+            textView.string = text
+        }
+        
+        // 5) 거터 리드로우 스케줄
         context.coordinator.scheduleGutterRedraw()
     }
+
 }
 
 // MARK: - Factory Methods
@@ -124,8 +149,8 @@ private enum ScrollViewFactory {
 }
 
 private enum TextViewFactory {
-    static func create(configuration: CodeEditorConfiguration, coordinator: CodeEditor.Coordinator) -> CodeTextView {
-        let textSystem = TextSystemFactory.create()
+    static func create(configuration: CodeEditorConfiguration, coordinator: CodeEditor.Coordinator, language: String) -> CodeTextView {
+        let textSystem = TextSystemFactory.create(language: language)
         let textView = CodeTextView(frame: .zero, textContainer: textSystem.textContainer)
         
         configure(textView, with: configuration, coordinator: coordinator)
@@ -195,11 +220,14 @@ private enum TextSystemFactory {
         let textContainer: NSTextContainer
     }
     
-    static func create() -> TextSystem {
+    static func create(language: String) -> TextSystem {
         
         // syntaxHighligth
         let textStorage = CodeAttributedString()
-        textStorage.language = "Swift"
+        
+        // 언어
+        textStorage.language = language
+        print(language)
         textStorage.highlightr.setTheme(to: "atelier-heath")
         
 //        let highlightr = Highlightr()!
@@ -221,7 +249,7 @@ private enum TextSystemFactory {
         return TextSystem(
             textStorage: textStorage,
             layoutManager: layoutManager,
-            textContainer: textContainer
+            textContainer: textContainer,
         )
     }
 }
