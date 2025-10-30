@@ -96,13 +96,12 @@ public struct CodeEditor: NSViewRepresentable {
     public func updateNSView(_ nsView: NSScrollView, context: Context) {
         guard let textView = context.coordinator.textView else { return }
         
-        // 1) 언어 변경 반영
+        // 언어 변경
         if let storage = textView.textStorage as? CodeAttributedString, storage.language != language {
             storage.beginEditing()
             storage.language = language
             storage.endEditing()
             
-            // 2) 레이아웃 강제 보장
             if let lm = textView.layoutManager, let tc = textView.textContainer {
                 lm.ensureLayout(for: tc)
             }
@@ -111,12 +110,11 @@ public struct CodeEditor: NSViewRepresentable {
             context.coordinator.gutter?.needsDisplay = true
         }
         
-        // 텍스트 내용 변경 반영
+        // 텍스트 내용 변경
         if textView.string != text {
             textView.string = text
         }
         
-        // 5) 거터 리드로우 스케줄
         context.coordinator.scheduleGutterRedraw()
     }
 
@@ -222,17 +220,11 @@ private enum TextSystemFactory {
     
     static func create(language: String) -> TextSystem {
         
-        // syntaxHighligth
+        // syntaxHighligt
         let textStorage = CodeAttributedString()
         
-        // 언어
         textStorage.language = language
-        print(language)
         textStorage.highlightr.setTheme(to: "atelier-heath")
-        
-//        let highlightr = Highlightr()!
-//        let themes = highlightr.availableThemes()
-//        print(themes)
         
         // 폰트 재적용
         textStorage.highlightr.theme.codeFont = NSFont(name: "JetBrainsMono-Medium", size: 13) ?? .monospacedSystemFont(ofSize: 13, weight: .regular)
