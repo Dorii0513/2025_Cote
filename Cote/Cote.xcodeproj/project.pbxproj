@@ -7,10 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B30957EA2E008A2600517E17 /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = B30957E92E008A2600517E17 /* OpenAI */; };
-		B31E8F822E9402090015E819 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B31E8F812E9402090015E819 /* RealmSwift */; };
-		B3218A332EACFBBE000D3692 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = B3218A322EACFBBE000D3692 /* Highlightr */; };
+		B349CFE02EB3A28C00198445 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = B349CFDF2EB3A28C00198445 /* Highlightr */; };
+		B349CFF52EB3A59400198445 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B349CFF42EB3A59400198445 /* RealmSwift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B349CFEC2EB3A41200198445 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		B30957D62E0089E800517E17 /* Cote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cote.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -39,9 +51,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B31E8F822E9402090015E819 /* RealmSwift in Frameworks */,
-				B3218A332EACFBBE000D3692 /* Highlightr in Frameworks */,
-				B30957EA2E008A2600517E17 /* OpenAI in Frameworks */,
+				B349CFF52EB3A59400198445 /* RealmSwift in Frameworks */,
+				B349CFE02EB3A28C00198445 /* Highlightr in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,6 +87,7 @@
 				B30957D22E0089E800517E17 /* Sources */,
 				B30957D32E0089E800517E17 /* Frameworks */,
 				B30957D42E0089E800517E17 /* Resources */,
+				B349CFEC2EB3A41200198445 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -88,9 +100,8 @@
 			);
 			name = Cote;
 			packageProductDependencies = (
-				B30957E92E008A2600517E17 /* OpenAI */,
-				B31E8F812E9402090015E819 /* RealmSwift */,
-				B3218A322EACFBBE000D3692 /* Highlightr */,
+				B349CFDF2EB3A28C00198445 /* Highlightr */,
+				B349CFF42EB3A59400198445 /* RealmSwift */,
 			);
 			productName = Cote;
 			productReference = B30957D62E0089E800517E17 /* Cote.app */;
@@ -121,9 +132,8 @@
 			mainGroup = B30957CD2E0089E800517E17;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				B30957E82E008A2600517E17 /* XCRemoteSwiftPackageReference "OpenAI" */,
-				B31E8F802E9402090015E819 /* XCRemoteSwiftPackageReference "realm-swift" */,
-				B3218A312EACFBBE000D3692 /* XCRemoteSwiftPackageReference "Highlightr" */,
+				B349CFDE2EB3A28C00198445 /* XCRemoteSwiftPackageReference "Highlightr" */,
+				B349CFF32EB3A59400198445 /* XCRemoteSwiftPackageReference "realm-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B30957D72E0089E800517E17 /* Products */;
@@ -356,47 +366,34 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		B30957E82E008A2600517E17 /* XCRemoteSwiftPackageReference "OpenAI" */ = {
+		B349CFDE2EB3A28C00198445 /* XCRemoteSwiftPackageReference "Highlightr" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/MacPaw/OpenAI";
+			repositoryURL = "https://github.com/raspu/Highlightr/";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.4.3;
+				minimumVersion = 2.3.0;
 			};
 		};
-		B31E8F802E9402090015E819 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
+		B349CFF32EB3A59400198445 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/realm/realm-swift";
+			repositoryURL = "https://github.com/realm/realm-swift.git";
 			requirement = {
 				branch = master;
 				kind = branch;
 			};
 		};
-		B3218A312EACFBBE000D3692 /* XCRemoteSwiftPackageReference "Highlightr" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/raspu/Highlightr/";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		B30957E92E008A2600517E17 /* OpenAI */ = {
+		B349CFDF2EB3A28C00198445 /* Highlightr */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B30957E82E008A2600517E17 /* XCRemoteSwiftPackageReference "OpenAI" */;
-			productName = OpenAI;
-		};
-		B31E8F812E9402090015E819 /* RealmSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B31E8F802E9402090015E819 /* XCRemoteSwiftPackageReference "realm-swift" */;
-			productName = RealmSwift;
-		};
-		B3218A322EACFBBE000D3692 /* Highlightr */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B3218A312EACFBBE000D3692 /* XCRemoteSwiftPackageReference "Highlightr" */;
+			package = B349CFDE2EB3A28C00198445 /* XCRemoteSwiftPackageReference "Highlightr" */;
 			productName = Highlightr;
+		};
+		B349CFF42EB3A59400198445 /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B349CFF32EB3A59400198445 /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = RealmSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,22 +1,13 @@
 {
-  "originHash" : "53faff4f336ab9755c43aba31e5c1bd49726a7e63c32effdae41db25fbb4dfb2",
+  "originHash" : "8b52bbbb2c1d2fada25d0cd6e15be19610cab7dfb6925f5ec3f842b44a53c87f",
   "pins" : [
     {
       "identity" : "highlightr",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/raspu/Highlightr/",
       "state" : {
-        "branch" : "master",
-        "revision" : "32561b17602e7f2c69a1defb264ade2d52314eb7"
-      }
-    },
-    {
-      "identity" : "openai",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/MacPaw/OpenAI",
-      "state" : {
-        "revision" : "9261cd39d55a718bcc360fbc29515a331cad5dbb",
-        "version" : "0.4.3"
+        "revision" : "05e7fcc63b33925cd0c1faaa205cdd5681e7bbef",
+        "version" : "2.3.0"
       }
     },
     {
@@ -31,28 +22,10 @@
     {
       "identity" : "realm-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/realm/realm-swift",
+      "location" : "https://github.com/realm/realm-swift.git",
       "state" : {
         "branch" : "master",
-        "revision" : "5fcba6408c99eb3596bf5ae148bfc1a33b5adebd"
-      }
-    },
-    {
-      "identity" : "swift-http-types",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-http-types",
-      "state" : {
-        "revision" : "a0a57e949a8903563aba4615869310c0ebf14c03",
-        "version" : "1.4.0"
-      }
-    },
-    {
-      "identity" : "swift-openapi-runtime",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-openapi-runtime",
-      "state" : {
-        "revision" : "8f33cc5dfe81169fb167da73584b9c72c3e8bc23",
-        "version" : "1.8.2"
+        "revision" : "c22f9303d446fc3c044e4c151ed19597464b6bd7"
       }
     }
   ],
