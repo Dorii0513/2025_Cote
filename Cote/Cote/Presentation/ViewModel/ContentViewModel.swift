@@ -22,6 +22,7 @@ final class ContentViewModel: ObservableObject {
     @Published var title: String = ""
     @Published var noteTags: [Tag] = []
     @Published var updatedAt: Date? = nil
+    @Published var language: String = ""
     
     // 태그 생성
     @Published var generatedTags: [Tag] = []
@@ -97,7 +98,8 @@ final class ContentViewModel: ObservableObject {
             content: content,
             tags: noteTags,
             sortIndex: 0,
-            updatedAt: safeDate
+            updatedAt: safeDate,
+            language: language
         )
         do {
             try await saveUseCase.execute(note: note)
@@ -131,6 +133,7 @@ final class ContentViewModel: ObservableObject {
         self.content = note.content
         self.noteTags = note.tags
         self.updatedAt = note.updatedAt
+        self.language = note.language.isEmpty ? "plaintext" : note.language
     }
 }
 

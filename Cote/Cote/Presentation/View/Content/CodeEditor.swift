@@ -7,7 +7,7 @@
 
 import SwiftUI
 import AppKit
-import Foundation
+import Highlightr
 
 // MARK: - Configuration
 public struct CodeEditorConfiguration {
@@ -16,13 +16,16 @@ public struct CodeEditorConfiguration {
     public let gutterPadding: CGFloat
     public let textInset: NSEdgeInsets
     public let lineNumberFont: NSFont
+    public let theme: String
+    
     
     public static let defaultConfig = CodeEditorConfiguration(
-        font: NSFont(name: "JetBrainsMono-Regular", size: 13) ?? .monospacedSystemFont(ofSize: 13, weight: .regular),
+        font: NSFont(name: "JetBrainsMono-Medium", size: 12) ?? .monospacedSystemFont(ofSize: 13, weight: .regular),
         gutterWidth: 35,
         gutterPadding: 8,
         textInset: NSEdgeInsets(top: 40, left: 10, bottom: 0, right: 10),
-        lineNumberFont: NSFont(name: "JetBrainsMono-Regular", size: 12) ?? .monospacedSystemFont(ofSize: 12, weight: .regular)
+        lineNumberFont: NSFont(name: "JetBrainsMono-Regular", size: 12) ?? .monospacedSystemFont(ofSize: 12, weight: .regular),
+        theme: "paraiso-dark"
     )
     
     public init(
@@ -30,41 +33,48 @@ public struct CodeEditorConfiguration {
         gutterWidth: CGFloat,
         gutterPadding: CGFloat,
         textInset: NSEdgeInsets,
-        lineNumberFont: NSFont
+        lineNumberFont: NSFont,
+        theme: String
     ) {
         self.font = font
         self.gutterWidth = gutterWidth
         self.gutterPadding = gutterPadding
         self.textInset = textInset
         self.lineNumberFont = lineNumberFont
+        self.theme = theme
     }
 }
 
 // MARK: - SwiftUI Code Editor
 public struct CodeEditor: NSViewRepresentable {
     @Binding var text: String
+    @Binding var language: String
     private let configuration: CodeEditorConfiguration
     
     public init(
         text: Binding<String>,
+        language: Binding<String>,
         configuration: CodeEditorConfiguration = .defaultConfig
     ) {
         self._text = text
+        self._language = language
         self.configuration = configuration
     }
     
     public init(
         text: Binding<String>,
-        font: NSFont
+        language: Binding<String>
     ) {
         self.init(
             text: text,
+            language: language,
             configuration: CodeEditorConfiguration(
-                font: font,
+                font: CodeEditorConfiguration.defaultConfig.font,
                 gutterWidth: CodeEditorConfiguration.defaultConfig.gutterWidth,
                 gutterPadding: CodeEditorConfiguration.defaultConfig.gutterPadding,
                 textInset: CodeEditorConfiguration.defaultConfig.textInset,
-                lineNumberFont: CodeEditorConfiguration.defaultConfig.lineNumberFont
+                lineNumberFont: CodeEditorConfiguration.defaultConfig.lineNumberFont,
+                theme: CodeEditorConfiguration.defaultConfig.theme
             )
         )
     }
@@ -75,7 +85,7 @@ public struct CodeEditor: NSViewRepresentable {
     
     public func makeNSView(context: Context) -> NSScrollView {
         let scrollView = ScrollViewFactory.create()
-        let textView = TextViewFactory.create(configuration: configuration, coordinator: context.coordinator)
+        let textView = TextViewFactory.create(configuration: configuration, coordinator: context.coordinator, language: language)
         let gutter = LineNumberGutter(textView: textView, configuration: configuration)
         
         ScrollViewFactory.setup(scrollView, textView: textView, gutter: gutter, coordinator: context.coordinator)
@@ -84,12 +94,30 @@ public struct CodeEditor: NSViewRepresentable {
     }
     
     public func updateNSView(_ nsView: NSScrollView, context: Context) {
-        guard let textView = context.coordinator.textView,
-              textView.string != text else { return }
+        guard let textView = context.coordinator.textView else { return }
         
-        textView.string = text
+        // 언어 변경
+        if let storage = textView.textStorage as? CodeAttributedString, storage.language != language {
+            storage.beginEditing()
+            storage.language = language
+            storage.endEditing()
+            
+            if let lm = textView.layoutManager, let tc = textView.textContainer {
+                lm.ensureLayout(for: tc)
+            }
+            
+            textView.setNeedsDisplay(textView.bounds)
+            context.coordinator.gutter?.needsDisplay = true
+        }
+        
+        // 텍스트 내용 변경
+        if textView.string != text {
+            textView.string = text
+        }
+        
         context.coordinator.scheduleGutterRedraw()
     }
+
 }
 
 // MARK: - Factory Methods
@@ -119,8 +147,8 @@ private enum ScrollViewFactory {
 }
 
 private enum TextViewFactory {
-    static func create(configuration: CodeEditorConfiguration, coordinator: CodeEditor.Coordinator) -> CodeTextView {
-        let textSystem = TextSystemFactory.create()
+    static func create(configuration: CodeEditorConfiguration, coordinator: CodeEditor.Coordinator, language: String) -> CodeTextView {
+        let textSystem = TextSystemFactory.create(language: language)
         let textView = CodeTextView(frame: .zero, textContainer: textSystem.textContainer)
         
         configure(textView, with: configuration, coordinator: coordinator)
@@ -135,7 +163,6 @@ private enum TextViewFactory {
         textView.isSelectable = true
         textView.allowsUndo = true
         textView.usesFindBar = true
-        
         
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
@@ -183,6 +210,7 @@ private enum TextViewFactory {
     }
 }
 
+
 private enum TextSystemFactory {
     struct TextSystem {
         let textStorage: NSTextStorage
@@ -190,8 +218,17 @@ private enum TextSystemFactory {
         let textContainer: NSTextContainer
     }
     
-    static func create() -> TextSystem {
-        let textStorage = NSTextStorage()
+    static func create(language: String) -> TextSystem {
+        
+        // syntaxHighligt
+        let textStorage = CodeAttributedString()
+        
+        textStorage.language = language
+        textStorage.highlightr.setTheme(to: "atelier-heath")
+        
+        // 폰트 재적용
+        textStorage.highlightr.theme.codeFont = NSFont(name: "JetBrainsMono-Medium", size: 13) ?? .monospacedSystemFont(ofSize: 13, weight: .regular)
+        
         let layoutManager = NSLayoutManager()
         textStorage.addLayoutManager(layoutManager)
         
@@ -204,7 +241,7 @@ private enum TextSystemFactory {
         return TextSystem(
             textStorage: textStorage,
             layoutManager: layoutManager,
-            textContainer: textContainer
+            textContainer: textContainer,
         )
     }
 }

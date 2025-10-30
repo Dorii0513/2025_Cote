@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		B30957EA2E008A2600517E17 /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = B30957E92E008A2600517E17 /* OpenAI */; };
 		B31E8F822E9402090015E819 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B31E8F812E9402090015E819 /* RealmSwift */; };
+		B3218A332EACFBBE000D3692 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = B3218A322EACFBBE000D3692 /* Highlightr */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B31E8F822E9402090015E819 /* RealmSwift in Frameworks */,
+				B3218A332EACFBBE000D3692 /* Highlightr in Frameworks */,
 				B30957EA2E008A2600517E17 /* OpenAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -88,6 +90,7 @@
 			packageProductDependencies = (
 				B30957E92E008A2600517E17 /* OpenAI */,
 				B31E8F812E9402090015E819 /* RealmSwift */,
+				B3218A322EACFBBE000D3692 /* Highlightr */,
 			);
 			productName = Cote;
 			productReference = B30957D62E0089E800517E17 /* Cote.app */;
@@ -120,6 +123,7 @@
 			packageReferences = (
 				B30957E82E008A2600517E17 /* XCRemoteSwiftPackageReference "OpenAI" */,
 				B31E8F802E9402090015E819 /* XCRemoteSwiftPackageReference "realm-swift" */,
+				B3218A312EACFBBE000D3692 /* XCRemoteSwiftPackageReference "Highlightr" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B30957D72E0089E800517E17 /* Products */;
@@ -368,6 +372,14 @@
 				kind = branch;
 			};
 		};
+		B3218A312EACFBBE000D3692 /* XCRemoteSwiftPackageReference "Highlightr" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/raspu/Highlightr/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -380,6 +392,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B31E8F802E9402090015E819 /* XCRemoteSwiftPackageReference "realm-swift" */;
 			productName = RealmSwift;
+		};
+		B3218A322EACFBBE000D3692 /* Highlightr */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B3218A312EACFBBE000D3692 /* XCRemoteSwiftPackageReference "Highlightr" */;
+			productName = Highlightr;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

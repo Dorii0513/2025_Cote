@@ -31,6 +31,7 @@ final class NoteObject: Object {
     @Persisted var tags = List<TagObject>()
     @Persisted var sortIndex: Int = 0
     @Persisted var updatedAt: Date = .now
+    @Persisted var language: String = ""
     @Persisted(originProperty: "notes") var parentFolders: LinkingObjects<FolderObject>
 }
 
@@ -49,7 +50,8 @@ extension NoteObject {
         }
         self.tags = noteTags
         self.updatedAt = note.updatedAt
-        // 필요하면 sortIndex도 note에서 받아서 설정
+        self.language = note.language
+        // TODO: - sortedIndex
     }
     
     func toDomain() -> Note {
@@ -60,7 +62,8 @@ extension NoteObject {
             content: content,
             tags: domainTags,
             sortIndex: sortIndex,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            language: language
         )
     }
 }

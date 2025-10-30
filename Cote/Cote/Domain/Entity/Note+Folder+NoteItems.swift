@@ -37,14 +37,16 @@ struct Note: Identifiable {
     var tags: [Tag] = []
     var sortIndex: Int = 0
     var updatedAt: Date = .now
+    var language: String = ""
     
-    init(id: UUID, title: String, content: String, tags: [Tag], sortIndex: Int, updatedAt: Date) {
+    init(id: UUID, title: String, content: String, tags: [Tag], sortIndex: Int, updatedAt: Date, language: String) {
         self.id = id
         self.title = title
         self.content = content
         self.tags = tags
         self.sortIndex = sortIndex
         self.updatedAt = updatedAt
+        self.language = language
     }
 }
 
