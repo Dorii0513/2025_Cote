@@ -12,7 +12,7 @@ import Foundation
 final class SideBarViewModel: ObservableObject {
     private let createNoteUseCase: CreateNoteUseCase
     private let createFolderUseCase: CreateFolderUseCase
-    private let repo: NoteRepository
+    private let repo: NoteRepositoryProtocol
     
     @Published var roots: [NoteItems] = []
     @Published var selectedNoteID: UUID? = nil
@@ -26,7 +26,7 @@ final class SideBarViewModel: ObservableObject {
     init(
         createNoteUseCase: CreateNoteUseCase,
         createFolderUseCase: CreateFolderUseCase,
-        repo: NoteRepository,
+        repo: NoteRepositoryProtocol,
         state: UIState? = nil
     ) {
         self.createNoteUseCase = createNoteUseCase
@@ -38,7 +38,7 @@ final class SideBarViewModel: ObservableObject {
     }
     
     convenience init() {
-        let repo = RealmNoteRepository()
+        let repo = NoteRepository()
         self.init(
             createNoteUseCase: DefaultCreateNoteUseCase(repository: repo), createFolderUseCase: DefaultCreateFolderUseCase(repository: repo),
             repo: repo,
@@ -107,7 +107,7 @@ final class SideBarViewModel: ObservableObject {
         Task { [weak self] in
             guard let self else { return }
             do {
-                try await repo.delete(id: id)
+                try await repo.deleteNote(id: id)
                 if self.selectedNoteID == id { self.selectedNoteID = nil }
             } catch {
                 print("[SideBarVM] delete failed: \(error)")

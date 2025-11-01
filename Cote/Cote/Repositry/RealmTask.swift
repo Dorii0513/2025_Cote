@@ -8,6 +8,7 @@
 import RealmSwift
 import Foundation
 
+
 final class TagObject: Object {
     @Persisted(primaryKey: true) var name: String   //중복 방지
     @Persisted(originProperty: "tags") var notes: LinkingObjects<NoteObject>
@@ -35,6 +36,7 @@ final class NoteObject: Object {
     @Persisted(originProperty: "notes") var parentFolders: LinkingObjects<FolderObject>
 }
 
+//MARK: - Extension
 extension NoteObject {
     convenience init(from note: Note) {
         self.init()
@@ -51,7 +53,6 @@ extension NoteObject {
         self.tags = noteTags
         self.updatedAt = note.updatedAt
         self.language = note.language
-        // TODO: - sortedIndex
     }
     
     func toDomain() -> Note {
@@ -107,5 +108,3 @@ extension FolderObject {
         self.children.append(objectsIn: folder.children.map { FolderObject(from: $0) })
     }
 }
-
-
