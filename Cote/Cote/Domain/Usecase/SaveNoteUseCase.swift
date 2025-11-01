@@ -12,19 +12,19 @@ protocol SaveNoteUseCase {
 }
 
 struct DefaultSaveNoteUseCase: SaveNoteUseCase {
-    private let repository: NoteRepository
+    private let repository: NoteRepositoryProtocol
 
-    init(repository: NoteRepository) {
+    init(repository: NoteRepositoryProtocol) {
         self.repository = repository
     }
     
     @MainActor
     init() {
-        self.init(repository: RealmNoteRepository())
+        self.init(repository: NoteRepository())
     }
 
     func execute(note: Note) async throws {
-        try await repository.save(note: note)
+        try await repository.saveNote(note: note)
     }
 }
 
