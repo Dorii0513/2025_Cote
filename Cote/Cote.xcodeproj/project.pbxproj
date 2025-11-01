@@ -34,16 +34,6 @@
 			path = Cote;
 			sourceTree = "<group>";
 		};
-		B31E8F872E9406C10015E819 /* Repositry */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Repositry;
-			sourceTree = "<group>";
-		};
-		B321890B2EACED10000D3692 /* State */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = State;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,10 +52,8 @@
 		B30957CD2E0089E800517E17 = {
 			isa = PBXGroup;
 			children = (
-				B31E8F872E9406C10015E819 /* Repositry */,
 				B30957D82E0089E800517E17 /* Cote */,
 				B30957D72E0089E800517E17 /* Products */,
-				B321890B2EACED10000D3692 /* State */,
 			);
 			sourceTree = "<group>";
 		};
@@ -95,8 +83,6 @@
 			);
 			fileSystemSynchronizedGroups = (
 				B30957D82E0089E800517E17 /* Cote */,
-				B31E8F872E9406C10015E819 /* Repositry */,
-				B321890B2EACED10000D3692 /* State */,
 			);
 			name = Cote;
 			packageProductDependencies = (
