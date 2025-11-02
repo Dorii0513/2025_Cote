@@ -66,3 +66,5 @@ fastlane/test_output
 #MLModel
 E5SentenceEmbedding.mlpackage
 sentencepiece.bpe.model
+Cote/Cote/MLModel/E5SentenceEmbedding.mlpackage
+Cote/Cote/MLModel/sentencepiece.bpe.model
