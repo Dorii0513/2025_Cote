@@ -7,89 +7,88 @@
 
 import Foundation
 import CoreML
+import SentencepieceTokenizer
 
-// MARK: - Tokenizer
-final class WordPieceTokenizer {
-    private var vocab: [String: Int] = [:]
-    private let unkToken = "[UNK]"
+final class SentencePieceTokenizer {
+    private let processor: SentencepieceTokenizer
     private let maxLength = 256
 
-    init(vocabFileURL: URL) {
+    init(modelName: String = "sentencepiece.bpe", modelExtension: String = "model") {
+        guard let url = Bundle.main.url(forResource: modelName, withExtension: modelExtension) else {
+            fatalError("❌ sentencepiece.bpe.model not found in bundle")
+        }
         do {
-            let content = try String(contentsOf: vocabFileURL, encoding: .utf8)
-            let lines = content.split(separator: "\n").map(String.init)
-            for (index, token) in lines.enumerated() {
-                vocab[token] = index
-            }
+            processor = try SentencepieceTokenizer(modelPath: url.path)
         } catch {
-            print("❌ Failed to load vocab:", error)
+            fatalError("❌ Failed to load SentencePiece model: \(error)")
         }
     }
 
-    func tokenize(_ text: String) -> [Int] {
-        var tokens: [Int] = []
-        let words = text.lowercased().split(separator: " ")
+    func tokenize(_ text: String) -> [Int32] {
+        do {
+            // encode 결과를 [Int]로 받고 Int32로 변환
+            let ids = try processor.encode(text).map { Int32($0) }
 
-        for word in words {
-            if let id = vocab[String(word)] {
-                tokens.append(id)
-            } else if let unkID = vocab[unkToken] {
-                tokens.append(unkID)
+            if ids.count < maxLength {
+                return ids + Array(repeating: Int32(0), count: maxLength - ids.count)
+            } else if ids.count > maxLength {
+                return Array(ids.prefix(maxLength))
+            } else {
+                return ids
             }
+        } catch {
+            print("❌ Tokenization error:", error)
+            return Array(repeating: 0, count: maxLength)
         }
-
-        // padding
-        if tokens.count < maxLength {
-            tokens += Array(repeating: 0, count: maxLength - tokens.count)
-        } else if tokens.count > maxLength {
-            tokens = Array(tokens.prefix(maxLength))
-        }
-
-        return tokens
     }
 }
 
 // MARK: - E5 Embedding Model Wrapper
 final class E5EmbeddingModel {
     private let model: E5SentenceEmbedding
-    private let tokenizer: WordPieceTokenizer
+    private let tokenizer: SentencePieceTokenizer
 
     init() {
-        // 모델 로드
         model = try! E5SentenceEmbedding(configuration: MLModelConfiguration())
-
-        // vocab.txt 로드
-        guard let vocabURL = Bundle.main.url(forResource: "vocab", withExtension: "txt") else {
-            fatalError("❌ vocab.txt not found in bundle")
-        }
-        tokenizer = WordPieceTokenizer(vocabFileURL: vocabURL)
+        tokenizer = SentencePieceTokenizer()
     }
 
     func embedding(for text: String) throws -> [Double] {
-        let tokenIDs = tokenizer.tokenize(text)
-        let attentionMask = tokenIDs.map { $0 == 0 ? 0 : 1 } // padding은 0
+        let prefixed = "query: \(text)"
+        let tokenIDs = tokenizer.tokenize(prefixed)
+        let attentionMask = tokenIDs.map { $0 == 0 ? 0 : 1 }
 
-        guard let input_ids = try? MLMultiArray(tokenIDs.map { NSNumber(value: $0) }),
-              let attn_mask = try? MLMultiArray(attentionMask.map { NSNumber(value: $0) }) else {
-            throw NSError(domain: "EmbeddingError", code: -1)
+        // ✅ 2D [1, 256], Int32 타입으로 생성
+        let shape: [NSNumber] = [1, NSNumber(value: tokenIDs.count)]
+        let input_ids = try MLMultiArray(shape: shape, dataType: .int32)
+        let attn_mask = try MLMultiArray(shape: shape, dataType: .int32)
+
+        // ✅ 값 안전하게 채우기
+        for i in 0..<tokenIDs.count {
+            input_ids[[0, NSNumber(value: i)]] = NSNumber(value: tokenIDs[i])
+            attn_mask[[0, NSNumber(value: i)]] = NSNumber(value: attentionMask[i])
         }
 
+        // ✅ CoreML 호출
         let input = E5SentenceEmbeddingInput(input_ids: input_ids, attention_mask: attn_mask)
         let output = try model.prediction(input: input)
-        return output.var_938.toArray()
+
+        return output.var_938.toArray() // output 이름 확인 필요
     }
 }
 
-// MARK: - Helper
+// MARK: - MLMultiArray Helper
 extension MLMultiArray {
     func toArray() -> [Double] {
-        return (0..<count).map { self[$0].doubleValue }
+        (0..<count).map { self[$0].doubleValue }
     }
 
-    convenience init(_ values: [NSNumber]) throws {
-        try self.init(shape: [NSNumber(value: values.count)], dataType: .int32)
-        for (i, v) in values.enumerated() {
+    convenience init(_ int32Values: [NSNumber]) throws {
+        try self.init(shape: [NSNumber(value: int32Values.count)], dataType: .int32)
+        for (i, v) in int32Values.enumerated() {
             self[i] = v
         }
     }
 }
+
+
