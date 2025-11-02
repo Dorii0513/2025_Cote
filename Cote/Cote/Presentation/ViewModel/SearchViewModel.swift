@@ -40,17 +40,11 @@ final class SearchViewModel: ObservableObject {
     }
 
     func search(for text: String) async {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            results = []
-            return
-        }
-
         do {
-            let res = try await useCase.execute(query: trimmed, topK: 200)
+            let res = try await useCase.execute(query: text, topK: 200)
             results = res
         } catch {
-            print("❌ 검색 오류: \(error)")
+            print("❌ 검색 오류:", error)
             results = []
         }
     }

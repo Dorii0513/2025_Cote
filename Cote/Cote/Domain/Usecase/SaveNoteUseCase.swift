@@ -13,6 +13,7 @@ protocol SaveNoteUseCase {
 
 struct DefaultSaveNoteUseCase: SaveNoteUseCase {
     private let repository: NoteRepositoryProtocol
+    private let embeddingModel = E5EmbeddingModel()
 
     init(repository: NoteRepositoryProtocol) {
         self.repository = repository
@@ -24,7 +25,17 @@ struct DefaultSaveNoteUseCase: SaveNoteUseCase {
     }
 
     func execute(note: Note) async throws {
-        try await repository.saveNote(note: note)
+        // 임베딩 생성
+        let text = "passage: \(note.title). \(note.content)"
+        let emb = try embeddingModel.embedding(for: text)
+        let vecF = emb.map { Float($0) }
+        
+        // 임베딩 note에 붙여서 저장
+        var noteWithEmbedding = note
+        noteWithEmbedding.embedding = vecF
+        
+        // 저장
+        try await repository.saveNote(note: noteWithEmbedding)
     }
 }
 

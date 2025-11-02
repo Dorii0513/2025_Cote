@@ -54,7 +54,7 @@ final class E5EmbeddingModel {
     }
 
     func embedding(for text: String) throws -> [Double] {
-        let prefixed = "query: \(text)"
+        let prefixed = "query: \(text) 코드"
         let tokenIDs = tokenizer.tokenize(prefixed)
         let attentionMask = tokenIDs.map { $0 == 0 ? 0 : 1 }
 

@@ -216,17 +216,16 @@ struct NoteRepository: @preconcurrency NoteRepositoryProtocol {
     
     //MARK: - Search
     
-    func fetchNoteLight(limit: Int? = nil) async throws -> [(id: UUID, title: String, content: String)]  {
+    func fetchNoteLight(limit: Int? = nil) async throws -> [(UUID, String, String, [Float]?)] {
         let realm = try openRealm()
         let objs = realm.objects(NoteObject.self)
-        var items: [(UUID, String, String)] = []
-        for o in objs {
-            guard !o.content.isEmpty else { continue }
-            let content = o.content
-            items.append((o.id, o.title, content))
-            if let limit, items.count >= limit { break }
+            .sorted(byKeyPath: "title", ascending: true)
+        let slice = limit != nil ? Array(objs.prefix(limit!)) : Array(objs)
+        return slice.map { obj in
+            // ✅ Data? → [Float]? 변환
+            let vector = obj.embedding.map { EmbeddingCodec.decode($0) }
+            return (obj.id, obj.title, obj.content, vector)
         }
-        return items
     }
 }
 

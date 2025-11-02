@@ -38,8 +38,9 @@ struct Note: Identifiable {
     var sortIndex: Int = 0
     var updatedAt: Date = .now
     var language: String = ""
+    var embedding: [Float]?
     
-    init(id: UUID, title: String, content: String, tags: [Tag], sortIndex: Int, updatedAt: Date, language: String) {
+    init(id: UUID, title: String, content: String, tags: [Tag], sortIndex: Int, updatedAt: Date, language: String, embedding: [Float]? = nil) {
         self.id = id
         self.title = title
         self.content = content
@@ -47,6 +48,7 @@ struct Note: Identifiable {
         self.sortIndex = sortIndex
         self.updatedAt = updatedAt
         self.language = language
+        self.embedding = embedding
     }
 }
 
