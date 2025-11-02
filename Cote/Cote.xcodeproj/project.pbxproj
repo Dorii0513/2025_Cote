@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		B349CFE02EB3A28C00198445 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = B349CFDF2EB3A28C00198445 /* Highlightr */; };
 		B349CFF52EB3A59400198445 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B349CFF42EB3A59400198445 /* RealmSwift */; };
+		B349D2592EB7011200198445 /* SentencepieceTokenizer in Frameworks */ = {isa = PBXBuildFile; productRef = B349D2582EB7011200198445 /* SentencepieceTokenizer */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +59,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B349CFF52EB3A59400198445 /* RealmSwift in Frameworks */,
+				B349D2592EB7011200198445 /* SentencepieceTokenizer in Frameworks */,
 				B349CFE02EB3A28C00198445 /* Highlightr in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -113,6 +115,7 @@
 			packageProductDependencies = (
 				B349CFDF2EB3A28C00198445 /* Highlightr */,
 				B349CFF42EB3A59400198445 /* RealmSwift */,
+				B349D2582EB7011200198445 /* SentencepieceTokenizer */,
 			);
 			productName = Cote;
 			productReference = B30957D62E0089E800517E17 /* Cote.app */;
@@ -172,6 +175,7 @@
 			packageReferences = (
 				B349CFDE2EB3A28C00198445 /* XCRemoteSwiftPackageReference "Highlightr" */,
 				B349CFF32EB3A59400198445 /* XCRemoteSwiftPackageReference "realm-swift" */,
+				B349D2572EB7011200198445 /* XCRemoteSwiftPackageReference "swift-sentencepiece" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B30957D72E0089E800517E17 /* Products */;
@@ -494,6 +498,14 @@
 				kind = branch;
 			};
 		};
+		B349D2572EB7011200198445 /* XCRemoteSwiftPackageReference "swift-sentencepiece" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/jkrukowski/swift-sentencepiece?utm_source=chatgpt.com";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.6;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -506,6 +518,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B349CFF32EB3A59400198445 /* XCRemoteSwiftPackageReference "realm-swift" */;
 			productName = RealmSwift;
+		};
+		B349D2582EB7011200198445 /* SentencepieceTokenizer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B349D2572EB7011200198445 /* XCRemoteSwiftPackageReference "swift-sentencepiece" */;
+			productName = SentencepieceTokenizer;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
