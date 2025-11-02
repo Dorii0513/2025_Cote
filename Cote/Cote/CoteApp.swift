@@ -57,6 +57,9 @@ struct CoteApp: SwiftUI.App {
                 .navigationTitle("")
                 .toolbarBackground(.hidden, for: .windowToolbar)
                 .environment(\.realmConfiguration, Realm.Configuration.defaultConfiguration)
+                .task {
+                    await EmbeddingBackFill().run()
+                }
         }
         .windowResizability(.contentSize)
     }

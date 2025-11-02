@@ -33,6 +33,7 @@ final class NoteObject: Object {
     @Persisted var sortIndex: Int = 0
     @Persisted var updatedAt: Date = .now
     @Persisted var language: String = ""
+    @Persisted var embedding: Data?
     @Persisted(originProperty: "notes") var parentFolders: LinkingObjects<FolderObject>
 }
 
@@ -53,10 +54,17 @@ extension NoteObject {
         self.tags = noteTags
         self.updatedAt = note.updatedAt
         self.language = note.language
+        
+        if let emb = note.embedding {
+            self.embedding = EmbeddingCodec.encode(emb)
+        } else {
+            self.embedding = nil
+        }
     }
     
     func toDomain() -> Note {
         let domainTags: [Tag] = tags.map { Tag(name: $0.name) }
+        let embedding = embedding.map { EmbeddingCodec.decode($0) }
         return Note(
             id: id,
             title: title,
@@ -64,7 +72,8 @@ extension NoteObject {
             tags: domainTags,
             sortIndex: sortIndex,
             updatedAt: updatedAt,
-            language: language
+            language: language,
+            embedding: embedding
         )
     }
 }
