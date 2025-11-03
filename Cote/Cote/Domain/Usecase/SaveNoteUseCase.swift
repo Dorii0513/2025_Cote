@@ -25,8 +25,13 @@ struct DefaultSaveNoteUseCase: SaveNoteUseCase {
     }
 
     func execute(note: Note) async throws {
+        
+        let summarizer = CodeSummarizer()
+        let summary = try await summarizer.summarize(code: note.content)
+
+        
         // 임베딩 생성
-        let text = "passage: \(note.title). \(note.content)"
+        let text = "passage: \(note.title). \(summary)"
         let emb = try embeddingModel.embedding(for: text)
         let vecF = emb.map { Float($0) }
         
