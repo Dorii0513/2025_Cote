@@ -14,7 +14,7 @@ protocol SearchUseCase {
 
 struct DefaultSearchUseCase: SearchUseCase {
     private let repository: NoteRepositoryProtocol
-    private let threshold: Double = 0.81 // e5는 0.6~0.7이 적당
+    private let threshold: Double = 0.83 // e5는 0.6~0.7이 적당
     private let embeddingModel = E5EmbeddingModel()
     
     

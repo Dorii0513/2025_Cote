@@ -40,6 +40,16 @@
 		B349D24E2EB6FE1D00198445 /* CoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B349D7262EB87FC600198445 /* Exceptions for "CoteTests" folder in "Cote" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SummarizerTest.swift,
+			);
+			target = B30957D52E0089E800517E17 /* Cote */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B30957D82E0089E800517E17 /* Cote */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -48,6 +58,9 @@
 		};
 		B349D24F2EB6FE1D00198445 /* CoteTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B349D7262EB87FC600198445 /* Exceptions for "CoteTests" folder in "Cote" target */,
+			);
 			path = CoteTests;
 			sourceTree = "<group>";
 		};
