@@ -66,3 +66,4 @@ fastlane/test_output
 # CoreML 모델 파일
 *.mlmodel
 *.mlpackage
+*.model

@@ -14,8 +14,10 @@ protocol SearchUseCase {
 
 struct DefaultSearchUseCase: SearchUseCase {
     private let repository: NoteRepositoryProtocol
-    private let threshold: Double = 0.2
-
+    private let threshold: Double = 0.6 // e5는 0.6~0.7이 적당
+    private let embeddingModel = E5EmbeddingModel()
+    
+    
     init(repository: NoteRepositoryProtocol) {
         self.repository = repository
     }
@@ -24,29 +26,21 @@ struct DefaultSearchUseCase: SearchUseCase {
     init() {
         self.init(repository: NoteRepository())
     }
-
-    func execute(query: String, topK: Int = 50) async throws -> [SearchResult] {
-        
-        // 한국어용 벡터 공간 로드
-        guard let embedding = NLEmbedding.wordEmbedding(for: .english) else {
-            print("⚠️ 한국어 임베딩 로드 실패")
-            return []
-        }
-        
-        // limit 제한 없이 가져옴 - 추후 수정 가능성 있
-        let notes = try await repository.fetchNoteLight(limit: nil)
+    
+    func execute(query: String, topK: Int = 200) async throws -> [SearchResult] {
+        // 1️⃣ 모든 노트 가져오기
+        let notes = try await repository.fetchNoteLight(limit: topK)
         var results: [SearchResult] = []
-
+        
+        // 2️⃣ 쿼리 임베딩 계산
+        let queryVec = try embeddingModel.embedding(for: "query: \(query)")
+        
+        // 3️⃣ 각 노트별 임베딩 비교
         for note in notes {
             let (id, title, content) = note
+            let passageVec = try embeddingModel.embedding(for: "passage: \(content)")
+            let similarity = cosineSimilarity(queryVec, passageVec)
             
-            // 벡터 거리 계산
-            let distance = averageDistance(between: query, and: content, using: embedding)
-            let similarity = max(0, 1 - (distance / 2))
-            
-            print("📄 \(title) → distance:", distance)
-            
-            // 점수 필터링
             if similarity >= threshold {
                 let preview = String(content.prefix(160))
                 results.append(
@@ -55,26 +49,16 @@ struct DefaultSearchUseCase: SearchUseCase {
             }
         }
         
-        print("🟡 Embedding loaded:", embedding.dimension)
-        print("🔍 Query:", query)
-        
-        // 정렬해서 반환
+        // 4️⃣ 점수 순 정렬
         return results.sorted { $0.score > $1.score }
     }
     
-    func averageDistance(between query: String, and content: String, using embedding: NLEmbedding) -> Double {
-        let queryTokens = query.lowercased().split(separator: " ")
-        let contentTokens = content.lowercased().split(separator: " ")
-        
-        var distances: [Double] = []
-        for q in queryTokens {
-            for c in contentTokens {
-                let d = embedding.distance(between: String(q), and: String(c))
-                if d < 2.0 { // 유효 거리만 추가
-                    distances.append(d)
-                }
-            }
-        }
-        return distances.isEmpty ? 2.0 : distances.reduce(0, +) / Double(distances.count)
+    // MARK: - Cosine Similarity
+    private func cosineSimilarity(_ a: [Double], _ b: [Double]) -> Double {
+        guard a.count == b.count else { return 0 }
+        let dot = zip(a, b).map(*).reduce(0, +)
+        let magA = sqrt(a.map { $0 * $0 }.reduce(0, +))
+        let magB = sqrt(b.map { $0 * $0 }.reduce(0, +))
+        return dot / (magA * magB)
     }
 }

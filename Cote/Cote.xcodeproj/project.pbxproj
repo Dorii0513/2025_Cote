@@ -11,6 +11,16 @@
 		B349CFF52EB3A59400198445 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B349CFF42EB3A59400198445 /* RealmSwift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B349D2522EB6FE1D00198445 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B30957CE2E0089E800517E17 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B30957D52E0089E800517E17;
+			remoteInfo = Cote;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		B349CFEC2EB3A41200198445 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -26,12 +36,18 @@
 
 /* Begin PBXFileReference section */
 		B30957D62E0089E800517E17 /* Cote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B349D24E2EB6FE1D00198445 /* CoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B30957D82E0089E800517E17 /* Cote */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Cote;
+			sourceTree = "<group>";
+		};
+		B349D24F2EB6FE1D00198445 /* CoteTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CoteTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -46,6 +62,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B349D24B2EB6FE1D00198445 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -53,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				B30957D82E0089E800517E17 /* Cote */,
+				B349D24F2EB6FE1D00198445 /* CoteTests */,
 				B30957D72E0089E800517E17 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -61,6 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				B30957D62E0089E800517E17 /* Cote.app */,
+				B349D24E2EB6FE1D00198445 /* CoteTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -93,6 +118,29 @@
 			productReference = B30957D62E0089E800517E17 /* Cote.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B349D24D2EB6FE1D00198445 /* CoteTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B349D2542EB6FE1D00198445 /* Build configuration list for PBXNativeTarget "CoteTests" */;
+			buildPhases = (
+				B349D24A2EB6FE1D00198445 /* Sources */,
+				B349D24B2EB6FE1D00198445 /* Frameworks */,
+				B349D24C2EB6FE1D00198445 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B349D2532EB6FE1D00198445 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B349D24F2EB6FE1D00198445 /* CoteTests */,
+			);
+			name = CoteTests;
+			packageProductDependencies = (
+			);
+			productName = CoteTests;
+			productReference = B349D24E2EB6FE1D00198445 /* CoteTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -100,11 +148,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1600;
+				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					B30957D52E0089E800517E17 = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					B349D24D2EB6FE1D00198445 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = B30957D52E0089E800517E17;
 					};
 				};
 			};
@@ -127,12 +179,20 @@
 			projectRoot = "";
 			targets = (
 				B30957D52E0089E800517E17 /* Cote */,
+				B349D24D2EB6FE1D00198445 /* CoteTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		B30957D42E0089E800517E17 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B349D24C2EB6FE1D00198445 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -149,7 +209,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B349D24A2EB6FE1D00198445 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B349D2532EB6FE1D00198445 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B30957D52E0089E800517E17 /* Cote */;
+			targetProxy = B349D2522EB6FE1D00198445 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		B30957E32E0089E900517E17 /* Debug */ = {
@@ -328,6 +403,48 @@
 			};
 			name = Release;
 		};
+		B349D2552EB6FE1D00198445 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KY55F55FY5;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yellmm.CoteTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Cote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Cote";
+			};
+			name = Debug;
+		};
+		B349D2562EB6FE1D00198445 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KY55F55FY5;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yellmm.CoteTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Cote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Cote";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -345,6 +462,15 @@
 			buildConfigurations = (
 				B30957E62E0089E900517E17 /* Debug */,
 				B30957E72E0089E900517E17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B349D2542EB6FE1D00198445 /* Build configuration list for PBXNativeTarget "CoteTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B349D2552EB6FE1D00198445 /* Debug */,
+				B349D2562EB6FE1D00198445 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

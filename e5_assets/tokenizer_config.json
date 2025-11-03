@@ -1,0 +1,22 @@
+{
+  "bos_token": "<s>",
+  "clean_up_tokenization_spaces": true,
+  "cls_token": "<s>",
+  "eos_token": "</s>",
+  "mask_token": {
+    "__type": "AddedToken",
+    "content": "<mask>",
+    "lstrip": true,
+    "normalized": true,
+    "rstrip": false,
+    "single_word": false
+  },
+  "model_max_length": 512,
+  "name_or_path": "intfloat/multilingual-e5-small",
+  "pad_token": "<pad>",
+  "sep_token": "</s>",
+  "sp_model_kwargs": {},
+  "special_tokens_map_file": "/Users/kim-yelim/.cache/huggingface/hub/models--intfloat--multilingual-e5-small/snapshots/c007d7ef6fd86656326059b28395a7a03a7c5846/special_tokens_map.json",
+  "tokenizer_class": "XLMRobertaTokenizer",
+  "unk_token": "<unk>"
+}
