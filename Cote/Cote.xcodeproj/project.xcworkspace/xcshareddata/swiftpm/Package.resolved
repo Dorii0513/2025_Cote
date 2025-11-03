@@ -1,5 +1,5 @@
 {
-  "originHash" : "e7c79a49200ff2dafd272eaaa90a7f0ba55c2a4bf3edb309041c75e4111f89c3",
+  "originHash" : "8b52bbbb2c1d2fada25d0cd6e15be19610cab7dfb6925f5ec3f842b44a53c87f",
   "pins" : [
     {
       "identity" : "highlightr",
@@ -26,24 +26,6 @@
       "state" : {
         "branch" : "master",
         "revision" : "c22f9303d446fc3c044e4c151ed19597464b6bd7"
-      }
-    },
-    {
-      "identity" : "swift-argument-parser",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-argument-parser.git",
-      "state" : {
-        "revision" : "cdd0ef3755280949551dc26dee5de9ddeda89f54",
-        "version" : "1.6.2"
-      }
-    },
-    {
-      "identity" : "swift-sentencepiece?utm_source=chatgpt.com",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jkrukowski/swift-sentencepiece?utm_source=chatgpt.com",
-      "state" : {
-        "revision" : "36a8b2b45733f6adb3092100f16e4c7d38a10a7c",
-        "version" : "0.0.6"
       }
     }
   ],
