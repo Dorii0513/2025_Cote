@@ -58,22 +58,22 @@ final class E5EmbeddingModel {
         let tokenIDs = tokenizer.tokenize(prefixed)
         let attentionMask = tokenIDs.map { $0 == 0 ? 0 : 1 }
 
-        // ✅ 2D [1, 256], Int32 타입으로 생성
+        // 2차원 배열 생성
         let shape: [NSNumber] = [1, NSNumber(value: tokenIDs.count)]
         let input_ids = try MLMultiArray(shape: shape, dataType: .int32)
         let attn_mask = try MLMultiArray(shape: shape, dataType: .int32)
 
-        // ✅ 값 안전하게 채우기
+        // 값 채우기
         for i in 0..<tokenIDs.count {
             input_ids[[0, NSNumber(value: i)]] = NSNumber(value: tokenIDs[i])
             attn_mask[[0, NSNumber(value: i)]] = NSNumber(value: attentionMask[i])
         }
 
-        // ✅ CoreML 호출
+        // CoreML
         let input = E5SentenceEmbeddingInput(input_ids: input_ids, attention_mask: attn_mask)
         let output = try model.prediction(input: input)
 
-        return output.var_938.toArray() // output 이름 확인 필요
+        return output.var_938.toArray()
     }
 }
 

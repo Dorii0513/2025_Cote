@@ -68,16 +68,6 @@ struct SearchView: View {
             }
             .navigationTitle("노트 검색")
         }
-        .task {
-            do {
-                    let model = E5EmbeddingModel()
-                    let vector = try model.embedding(for: "query: 논문 읽기 도구 만들기")
-                    print("✅ embedding dimension:", vector.count)
-                    print("🧩 first 10 values:", vector.prefix(10))
-                } catch {
-                    print("❌ embedding error:", error)
-                }
-        }
     }
 }
 

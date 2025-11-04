@@ -16,14 +16,15 @@ struct EmbeddingBackFill {
         func run() async {
             do {
                 let realm = try await Realm()
-                // 아직 embeddingData가 비어있는 노트만
+                
+                // 아직 embedding이 비어있는 노트만
                 let objs = realm.objects(NoteObject.self).where { $0.embedding == nil }
                 guard !objs.isEmpty else {
                     print("✅ 모든 노트가 이미 임베딩을 가지고 있음.")
                     return
                 }
 
-                print("🟡 임베딩 없는 노트 수: \(objs.count)")
+                print(" 임베딩 없는 노트 수: \(objs.count)")
                 try realm.write {
                     for obj in objs {
                         let text = "passage: \(obj.content)"

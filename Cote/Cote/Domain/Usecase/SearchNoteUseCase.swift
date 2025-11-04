@@ -14,7 +14,7 @@ protocol SearchUseCase {
 
 struct DefaultSearchUseCase: SearchUseCase {
     private let repository: NoteRepositoryProtocol
-    private let threshold: Double = 0.85 // e5는 0.6~0.7이 적당
+    private let threshold: Double = 0.85
     private let embeddingModel = E5EmbeddingModel()
     
     
@@ -28,20 +28,20 @@ struct DefaultSearchUseCase: SearchUseCase {
     }
     
     func execute(query: String, topK: Int = 200) async throws -> [SearchResult] {
-        // 1️⃣ 쿼리 임베딩 1회 계산
+        // 임베딩 계산 (검색어)
         let queryVec = try embeddingModel.embedding(for: "query: \(query)")
 
-        // 2️⃣ 노트 목록 (임베딩 포함) 가져오기
+        // 노트 목록 가져오기
         let notes = try await repository.fetchNoteLight(limit: topK)
 
-        // 3️⃣ 저장된 임베딩과 코사인 유사도 비교
+        // 임베딩과 노트 유사도 계산
         var results: [SearchResult] = []
         for (id, title, preview, embF) in notes {
             guard let embF, !embF.isEmpty else { continue }
             let noteVec = embF.map { Double($0) }
             let similarity = cosineSimilarity(queryVec, noteVec)
 
-            // ✨ 여기 추가 (길이 보정)
+            // 길이 보정?
             let lengthPenalty = min(1.0, max(0.6, Double(preview.count) / 200.0))
             let adjusted = similarity * lengthPenalty
 
@@ -57,7 +57,7 @@ struct DefaultSearchUseCase: SearchUseCase {
             }
         }
 
-        // 4️⃣ 점수순 정렬
+        // 정렬 (유사도 높은 순)
         return results.sorted { $0.score > $1.score }
     }
     

@@ -10,43 +10,33 @@ import Foundation
 import FoundationModels
 #endif
 
-/// A tiny helper that summarizes code into a single Korean sentence.
-/// - Note: Uses SystemLanguageModel when available on the running OS. Falls back to a lightweight heuristic on earlier OS versions.
 final class CodeSummarizer {
-
-    /// Summarize the given Swift source as a single concise Korean sentence.
-    /// - Parameter code: The Swift source to summarize.
-    /// - Returns: A single-sentence Korean summary.
     func summarize(code: String) async throws -> String {
-        // Use the on-device SystemLanguageModel only when it is available on the running OS.
 #if canImport(FoundationModels)
         if #available(macOS 26.0, iOS 18.0, *) {
+            
+            //프롬프트
             let prompt = """
-                    Summarize the following Swift code in one concise Korean sentence that describes what the code does:
-                    \(code)
-                    """
-            // ✅ 1) 기본 시스템 언어 모델 가져오기
-            let model = SystemLanguageModel.default
+            Summarize the following Swift code in one concise sentence.
+            If the code or question is in Korean, respond in Korean.
+            If it's in English, respond in English.
+            Code:
+            \(code)
+            """
             
             let session = LanguageModelSession()
-            
-            // ✅ 3) 응답 요청
             let response = try await session.respond(to: prompt)
             
-            // ✅ 4) 결과 텍스트 반환
+            // 반환
             return response.content
         }
 #endif
-
-        // Fallback path for earlier OS versions or when FoundationModels is unavailable.
-        // Provide a very simple heuristic summary to keep the app functional.
         return fallbackSummary(for: code)
     }
 
     // MARK: - Fallback
 
     private func fallbackSummary(for code: String) -> String {
-        // Extremely lightweight heuristic: detect common Swift constructs and produce a short Korean sentence.
         let lower = code.lowercased()
         if lower.contains("class ") { return "이 코드는 하나 이상의 클래스를 정의합니다." }
         if lower.contains("struct ") { return "이 코드는 하나 이상의 구조체를 정의합니다." }
