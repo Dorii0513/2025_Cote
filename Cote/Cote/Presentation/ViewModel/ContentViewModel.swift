@@ -89,6 +89,12 @@ final class ContentViewModel: ObservableObject {
     
     // 노트 저장
     func saveCurrentNote(by id: UUID) async {
+        
+        guard !isLoading else {
+            print("⛔️ save blocked - note is loading")
+            return
+        }
+        
         let safeTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Untitled" : title
         let safeDate = updatedAt ?? Date()
         
@@ -110,30 +116,50 @@ final class ContentViewModel: ObservableObject {
     
     // 선택 노트 로드
     func loadNote(by id: UUID) async {
-        if currentNoteID == id { return }
-        isLoading = true
-        defer { isLoading = false; currentNoteID = id }
-        do {
-            if let note = try await fetchUseCase.execute(noteID: id) {
-                apply(note)
+            if currentNoteID == id {
+                print("ℹ️ Already loaded note \(id)")
                 return
             }
-            // 대기 후 시도
-            try await Task.sleep(nanoseconds: 150_000_000) // 150ms
-            if let note = try await fetchUseCase.execute(noteID: id) {
-                apply(note)
-                return
+            
+            print("📖 Loading note \(id)...")
+            isLoading = true
+            currentNoteID = id
+            
+            do {
+                // 첫 시도
+                if let note = try await fetchUseCase.execute(noteID: id) {
+                    apply(note)
+
+                    try await Task.sleep(nanoseconds: 50_000_000)
+                    isLoading = false
+                    return
+                }
+                
+                // 재시도
+                try await Task.sleep(nanoseconds: 150_000_000)
+                if let note = try await fetchUseCase.execute(noteID: id) {
+                    apply(note)
+                    
+                    try await Task.sleep(nanoseconds: 50_000_000)
+                    isLoading = false
+                    return
+                }
+                
+                isLoading = false
+            } catch {
+                print("❌ [VM] load error=", error)
+                isLoading = false
             }
-        } catch {
-            print("[VM] load error=", error)
         }
-    }
-    private func apply(_ note: Note) {
-        self.title = note.title
-        self.content = note.content
-        self.noteTags = note.tags
-        self.updatedAt = note.updatedAt
-        self.language = note.language.isEmpty ? "plaintext" : note.language
-    }
+        
+        private func apply(_ note: Note) {
+            objectWillChange.send()
+            
+            self.title = note.title
+            self.content = note.content
+            self.noteTags = note.tags
+            self.updatedAt = note.updatedAt
+            self.language = note.language.isEmpty ? "plaintext" : note.language
+        }
 }
 

@@ -14,14 +14,14 @@ protocol FetchNotesUseCase {
 
 @MainActor
 struct DefaultFetchNotesUseCase: FetchNotesUseCase {
-    private let repository: NoteRepository
+    private let repository: NoteRepositoryProtocol
     
-    init(repository: NoteRepository) {
+    init(repository: NoteRepositoryProtocol) {
         self.repository = repository
     }
     
     init() {
-        self.init(repository: RealmNoteRepository())
+        self.init(repository: NoteRepository())
     }
     
     func execute(noteID: UUID) async throws -> Note? {

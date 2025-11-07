@@ -12,15 +12,15 @@ protocol CreateNoteUseCase {
 }
 
 struct DefaultCreateNoteUseCase: CreateNoteUseCase {
-    private let repository: NoteRepository
+    private let repository: NoteRepositoryProtocol
 
-    init(repository: NoteRepository) {
+    init(repository: NoteRepositoryProtocol) {
         self.repository = repository
     }
     
     @MainActor
     init() {
-        self.init(repository: RealmNoteRepository())
+        self.init(repository: NoteRepository())
     }
 
     func execute(note: Note) async throws {
