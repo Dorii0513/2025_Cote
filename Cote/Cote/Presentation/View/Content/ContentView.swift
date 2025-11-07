@@ -58,10 +58,17 @@ struct ContentView: View {
     }
     
     private func scheduleAutosave(oldValue: Any, newValue: Any) {
-        // 로딩 중엔 autosave 금지
         guard !viewModel.isLoading else { return }
         AutosaveScheduler.shared.schedule {
-            Task { if let id = state.selectedNoteID { await viewModel.saveCurrentNote(by: id) } }
+            guard !viewModel.isLoading else {
+                return
+            }
+            
+            Task { @MainActor in
+                if let id = viewModel.currentNoteID {
+                    await viewModel.saveCurrentNote(by: id)
+                }
+            }
         }
     }
 }
@@ -150,7 +157,7 @@ private struct BottomBar: View {
 fileprivate final class AutosaveScheduler {
     static let shared = AutosaveScheduler()
     private var workItem: DispatchWorkItem?
-    private let delay: TimeInterval = 0.8
+    private let delay: TimeInterval = 1.0
     
     func schedule(_ action: @escaping () -> Void) {
         workItem?.cancel()

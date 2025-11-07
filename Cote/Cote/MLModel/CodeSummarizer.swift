@@ -11,21 +11,28 @@ import FoundationModels
 #endif
 
 final class CodeSummarizer {
+    private var isSummarizing = false
+    
     func summarize(code: String) async throws -> String {
 #if canImport(FoundationModels)
         if #available(macOS 26.0, iOS 18.0, *) {
             
             //프롬프트
             let prompt = """
-            Summarize the following Swift code in one concise sentence.
-            If the code or question is in Korean, respond in Korean.
-            If it's in English, respond in English.
+            Summarize the following code in two concise sentences optimized for search:
+            1) A Korean summary.
+            2) An English summary.
+
+            Each summary must clearly describe the code’s main purpose, behavior, and role so the note can be easily found through semantic search.
+
             Code:
             \(code)
             """
             
             let session = LanguageModelSession()
             let response = try await session.respond(to: prompt)
+            
+            print(response.content)
             
             // 반환
             return response.content
