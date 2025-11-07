@@ -20,10 +20,10 @@ final class CodeSummarizer {
             //프롬프트
             let prompt = """
             Summarize the following code in two concise sentences optimized for search:
-            1) A Korean summary.
-            2) An English summary.
+            1) A Korean summary that includes key identifiers (variable names, function names, class names).
+            2) An English summary that includes key identifiers.
 
-            Each summary must clearly describe the code’s main purpose, behavior, and role so the note can be easily found through semantic search.
+            Important: Include actual identifiers from the code (e.g., "random", "compliments", "print") in your summaries.
 
             Code:
             \(code)
