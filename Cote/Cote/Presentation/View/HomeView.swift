@@ -87,14 +87,15 @@ private struct contentToolbar: View {
     
     var body: some View {
         HStack(spacing: 0) {
+            Spacer().frame(width: 20)
             Text(viewModel.title.isEmpty ? "" : viewModel.title)
                 .coteFont(.title1,
                           color: .textStrong)
-                .padding(.trailing, 8)
+                .padding(.trailing, 10)
             
             if !viewModel.noteTags.isEmpty {
                 tagChipsView
-                    .padding(.trailing, 8)
+                    .padding(.trailing, 10)
             }
             
             if isBtnTapped {
@@ -146,7 +147,7 @@ private struct contentToolbar: View {
                 } label: {
                     Text("Add Tags")
                         .coteFont(.title2,
-                                  color: .textDefault)
+                                  color: .textSecondary)
                 }
                 .buttonStyle(.plain)
             }

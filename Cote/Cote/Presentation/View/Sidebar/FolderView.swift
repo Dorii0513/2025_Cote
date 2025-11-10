@@ -33,7 +33,7 @@ struct FolderView: View {
     }
     
     private var topMenuBar: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 2) {
             MenuButton(selected: $addFolderSelected, icon: CoteIcon.addFolder)
             MenuButton(selected: $addNoteSelected, icon: CoteIcon.addNote)
             Spacer()
@@ -100,7 +100,7 @@ struct FolderView: View {
                     .focused($isFocused)
                     .tint(.textDefault)
                     .coteFont(.title2, color: .textDefault)
-                    .padding(.horizontal, 6)
+                    .padding(.horizontal, 4)
                     .padding(.vertical, 5)
                     .frame(height: 20)
                     .frame(minWidth: 60, alignment: .leading)
@@ -146,7 +146,7 @@ struct FolderView: View {
                     .focused($isFocused)
                     .tint(.textDefault)
                     .coteFont(.title2, color: .textDefault)
-                    .padding(.horizontal, 6)
+                    .padding(.horizontal, 4)
                     .padding(.vertical, 5)
                     .frame(height: 20)
                     .frame(minWidth: 60, alignment: .leading)

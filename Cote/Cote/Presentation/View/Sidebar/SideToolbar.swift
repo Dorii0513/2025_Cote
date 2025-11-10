@@ -23,7 +23,7 @@ struct SideToolbar: View {
     var body: some View {
         HStack(spacing: 4) {
             Spacer()
-            HStack(spacing: 0) {
+            HStack(spacing: 2) {
                 ForEach(visibleIcons) { button in
                     MenuButton(
                         selected: Binding(
