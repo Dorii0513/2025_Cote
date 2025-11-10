@@ -7,7 +7,7 @@ protocol SearchUseCase {
 
 struct DefaultSearchUseCase: SearchUseCase {
     private let repository: NoteRepositoryProtocol
-    private let threshold: Double = 0.85
+    private let threshold: Double = 0.86
     private let embeddingModel = E5EmbeddingModel()
     
     init(repository: NoteRepositoryProtocol) {
@@ -29,17 +29,17 @@ struct DefaultSearchUseCase: SearchUseCase {
         var results: [SearchResult] = []
         
         // 검색어-노트 유사도 계산
-        for (id, title, preview, embF) in notes {
+        for (id, title, content, folders, embF) in notes {
             guard let embF, !embF.isEmpty else { continue }
             let noteVec = embF.map { Double($0) }
             let similarity = cosineSimilarity(queryVec, noteVec)
-            let lengthPenalty = calculateLengthPenalty(contentLength: preview.count)
+            let lengthPenalty = calculateLengthPenalty(contentLength: content.count)
             
             // 제목 매칭 점수
             let titleBonus = calculateTitleBonus(query: query, title: title)
             
             // 키워드 매칭 점수
-            let keywordBonus = calculateKeywordBonus(query: query, preview: preview)
+            let keywordBonus = calculateKeywordBonus(query: query, content: content)
             
             // 최종 점수
             let adjusted = similarity * lengthPenalty + titleBonus + keywordBonus
@@ -49,7 +49,8 @@ struct DefaultSearchUseCase: SearchUseCase {
                     SearchResult(
                         noteID: id,
                         title: title,
-                        preview: preview,
+                        content: content,
+                        folders: folders,
                         score: adjusted
                     )
                 )
@@ -81,9 +82,9 @@ struct DefaultSearchUseCase: SearchUseCase {
     }
     
     // 키워드 매칭
-    private func calculateKeywordBonus(query: String, preview: String) -> Double {
+    private func calculateKeywordBonus(query: String, content: String) -> Double {
         let queryTokens = tokenize(query)
-        let previewLower = preview.lowercased()
+        let previewLower = content.lowercased()
         
         let matches = queryTokens.filter { token in
             previewLower.contains(token.lowercased())

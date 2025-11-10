@@ -8,7 +8,8 @@
 import SwiftUI
 
 extension ShapeStyle where Self == Color {
-    static var border: Self { Color("gray90") }
+    static var borderDefault: Self { Color("gray90") }
+    static var borderSecondary: Self { Color("black60") }
     
     // icon
     static var iconDefault: Self { Color("gray80") }
@@ -20,11 +21,12 @@ extension ShapeStyle where Self == Color {
     static var textStrong:       Self { Color("gray50") }
     static var textSelected: Self { Color("gray50") }
     static var textDefault:  Self { Color("gray80") }
-    static var textSecondary:Self { Color("gray100") }
-    static var textInfo:     Self { Color("black60") }
+    static var textSecondary:     Self { Color("gray100") }
+    static var textMuted:Self { Color("gray100") }
     static var textTag:   Self { Color("purple20") }
     
     // background
+    static var bgTextField: Self { Color("black200_8") }
     static var bgTag:            Self { Color("purple100_15") }
     static var bgEditor:   Self { Color("black100") }
     static var bgElevatedDefault:Self { Color("black70") }

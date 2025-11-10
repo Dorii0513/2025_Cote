@@ -129,11 +129,11 @@ private struct BottomBar: View {
                     HStack(spacing: 4) {
                         Image("language")
                         Text(language)
-                            .coteFont(.code2, color: .textSecondary)
+                            .coteFont(.code2, color: .textMuted)
                     }
                 }
                 .menuStyle(.borderlessButton)
-                .tint(isHover ? .textDefault : .textSecondary)
+                .tint(isHover ? .textDefault : .textMuted)
                 .padding(.vertical, 2)
                 .padding(.horizontal, 4)
                 .background(
@@ -146,7 +146,7 @@ private struct BottomBar: View {
                 })
             }
         }
-        .coteFont(.code2, color: .textSecondary)
+        .coteFont(.code2, color: .textMuted)
         .padding(.leading, 15)
         .padding([.vertical, .trailing], 8)
         .background(.bgEditor)

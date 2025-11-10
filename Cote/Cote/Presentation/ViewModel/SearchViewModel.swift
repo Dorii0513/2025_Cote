@@ -13,6 +13,7 @@ final class SearchViewModel: ObservableObject {
     private let useCase: SearchUseCase
     
     @Published var query: String = ""
+    @Published var resultCount: Int = 0
     @Published private(set) var results: [SearchResult] = []
 
     
@@ -38,11 +39,16 @@ final class SearchViewModel: ObservableObject {
             }
             .store(in: &cancellables)
     }
+    
+    func cleanQuery() {
+        query = ""
+    }
 
     func search(for text: String) async {
         do {
             let res = try await useCase.execute(query: text, topK: 200)
             results = res
+            resultCount = res.count
         } catch {
             print("❌ 검색 오류:", error)
             results = []

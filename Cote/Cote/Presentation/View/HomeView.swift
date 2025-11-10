@@ -89,7 +89,7 @@ private struct contentToolbar: View {
         HStack(spacing: 0) {
             Spacer().frame(width: 20)
             Text(viewModel.title.isEmpty ? "" : viewModel.title)
-                .coteFont(.title1,
+                .coteFont(.title,
                           color: .textStrong)
                 .padding(.trailing, 10)
             
@@ -117,7 +117,7 @@ private struct contentToolbar: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color.border, lineWidth: isFocused ? 2 : 1)
+                            .stroke(Color.borderDefault, lineWidth: isFocused ? 2 : 1)
                     )
                     .onSubmit(of: .text) {
                         let tagToAdd = newTag
@@ -146,8 +146,8 @@ private struct contentToolbar: View {
                     viewModel.showSuggestions()
                 } label: {
                     Text("Add Tags")
-                        .coteFont(.title2,
-                                  color: .textSecondary)
+                        .coteFont(.text2,
+                                  color: .textMuted)
                 }
                 .buttonStyle(.plain)
             }

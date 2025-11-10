@@ -12,13 +12,13 @@ struct TagSuggestionsView: View {
     private var suggestionsView: some View {
         VStack(alignment: .leading) {
             Text("Tap to add relevant tags for this note.")
-                .coteFont(.title2, color: .textDefault)
+                .coteFont(.text2, color: .textDefault)
             if viewModel.generatedTags.isEmpty {
                 HStack(spacing: 8) {
                     ProgressView()
                         .progressViewStyle(.circular)
                     Text("Generating tags…")
-                        .coteFont(.title2, color: .textInfo)
+                        .coteFont(.text2, color: .textSecondary)
                         .foregroundStyle(Color.textDefault)
                 }
                 .padding(.vertical, 4)
@@ -39,14 +39,14 @@ struct TagSuggestionsView: View {
             Color.bgSidebar
             if viewModel.content.isEmpty {
                 Text("노트를 입력해 주세요")
-                    .coteFont(.title2, color: .textDefault)
+                    .coteFont(.text2, color: .textDefault)
                     .padding(.leading, 10)
             } else {
                 VStack(alignment: .leading) {
                     HStack(spacing: 4) {
                         Image("generate")
                         Text("AI-Generated Tags")
-                            .coteFont(.title2, color: .textStrong)
+                            .coteFont(.text2, color: .textStrong)
                     }
                     .padding(.bottom, 10)
                     suggestionsView

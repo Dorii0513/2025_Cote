@@ -63,7 +63,7 @@ struct ListCell: View {
                         .frame(width: 18)
                     
                     Text(n.title)
-                        .coteFont(.title2,
+                        .coteFont(.text2,
                                   color: isHover || isSelected ? .textStrong : .textDefault)
                         .frame(height: 18) //tag 높이
                 }
@@ -120,7 +120,7 @@ struct FolderCell: View {
                     .foregroundStyle(.iconSecondary)
             }
             Text(folder.name)
-                .coteFont(.title2,
+                .coteFont(.text2,
                           color: isHover ? .textStrong : .textDefault)
         }
     }

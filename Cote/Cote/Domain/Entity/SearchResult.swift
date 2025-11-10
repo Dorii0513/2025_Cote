@@ -7,15 +7,19 @@
 
 import Foundation
 
-public struct SearchResult {
+public struct SearchResult: Identifiable {
+    public var id: UUID { noteID }
+    
     public let noteID: UUID
     public let title: String
-    public let preview: String
+    public let content: String
+    public let folders: [String]
     public let score: Double
-    public init(noteID: UUID, title: String, preview: String, score: Double = 0) {
+    public init(noteID: UUID, title: String, content: String, folders: [String], score: Double = 0) {
         self.noteID = noteID
         self.title  = title
-        self.preview = preview
+        self.content = content
+        self.folders = folders
         self.score  = score
     }
 }

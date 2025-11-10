@@ -99,7 +99,7 @@ struct FolderView: View {
                 TextField("", text: $newFolder.name)
                     .focused($isFocused)
                     .tint(.textDefault)
-                    .coteFont(.title2, color: .textDefault)
+                    .coteFont(.text3, color: .textDefault)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 5)
                     .frame(height: 20)
@@ -114,7 +114,7 @@ struct FolderView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color.border, lineWidth: isFocused ? 2 : 1)
+                            .stroke(Color.borderDefault, lineWidth: isFocused ? 2 : 1)
                     )
                     .onSubmit(of: .text) {
                         withAnimation(.smooth) {
@@ -145,7 +145,7 @@ struct FolderView: View {
                 TextField("", text: $newNote.title)
                     .focused($isFocused)
                     .tint(.textDefault)
-                    .coteFont(.title2, color: .textDefault)
+                    .coteFont(.text3, color: .textDefault)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 5)
                     .frame(height: 20)
@@ -160,7 +160,7 @@ struct FolderView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color.border, lineWidth: isFocused ? 2 : 1)
+                            .stroke(Color.borderDefault, lineWidth: isFocused ? 2 : 1)
                     )
                     .onSubmit(of: .text) {
                         withAnimation(.smooth) {

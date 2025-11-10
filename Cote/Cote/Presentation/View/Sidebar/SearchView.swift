@@ -9,65 +9,72 @@ import SwiftUI
 
 struct SearchView: View {
     @StateObject private var viewModel = SearchViewModel()
+    @EnvironmentObject private var state: UIState
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
+            VStack(spacing: 8) {
+                Spacer().frame(height: 0)
+                
                 // 검색창
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
-                    TextField("검색어를 입력하세요...", text: $viewModel.query)
+                HStack(spacing: 4) {
+                    Image("search")
+                        .foregroundColor(.iconSecondary)
+                    TextField("Search your notes", text: $viewModel.query)
+                        .coteFont(.text2, color: .textSelected)
                         .textFieldStyle(.plain)
-                        .padding(.vertical, 8)
-                        .frame(height: 28)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    Spacer()
+                    
+                    Button{
+                        viewModel.cleanQuery()
+                    } label: {
+                        Image("xBtn")
+                    }
+                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal)
+                .padding([.vertical, .horizontal], 5)
                 .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(.gray80))
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.bgTextField))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.borderSecondary, lineWidth: 2)
+                        )
                 )
-                .padding(.horizontal)
-                .padding(.top, 12)
-
-                Divider().padding(.vertical, 4)
+                .padding(.vertical, 4)
+                
+                HStack {
+                    Text("\(viewModel.resultCount)개의 노트")
+                        .coteFont(.text3, color: .textSecondary)
+                    Spacer()
+                    Button {
+                        // 필터 액션
+                    } label: {
+                        Image("filter2")
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 3)
 
                 // 검색 결과 리스트
                 if viewModel.results.isEmpty {
                     Spacer()
                     VStack {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .font(.system(size: 36))
-                            .foregroundColor(.gray)
-                        Text("검색 결과가 없습니다.")
-                            .foregroundColor(.secondary)
-                            .padding(.top, 4)
+                        Text("No results found.")
+                            .coteFont(.text1, color: .textSecondary)
                     }
                     Spacer()
                 } else {
-                    List(viewModel.results, id: \.noteID) { result in
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(result.title)
-                                .font(.headline)
-                            Text(result.preview)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .lineLimit(2)
-                            HStack {
-                                Spacer()
-                                Text(String(format: "유사도: %.2f", result.score))
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(viewModel.results) { result in
+                            SearchCell(result: result) {
+                                state.selectedNoteID = result.noteID
                             }
                         }
-                        .padding(.vertical, 6)
+                        Spacer()
                     }
-                    .listStyle(.plain)
                 }
             }
-            .navigationTitle("노트 검색")
-        }
+            .padding(.horizontal, 10)
     }
 }
 
