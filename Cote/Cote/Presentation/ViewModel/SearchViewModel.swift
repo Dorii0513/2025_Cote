@@ -12,7 +12,7 @@ import Combine
 final class SearchViewModel: ObservableObject {
     private let useCase: SearchUseCase
     
-    @Published var query: String = ""
+    @Published var query: String = (UserDefaults.standard.string(forKey: "Search") ?? "")
     @Published var resultCount: Int = 0
     @Published private(set) var results: [SearchResult] = []
 
@@ -49,6 +49,7 @@ final class SearchViewModel: ObservableObject {
             let res = try await useCase.execute(query: text, topK: 200)
             results = res
             resultCount = res.count
+            UserDefaults.standard.set(self.query, forKey: "Search")
         } catch {
             print("❌ 검색 오류:", error)
             results = []
