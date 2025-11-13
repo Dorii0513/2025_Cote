@@ -13,10 +13,18 @@ final class UIState: ObservableObject {
     @Published var isFolderView = true
     @Published var isSearchView = false
     
-//    @Published var addNote = false
-//    @Published var addFolder = false
-    
-    @Published var selectedNoteID: UUID?
+    @AppStorage("selectedNoteID") private var selectedNoteIDString: String?
+
+    var selectedNoteID: UUID? {
+        get {
+            guard let string = selectedNoteIDString else { return nil }
+            return UUID(uuidString: string)
+        }
+        set {
+            selectedNoteIDString = newValue?.uuidString
+            objectWillChange.send()
+        }
+    }
     
     func toggleSidebar() { isSidebarOpen.toggle() }
 }
