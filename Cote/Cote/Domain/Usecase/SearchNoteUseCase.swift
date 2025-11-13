@@ -29,7 +29,7 @@ struct DefaultSearchUseCase: SearchUseCase {
         var results: [SearchResult] = []
         
         // 검색어-노트 유사도 계산
-        for (id, title, content, folders, embF) in notes {
+        for (id, title, content, folders, updatedAt, embF) in notes {
             guard let embF, !embF.isEmpty else { continue }
             let noteVec = embF.map { Double($0) }
             let similarity = cosineSimilarity(queryVec, noteVec)
@@ -51,6 +51,7 @@ struct DefaultSearchUseCase: SearchUseCase {
                         title: title,
                         content: content,
                         folders: folders,
+                        updatedAt: updatedAt,
                         score: adjusted
                     )
                 )
@@ -58,7 +59,7 @@ struct DefaultSearchUseCase: SearchUseCase {
         }
 
         // 정렬 (유사도 높은 순)
-        return results.sorted { $0.score > $1.score }
+        return results
     }
     
     // MARK: - Scoring Helpers

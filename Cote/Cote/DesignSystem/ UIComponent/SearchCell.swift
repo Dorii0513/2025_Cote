@@ -38,12 +38,6 @@ struct SearchCell: View {
                             .coteFont(.text3, color: isHover || isSelected ? .textDefault : .textSecondary)
                         }
                     }
-                    //                            HStack {
-                    //                                Spacer()
-                    //                                Text(String(format: "유사도: %.2f", result.score))
-                    //                                    .font(.caption)
-                    //                                    .foregroundColor(.gray)
-                    //                            }
                 }
                 Spacer()
             }

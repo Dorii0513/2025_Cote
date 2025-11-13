@@ -216,7 +216,7 @@ struct NoteRepository: @preconcurrency NoteRepositoryProtocol {
     
     //MARK: - Search
     
-    func fetchNoteLight(limit: Int? = nil) async throws -> [(UUID, String, String, [String], [Float]?)] {
+    func fetchNoteLight(limit: Int? = nil) async throws -> [(UUID, String, String, [String], Date, [Float]?)] {
         let realm = try openRealm()
         let objs = realm.objects(NoteObject.self)
             .sorted(byKeyPath: "title", ascending: true)
@@ -229,7 +229,7 @@ struct NoteRepository: @preconcurrency NoteRepositoryProtocol {
             for i in obj.parentFolders {
                 folders.append(i.name)
             }
-            return (obj.id, obj.title, obj.content, folders ,vector)
+            return (obj.id, obj.title, obj.content, folders, obj.updatedAt ,vector)
         }
     }
 }

@@ -13,7 +13,6 @@ struct SearchView: View {
     @FocusState private var focusField: FocusTarget?
     
     @State private var showFilter: Bool = false
-    @State private var sort: SearchFilter = .newest
     @State private var isFilterHover: Bool = false
     
     private var isFocused: Bool {
@@ -65,24 +64,27 @@ struct SearchView: View {
                     Spacer()
                     Menu {
                         Button {
-                            sort = .newest
+                            viewModel.setFilter(.newest)
                         } label: {
-                            Label("최신순", systemImage: sort == .newest ? "checkmark" : "")
+                            Label("최신순", systemImage: viewModel.filter == .newest ? "checkmark" : "")
                         }
+
                         Button {
-                            sort = .oldest
+                            viewModel.setFilter(.oldest)
                         } label: {
-                            Label("오래된순", systemImage: sort == .oldest ? "checkmark" : "")
+                            Label("오래된순", systemImage: viewModel.filter == .oldest ? "checkmark" : "")
                         }
+
                         Button {
-                            sort = .relevance
+                            viewModel.setFilter(.relevance)
                         } label: {
-                            Label("관련도순", systemImage: sort == .relevance ? "checkmark" : "")
+                            Label("관련도순", systemImage: viewModel.filter == .relevance ? "checkmark" : "")
                         }
                     } label: {
                         HStack(spacing: 4) {
-                            Text(sort.rawValue)
+                            Text(viewModel.filter.rawValue)
                                 .coteFont(.text2, color: isFilterHover ? .textDefault : .textSecondary)
+
                             Image(systemName: "chevron.up.chevron.down")
                                 .foregroundStyle(isFilterHover ? .iconDefault : .iconSecondary)
                         }
@@ -129,10 +131,4 @@ struct SearchView: View {
                 focusField = nil
             }
     }
-}
-
-enum SearchFilter: String {
-    case newest = "Newest"
-    case oldest = "Oldest"
-    case relevance = "Relevance"
 }

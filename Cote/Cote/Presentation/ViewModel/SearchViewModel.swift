@@ -15,6 +15,7 @@ final class SearchViewModel: ObservableObject {
     @Published var query: String = (UserDefaults.standard.string(forKey: "Search") ?? "")
     @Published var resultCount: Int = 0
     @Published private(set) var results: [SearchResult] = []
+    @Published var filter: SearchFilter = .relevance
 
     
     private var cancellables = Set<AnyCancellable>()
@@ -35,7 +36,10 @@ final class SearchViewModel: ObservableObject {
             .removeDuplicates()
             .sink { [weak self] newValue in
                 guard let self else { return }
-                Task { await self.search(for: newValue) }
+                Task {
+                    await self.search(for: newValue)
+                    self.applyFilter()
+                }
             }
             .store(in: &cancellables)
     }
@@ -55,4 +59,32 @@ final class SearchViewModel: ObservableObject {
             results = []
         }
     }
+    
+    func setFilter(_ newFilter: SearchFilter) {
+        filter = newFilter
+        applyFilter()
+    }
+    
+    private func applyFilter() {
+        switch filter {
+        case .newest:
+            results.sort { lhs, rhs in
+                lhs.updatedAt > rhs.updatedAt
+            }
+        case .oldest:
+            results.sort { lhs, rhs in
+                lhs.updatedAt < rhs.updatedAt
+            }
+        case .relevance:
+            results.sort { lhs, rhs in
+                lhs.score > rhs.score
+            }
+        }
+    }
+}
+
+enum SearchFilter: String {
+    case newest = "Newest"
+    case oldest = "Oldest"
+    case relevance = "Relevance"
 }
