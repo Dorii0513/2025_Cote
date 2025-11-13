@@ -10,7 +10,12 @@ import SwiftUI
 struct SearchView: View {
     @StateObject private var viewModel = SearchViewModel()
     @EnvironmentObject private var state: UIState
-
+    @FocusState private var focusField: FocusTarget?
+    private var isFocused: Bool {
+        get { focusField == .search }
+        set { focusField = newValue ? .search : nil }
+    }
+    
     var body: some View {
             VStack(spacing: 8) {
                 Spacer().frame(height: 0)
@@ -20,8 +25,15 @@ struct SearchView: View {
                     Image("search")
                         .foregroundColor(.iconSecondary)
                     TextField("Search your notes", text: $viewModel.query)
+                        .focused($focusField, equals: .search)
                         .coteFont(.text2, color: .textSelected)
+                        .tint(.textDefault)
                         .textFieldStyle(.plain)
+                        .onSubmit(of: .text) {
+                            withAnimation(.easeInOut) {
+                                focusField = nil
+                            }
+                        }
                     Spacer()
                     
                     Button{
@@ -37,7 +49,7 @@ struct SearchView: View {
                         .fill(Color(.bgTextField))
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.borderSecondary, lineWidth: 2)
+                                .stroke(isFocused ? Color.borderDefault : Color.borderSecondary, lineWidth: 2)
                         )
                 )
                 .padding(.vertical, 4)
@@ -75,6 +87,14 @@ struct SearchView: View {
                 }
             }
             .padding(.horizontal, 10)
+            .onAppear(){
+                focusField = .search
+            }
+        // focus 해제
+            .contentShape(Rectangle())
+            .onTapGesture {
+                focusField = nil
+            }
     }
 }
 

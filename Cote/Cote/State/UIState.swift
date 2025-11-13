@@ -13,10 +13,25 @@ final class UIState: ObservableObject {
     @Published var isFolderView = true
     @Published var isSearchView = false
     
-    @Published var addNote = false
-    @Published var addFolder = false
+//    @Published var addNote = false
+//    @Published var addFolder = false
     
     @Published var selectedNoteID: UUID?
-
+    
     func toggleSidebar() { isSidebarOpen.toggle() }
+}
+
+struct FocusRequest: Equatable {
+    let target: FocusTarget
+    let id: UUID
+}
+
+enum FocusTarget: Hashable {
+    case addFolder
+    case addNote
+    case folder
+    case note
+    case tag
+    case content
+    case search
 }

@@ -21,16 +21,12 @@ struct FolderView: View {
     @State private var newNote: Note = .init(NoteObject.init())
     @State private var newFolder: Folder = .init(FolderObject.init())
     
-    @FocusState private var isFocused: Bool
+    @FocusState var focusField: FocusTarget?
     @State private var hasLoaded = false    // cell
     @State private var expandedIDs = Set<UUID>()
     
-    private func focousChanged() {
-        if addNoteSelected || addFolderSelected {
-            isFocused = true
-            print(isFocused)
-        }
-    }
+    @State private var showFolderField = false
+    @State private var showNoteField = false
     
     private var topMenuBar: some View {
         HStack(spacing: 2) {
@@ -92,12 +88,12 @@ struct FolderView: View {
     
     @ViewBuilder
     private var newFolderRow: some View {
-        if state.addFolder {
+        if showFolderField  {
             HStack(spacing: 0) {
                 Image("arrow_right")
                     .foregroundStyle(.iconSecondary)
                 TextField("", text: $newFolder.name)
-                    .focused($isFocused)
+                    .focused($focusField, equals: .addFolder)
                     .tint(.textDefault)
                     .coteFont(.text3, color: .textDefault)
                     .padding(.horizontal, 4)
@@ -114,20 +110,15 @@ struct FolderView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color.borderDefault, lineWidth: isFocused ? 2 : 1)
+                            .stroke(Color.borderDefault, lineWidth: focusField == .addFolder ? 2 : 1)
                     )
                     .onSubmit(of: .text) {
-                        withAnimation(.smooth) {
-                            viewModel.createFolder(name: newFolder.name)
-                            newFolder.name = ""
-                            state.addFolder = false
-                        }
-                    }
-                    .onChange(of: isFocused, initial: false) { _, newValue in
-                        if !newValue && newFolder.name.isEmpty {
-                            withAnimation(.snappy) {
-                                state.addFolder = false
+                        withAnimation(.easeInOut) {
+                            if !newFolder.name.isEmpty {
+                                viewModel.createFolder(name: newFolder.name)
+                                newFolder.name = ""
                             }
+                            focusField = nil
                         }
                     }
             }
@@ -136,14 +127,13 @@ struct FolderView: View {
     }
     
     
-    
     @ViewBuilder
     private var newNoteRow: some View {
-        if state.addNote {
+        if showNoteField {
             HStack {
                 Spacer().frame(width: 20)
                 TextField("", text: $newNote.title)
-                    .focused($isFocused)
+                    .focused($focusField, equals: .addNote)
                     .tint(.textDefault)
                     .coteFont(.text3, color: .textDefault)
                     .padding(.horizontal, 4)
@@ -160,21 +150,16 @@ struct FolderView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color.borderDefault, lineWidth: isFocused ? 2 : 1)
+                            .stroke(Color.borderDefault, lineWidth: focusField == .addNote ? 2 : 1)
                     )
                     .onSubmit(of: .text) {
-                        withAnimation(.smooth) {
-                            viewModel.createNote(note: newNote)
-                            newNote.title = ""
-                            state.addNote = false
-                            state.selectedNoteID = newNote.id
-                        }
-                    }
-                    .onChange(of: isFocused, initial: false) { _, newValue in
-                        if !newValue && newNote.title.isEmpty {
-                            withAnimation(.snappy) {
-                                state.addNote = false
+                        withAnimation(.easeInOut) {
+                            if !newNote.title.isEmpty {
+                                viewModel.createNote(note: newNote)
+                                newNote.title = ""
+                                state.selectedNoteID = newNote.id
                             }
+                            focusField = nil
                         }
                     }
             }
@@ -186,13 +171,42 @@ struct FolderView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 topMenuBar
-                newFolderRow
                 rootsList
+                newFolderRow
                 newNoteRow
                 Spacer()
             }
-            .onChange(of: addNoteSelected || addFolderSelected) {
-                focousChanged()
+            .onChange(of: addFolderSelected) { _, selected in
+                if selected {
+                    showFolderField = true
+                    focusField = .addFolder
+                    addFolderSelected = false
+                }
+            }
+            .onChange(of: addNoteSelected) { _, selected in
+                if selected {
+                    showNoteField = true
+                    focusField = .addNote
+                    addNoteSelected = false
+                }
+            }
+            .onChange(of: focusField) { oldValue, newValue in
+                if oldValue == .addNote && newValue != .addNote && showNoteField && newNote.title.isEmpty {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        showNoteField = false
+                    }
+                }
+                
+                if oldValue == .addFolder && newValue != .addFolder && showFolderField && newFolder.name.isEmpty {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        showFolderField = false
+                    }
+                }
+            }
+            // focus 해제
+            .contentShape(Rectangle())
+            .onTapGesture {
+                focusField = nil
             }
             .onChange(of: viewModel.roots.count) {
                 if !hasLoaded { hasLoaded = true }
