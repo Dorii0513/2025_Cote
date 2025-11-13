@@ -12,6 +12,10 @@ struct SearchView: View {
     @EnvironmentObject private var state: UIState
     @FocusState private var focusField: FocusTarget?
     
+    @State private var showFilter: Bool = false
+    @State private var sort: SearchFilter = .newest
+    @State private var isFilterHover: Bool = false
+    
     private var isFocused: Bool {
         get { focusField == .search }
         set { focusField = newValue ? .search : nil }
@@ -59,14 +63,42 @@ struct SearchView: View {
                     Text("\(viewModel.resultCount)개의 노트")
                         .coteFont(.text3, color: .textSecondary)
                     Spacer()
-                    Button {
-                        // 필터 액션
+                    Menu {
+                        Button {
+                            sort = .newest
+                        } label: {
+                            Label("최신순", systemImage: sort == .newest ? "checkmark" : "")
+                        }
+                        Button {
+                            sort = .oldest
+                        } label: {
+                            Label("오래된순", systemImage: sort == .oldest ? "checkmark" : "")
+                        }
+                        Button {
+                            sort = .relevance
+                        } label: {
+                            Label("관련도순", systemImage: sort == .relevance ? "checkmark" : "")
+                        }
                     } label: {
-                        Image("filter2")
+                        HStack(spacing: 4) {
+                            Text(sort.rawValue)
+                                .coteFont(.text2, color: isFilterHover ? .textDefault : .textSecondary)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .foregroundStyle(isFilterHover ? .iconDefault : .iconSecondary)
+                        }
+                        .padding(.vertical, 3)
+                        .padding(.horizontal, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .foregroundStyle(isFilterHover ? .actionDefault : .clear)
+                        )
                     }
                     .buttonStyle(.plain)
+                    .onHover(perform: { hovering in
+                        isFilterHover = hovering
+                    })
                 }
-                .padding(.horizontal, 3)
+                .padding(.leading, 3)
 
                 // 검색 결과 리스트
                 if viewModel.results.isEmpty {
@@ -99,3 +131,8 @@ struct SearchView: View {
     }
 }
 
+enum SearchFilter: String {
+    case newest = "Newest"
+    case oldest = "Oldest"
+    case relevance = "Relevance"
+}
