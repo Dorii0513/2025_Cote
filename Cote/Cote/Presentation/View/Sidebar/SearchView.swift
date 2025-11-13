@@ -11,6 +11,7 @@ struct SearchView: View {
     @StateObject private var viewModel = SearchViewModel()
     @EnvironmentObject private var state: UIState
     @FocusState private var focusField: FocusTarget?
+    
     private var isFocused: Bool {
         get { focusField == .search }
         set { focusField = newValue ? .search : nil }
@@ -78,7 +79,7 @@ struct SearchView: View {
                 } else {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(viewModel.results) { result in
-                            SearchCell(result: result) {
+                            SearchCell(selectedNoteID: state.selectedNoteID, result: result) {
                                 state.selectedNoteID = result.noteID
                             }
                         }

@@ -9,15 +9,22 @@ import Foundation
 import SwiftUI
 
 struct SearchCell: View {
-    @State var isHover: Bool = false
-    var result: SearchResult
+    @State private var isHover: Bool = false
+
+    let selectedNoteID: UUID?
+    let result: SearchResult
     let onSelect: () -> Void
+    
+    private var isSelected: Bool {
+        return selectedNoteID == result.noteID
+    }
+    
     var body: some View {
         Button(action: onSelect) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(result.title)
-                        .coteFont(.text1, color: .textDefault)
+                        .coteFont(.text1, color: isHover || isSelected ? .textSelected : .textDefault)
                     
                     if !result.folders.isEmpty {
                         HStack(spacing: 2) {
@@ -28,7 +35,7 @@ struct SearchCell: View {
                                 .foregroundStyle(.iconSecondary)
                             
                             Text(result.folders.joined(separator: " / "))
-                                .coteFont(.text3, color: .textSecondary)
+                            .coteFont(.text3, color: isHover || isSelected ? .textDefault : .textSecondary)
                         }
                     }
                     //                            HStack {
@@ -44,7 +51,7 @@ struct SearchCell: View {
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .foregroundStyle(isHover ? .actionDefault : .clear)
+                    .foregroundStyle(isHover || isSelected ? .actionDefault : .clear)
             )
             .onHover { isHover = $0 }
         }

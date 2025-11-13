@@ -43,7 +43,7 @@ struct FolderView: View {
             ForEach(viewModel.roots) { item in
                 ListCell(
                     expandedIDs: $expandedIDs,
-                    noteID: state.selectedNoteID,
+                    selectedNoteID: state.selectedNoteID,
                     item: item,
                     depth: 0
                 ) { id in

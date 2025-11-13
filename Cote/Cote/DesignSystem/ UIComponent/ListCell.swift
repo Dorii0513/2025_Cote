@@ -11,7 +11,7 @@ struct ListCell: View {
     @State var isHover = false
     @Binding var expandedIDs: Set<UUID>
     
-    let noteID: UUID?
+    let selectedNoteID: UUID?
     let item: NoteItems
     let depth: Int
     
@@ -28,7 +28,7 @@ struct ListCell: View {
     private var isSelected: Bool {
         switch item {
         case .folder: return false
-        case .note(let n): return noteID == n.id
+        case .note(let n): return selectedNoteID == n.id
         }
     }
     
@@ -90,7 +90,7 @@ struct ListCell: View {
                 ListCell(
                     isHover: false,
                     expandedIDs: $expandedIDs,
-                    noteID: noteID,
+                    selectedNoteID: selectedNoteID,
                     item: child,
                     depth: depth + 1,
                     onSelect: onSelect
