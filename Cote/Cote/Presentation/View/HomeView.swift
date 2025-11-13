@@ -10,7 +10,7 @@ import AppKit
 
 struct HomeView: View {
     @State private var isBtnTapped: Bool = false
-    @State private var window: NSWindow?
+    @State private var sidebarWidth: CGFloat = 210
     @StateObject private var viewModel = ContentViewModel()
     @StateObject private var state = UIState()
     
@@ -25,12 +25,20 @@ struct HomeView: View {
                     
                     VStack(spacing: 0) {
                         Spacer().frame(height: 42)  //높이 고정
-                        Sidebar()
+                        Sidebar(width: $sidebarWidth)
                     }
                     .ignoresSafeArea()
                     .frame(width: 210)
                 }
-                .frame(width: 210)
+                .frame(width: sidebarWidth)
+                
+                // invisible drag area
+                ResizableEdgeView { delta in
+                    let newWidth = sidebarWidth + delta
+                    sidebarWidth = max(210, min(newWidth, 400))   // ← 최소 210, 최대 400
+                }
+                .frame(width: 8)
+                .background(Color.clear)
             }
             ZStack {
                 Color.bgToolbar
@@ -46,7 +54,7 @@ struct HomeView: View {
         .frame(alignment: .leading)
         .overlay(alignment: .topLeading){
             HStack(spacing: 0) {
-                SideToolbar()
+                SideToolbar(offset: $sidebarWidth)
                 Cote.contentToolbar(isBtnTapped: $isBtnTapped)
             }
             .background(state.isSidebarOpen ? Color.clear : Color.bgToolbar)
@@ -171,6 +179,7 @@ private struct TagFieldAnchorKey: PreferenceKey {
 //MARK: - Sidebar
 private struct Sidebar: View {
     @EnvironmentObject private var state: UIState
+    @Binding var width: CGFloat
 
     var body: some View {
         ZStack {
@@ -186,14 +195,8 @@ private struct Sidebar: View {
                 }
             }
         }
-        .frame(minWidth: 210, minHeight: 700)
+        .frame(width: width)
+        .frame(minHeight: 700)
         .background(Color.clear)
     }
 }
-
-
-//#Preview {
-//    MainView()
-//        .environmentObject(UIState())
-//}
-

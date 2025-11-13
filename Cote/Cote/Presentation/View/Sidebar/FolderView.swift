@@ -176,6 +176,7 @@ struct FolderView: View {
                 newNoteRow
                 Spacer()
             }
+            .frame(maxWidth: .infinity)
             .onChange(of: addFolderSelected) { _, selected in
                 if selected {
                     showFolderField = true

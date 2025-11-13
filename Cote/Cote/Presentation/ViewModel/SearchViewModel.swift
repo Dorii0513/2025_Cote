@@ -88,3 +88,8 @@ enum SearchFilter: String {
     case oldest = "Oldest"
     case relevance = "Relevance"
 }
+
+enum SearchMode {
+    case keyword
+    case semantic
+}
