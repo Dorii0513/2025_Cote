@@ -15,13 +15,16 @@ public struct SearchResult: Identifiable {
     public let content: String
     public let folders: [String]
     public let updatedAt: Date
+    public let tags: [String]
     public let score: Double
-    public init(noteID: UUID, title: String, content: String, folders: [String], updatedAt: Date, score: Double = 0) {
+    
+    public init(noteID: UUID, title: String, content: String, folders: [String], updatedAt: Date, tags: [String], score: Double = 0) {
         self.noteID = noteID
         self.title  = title
         self.content = content
         self.folders = folders
         self.updatedAt = updatedAt
+        self.tags = tags
         self.score  = score
     }
 }

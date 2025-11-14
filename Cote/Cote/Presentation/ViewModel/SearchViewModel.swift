@@ -10,7 +10,7 @@ import Combine
 
 @MainActor
 final class SearchViewModel: ObservableObject {
-    private let useCase: SearchUseCase
+    private let useCase: searchUseCase
     
     @Published var query: String = (UserDefaults.standard.string(forKey: "Search") ?? "")
     @Published var resultCount: Int = 0
@@ -20,7 +20,7 @@ final class SearchViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
 
-    init(usecase: SearchUseCase){
+    init(usecase: searchUseCase){
         self.useCase = usecase
         observeQuery()
     }
@@ -37,7 +37,7 @@ final class SearchViewModel: ObservableObject {
             .sink { [weak self] newValue in
                 guard let self else { return }
                 Task {
-                    await self.search(for: newValue)
+                    await self.semanticSearch(for: newValue)
                     self.applyFilter()
                 }
             }
@@ -47,8 +47,16 @@ final class SearchViewModel: ObservableObject {
     func cleanQuery() {
         query = ""
     }
+    
+    func keywordSearch(for text: String) async {
+        do {
+            
+        } catch {
+            
+        }
+    }
 
-    func search(for text: String) async {
+    func semanticSearch(for text: String) async {
         do {
             let res = try await useCase.execute(query: text, topK: 200)
             results = res

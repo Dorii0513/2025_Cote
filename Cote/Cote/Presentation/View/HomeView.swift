@@ -32,10 +32,9 @@ struct HomeView: View {
                 }
                 .frame(width: sidebarWidth)
                 
-                // invisible drag area
                 ResizableEdgeView { delta in
                     let newWidth = sidebarWidth + delta
-                    sidebarWidth = max(210, min(newWidth, 400))   // ← 최소 210, 최대 400
+                    sidebarWidth = max(210, min(newWidth, 400))
                 }
                 .frame(width: 8)
                 .background(Color.clear)

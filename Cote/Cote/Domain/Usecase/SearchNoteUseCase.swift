@@ -1,11 +1,11 @@
 import NaturalLanguage
 import Foundation
 
-protocol SearchUseCase {
+protocol searchUseCase {
     func execute(query: String, topK: Int) async throws -> [SearchResult]
 }
 
-struct DefaultSearchUseCase: SearchUseCase {
+struct DefaultSearchUseCase: searchUseCase {
     private let repository: NoteRepositoryProtocol
     private let threshold: Double = 0.86
     private let embeddingModel = E5EmbeddingModel()
@@ -21,7 +21,7 @@ struct DefaultSearchUseCase: SearchUseCase {
     
     func execute(query: String, topK: Int = 200) async throws -> [SearchResult] {
         // 검색어 임베딩 계산
-        let queryVec = try embeddingModel.embedding(for: "query: \(query)")
+        let queryVec = try embeddingModel.embedding(for: "query: \(query) 코드")
 
         // 노트 목록 가져오기
         let notes = try await repository.fetchNoteLight(limit: topK)
@@ -29,7 +29,7 @@ struct DefaultSearchUseCase: SearchUseCase {
         var results: [SearchResult] = []
         
         // 검색어-노트 유사도 계산
-        for (id, title, content, folders, updatedAt, embF) in notes {
+        for (id, title, content, folders, updatedAt, tags, embF) in notes {
             guard let embF, !embF.isEmpty else { continue }
             let noteVec = embF.map { Double($0) }
             let similarity = cosineSimilarity(queryVec, noteVec)
@@ -52,6 +52,7 @@ struct DefaultSearchUseCase: SearchUseCase {
                         content: content,
                         folders: folders,
                         updatedAt: updatedAt,
+                        tags: tags,
                         score: adjusted
                     )
                 )
