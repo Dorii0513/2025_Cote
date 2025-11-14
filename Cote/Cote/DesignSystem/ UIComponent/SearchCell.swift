@@ -38,6 +38,8 @@ struct SearchCell: View {
                             .coteFont(.text3, color: isHover || isSelected ? .textDefault : .textSecondary)
                         }
                     }
+                    
+//                    Text(String(describing: result.score))
                 }
                 Spacer()
             }
@@ -52,3 +54,4 @@ struct SearchCell: View {
         .buttonStyle(.plain)
     }
 }
+

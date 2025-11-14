@@ -2,7 +2,7 @@ import NaturalLanguage
 import Foundation
 
 protocol searchUseCase {
-    func execute(query: String, topK: Int) async throws -> [SearchResult]
+    func execute(query: String, topK: Int, mode: SearchMode) async throws -> [SearchResult]
 }
 
 struct DefaultSearchUseCase: searchUseCase {
@@ -19,7 +19,7 @@ struct DefaultSearchUseCase: searchUseCase {
         self.init(repository: NoteRepository())
     }
     
-    func execute(query: String, topK: Int = 200) async throws -> [SearchResult] {
+    func execute(query: String, topK: Int = 200, mode: SearchMode) async throws -> [SearchResult] {
         // 검색어 임베딩 계산
         let queryVec = try embeddingModel.embedding(for: "query: \(query) 코드")
 
@@ -28,7 +28,6 @@ struct DefaultSearchUseCase: searchUseCase {
 
         var results: [SearchResult] = []
         
-        // 검색어-노트 유사도 계산
         for (id, title, content, folders, updatedAt, tags, embF) in notes {
             guard let embF, !embF.isEmpty else { continue }
             let noteVec = embF.map { Double($0) }
@@ -43,8 +42,25 @@ struct DefaultSearchUseCase: searchUseCase {
             
             // 최종 점수
             let adjusted = similarity * lengthPenalty + titleBonus + keywordBonus
-
-            if adjusted >= threshold {
+            
+            // semanticSearch
+            if mode == .semantic {
+                if adjusted >= threshold {
+                    results.append(
+                        SearchResult(
+                            noteID: id,
+                            title: title,
+                            content: content,
+                            folders: folders,
+                            updatedAt: updatedAt,
+                            tags: tags,
+                            score: adjusted
+                        )
+                    )
+                }
+                
+             // keywordSearch
+            } else {
                 results.append(
                     SearchResult(
                         noteID: id,
@@ -58,8 +74,7 @@ struct DefaultSearchUseCase: searchUseCase {
                 )
             }
         }
-
-        // 정렬 (유사도 높은 순)
+        
         return results
     }
     

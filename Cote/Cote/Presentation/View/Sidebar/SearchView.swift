@@ -14,10 +14,25 @@ struct SearchView: View {
     
     @State private var showFilter: Bool = false
     @State private var isFilterHover: Bool = false
+    @State private var changeMode: Bool = true
+    @State private var isHover: Bool = false
     
     private var isFocused: Bool {
         get { focusField == .search }
         set { focusField = newValue ? .search : nil }
+    }
+    
+    private var borderColor: Color {
+        if isFocused && viewModel.mode == .semantic {
+            return .textTag
+        }
+        if isFocused && viewModel.mode == .keyword {
+            return .borderDefault
+        }
+        if !isFocused && viewModel.mode == .semantic {
+            return .textTag.opacity(0.5)
+        }
+        return .borderSecondary
     }
     
     var body: some View {
@@ -25,9 +40,27 @@ struct SearchView: View {
                 Spacer().frame(height: 0)
                 
                 // 검색창
-                HStack(spacing: 4) {
-                    Image("search")
-                        .foregroundColor(.iconSecondary)
+                HStack(spacing: 6) {
+                    Button {
+                        viewModel.toggleSearchMode()
+                    } label: {
+                        Image("AISearch")
+                            .resizable()
+                            .frame(width: 22, height: 22)
+                            .foregroundColor(isHover || viewModel.mode == .semantic ? .textTag : .iconDefault)
+                            .padding(.bottom, 2)     // 균형 맞추기 용
+                            .padding(.horizontal, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .foregroundStyle(isHover ? .actionDefault : .clear)
+                            )
+                    }
+                    .onHover(perform: { hovering in
+                        isHover = hovering
+                    })
+                    .buttonStyle(.plain)
+                    .padding(.leading, 1)
+
                     TextField("Search your notes", text: $viewModel.query)
                         .focused($focusField, equals: .search)
                         .coteFont(.text2, color: .textSelected)
@@ -53,8 +86,9 @@ struct SearchView: View {
                         .fill(Color(.bgTextField))
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(isFocused ? Color.borderDefault : Color.borderSecondary, lineWidth: 2)
+                                .stroke(borderColor, lineWidth: 2)
                         )
+                        .shadow(color: viewModel.mode == .semantic ? .textTag.opacity(0.5) : .clear, radius: 4, x: 0, y: 0)
                 )
                 .padding(.vertical, 4)
                 
@@ -64,25 +98,27 @@ struct SearchView: View {
                     Spacer()
                     Menu {
                         Button {
-                            viewModel.setFilter(.newest)
+                            viewModel.setSort(.newest)
                         } label: {
-                            Label("최신순", systemImage: viewModel.filter == .newest ? "checkmark" : "")
+                            Label("Newest", systemImage: viewModel.sort == .newest ? "checkmark" : "")
                         }
 
                         Button {
-                            viewModel.setFilter(.oldest)
+                            viewModel.setSort(.oldest)
                         } label: {
-                            Label("오래된순", systemImage: viewModel.filter == .oldest ? "checkmark" : "")
+                            Label("Oldest", systemImage: viewModel.sort == .oldest ? "checkmark" : "")
                         }
-
-                        Button {
-                            viewModel.setFilter(.relevance)
-                        } label: {
-                            Label("관련도순", systemImage: viewModel.filter == .relevance ? "checkmark" : "")
+                        
+                        if viewModel.mode == .semantic {
+                            Button {
+                                viewModel.setSort(.relevance)
+                            } label: {
+                                Label("Relevance", systemImage: viewModel.sort == .relevance ? "checkmark" : "")
+                            }
                         }
                     } label: {
                         HStack(spacing: 4) {
-                            Text(viewModel.filter.rawValue)
+                            Text(viewModel.sort.rawValue)
                                 .coteFont(.text2, color: isFilterHover ? .textDefault : .textSecondary)
 
                             Image(systemName: "chevron.up.chevron.down")
