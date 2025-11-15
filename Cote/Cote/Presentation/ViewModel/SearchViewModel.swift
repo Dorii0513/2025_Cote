@@ -66,8 +66,17 @@ final class SearchViewModel: ObservableObject {
     }
     
     func setSort(_ newSort: SearchSort) {
-        sort = newSort
+        withAnimation(.easeInOut(duration: 0.2)) {
+            sort = newSort
+        }
         applySort()
+    }
+    
+    func setFilter(_ newFilter: SearchFilter) {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            filter = newFilter
+        }
+        applyFilter()
     }
     
     private func applySort() {
@@ -87,14 +96,20 @@ final class SearchViewModel: ObservableObject {
         }
     }
     
-    private func applyFilter() {
+    func applyFilter() {
         switch filter {
         case .note:
             results = results.filter { $0.title.localizedStandardContains(query) }
         case .tag:
-            results = results.filter { $0.tags.contains(query) }
+            results = results.filter { result in
+                result.tags.contains { tag in
+                    tag.localizedStandardContains(query)
+                }
+            }
         case .content:
             results = results.filter { $0.content.localizedStandardContains(query) }
+        case .folder:
+            return
         }
     }
     
@@ -127,6 +142,7 @@ enum SearchMode {
 
 enum SearchFilter: String {
     case note = "Title"
+    case folder = "Folder"
     case tag = "Tag"
     case content = "Content"
 }

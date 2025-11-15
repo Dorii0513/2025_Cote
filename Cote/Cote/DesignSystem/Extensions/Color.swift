@@ -16,6 +16,7 @@ extension ShapeStyle where Self == Color {
     static var iconSelected: Self { Color("gray50") }
     static var iconStrong:   Self { Color("gray70") }
     static var iconSecondary:Self { Color("gray90") }
+    static var iconMuted: Self { Color("gray100").opacity(0.6) }
     
     // text
     static var textStrong:       Self { Color("gray50") }
@@ -26,7 +27,7 @@ extension ShapeStyle where Self == Color {
     static var textTag:   Self { Color("purple20") }
     
     // background
-    static var bgTextField: Self { Color("black200_8") }
+    static var bgTextField: Self { Color("black200_5") }
     static var bgTag:            Self { Color("purple100_15") }
     static var bgEditor:   Self { Color("black100") }
     static var bgElevatedDefault:Self { Color("black70") }

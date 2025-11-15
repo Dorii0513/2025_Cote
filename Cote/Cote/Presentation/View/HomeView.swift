@@ -11,6 +11,7 @@ import AppKit
 struct HomeView: View {
     @State private var isBtnTapped: Bool = false
     @State private var sidebarWidth: CGFloat = 210
+    @State private var showEdge: Bool = false
     @StateObject private var viewModel = ContentViewModel()
     @StateObject private var state = UIState()
     
@@ -23,12 +24,14 @@ struct HomeView: View {
                     BlurEffect().ignoresSafeArea()
                     Color.bgSidebar.ignoresSafeArea()
                     
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: 42)  //높이 고정
-                        Sidebar(width: $sidebarWidth)
+                    HStack {
+                        VStack(spacing: 0) {
+                            Spacer().frame(height: 42)  //높이 고정
+                            Sidebar(width: $sidebarWidth)
+                        }
+                        .ignoresSafeArea()
+                        .frame(width: 210)
                     }
-                    .ignoresSafeArea()
-                    .frame(width: 210)
                 }
                 .frame(width: sidebarWidth)
                 
@@ -36,8 +39,16 @@ struct HomeView: View {
                     let newWidth = sidebarWidth + delta
                     sidebarWidth = max(210, min(newWidth, 400))
                 }
-                .frame(width: 8)
-                .background(Color.clear)
+                .frame(width: showEdge ? 6 : 2)
+                .background(showEdge ? .bgTag : .bgSidebar)
+                .onHover(perform: { hovering in
+                    showEdge = hovering
+                })
+                .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
+                    showEdge = isPressing
+                }, perform: {
+                    // No-op on long press completion; keep current state or add action if needed
+                })
             }
             ZStack {
                 Color.bgToolbar

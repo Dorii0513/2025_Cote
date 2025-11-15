@@ -12,10 +12,15 @@ struct SearchView: View {
     @EnvironmentObject private var state: UIState
     @FocusState private var focusField: FocusTarget?
     
-    @State private var showFilter: Bool = false
-    @State private var isFilterHover: Bool = false
     @State private var changeMode: Bool = true
-    @State private var isHover: Bool = false
+    
+    @State private var isSortHover: Bool = false
+    @State private var isSearchHover: Bool = false
+    @State private var isOptionHover: Bool = false
+    @State private var isFilterHover: Bool = false
+    
+    @State private var showOption: Bool = false
+    @State private var glow = false
     
     private var isFocused: Bool {
         get { focusField == .search }
@@ -24,85 +29,123 @@ struct SearchView: View {
     
     private var borderColor: Color {
         if isFocused && viewModel.mode == .semantic {
-            return .textTag
+            return .textTag.opacity(0.7)
         }
         if isFocused && viewModel.mode == .keyword {
-            return .borderDefault
+            return .borderDefault.opacity(0.8)
         }
         if !isFocused && viewModel.mode == .semantic {
-            return .textTag.opacity(0.5)
+            return .textTag.opacity(0.4)
         }
-        return .borderSecondary
+        return .borderSecondary.opacity(0.5)
     }
     
     var body: some View {
-            VStack(spacing: 8) {
-                Spacer().frame(height: 0)
-                
-                // 검색창
-                HStack(spacing: 6) {
-                    Button {
+        VStack(spacing: 0) {
+            Spacer().frame(height: 8)
+            
+            // 검색창
+            HStack(spacing: 6) {
+                Button {
+                    withAnimation(.linear(duration: 0.2)) {
                         viewModel.toggleSearchMode()
-                    } label: {
-                        Image("AISearch")
-                            .resizable()
-                            .frame(width: 22, height: 22)
-                            .foregroundColor(isHover || viewModel.mode == .semantic ? .textTag : .iconDefault)
-                            .padding(.bottom, 2)     // 균형 맞추기 용
-                            .padding(.horizontal, 2)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .foregroundStyle(isHover ? .actionDefault : .clear)
-                            )
                     }
-                    .onHover(perform: { hovering in
-                        isHover = hovering
-                    })
-                    .buttonStyle(.plain)
-                    .padding(.leading, 1)
-
-                    TextField("Search your notes", text: $viewModel.query)
-                        .focused($focusField, equals: .search)
-                        .coteFont(.text2, color: .textSelected)
-                        .tint(.textDefault)
-                        .textFieldStyle(.plain)
-                        .onSubmit(of: .text) {
-                            withAnimation(.easeInOut) {
-                                focusField = nil
-                            }
-                        }
-                    Spacer()
                     
-                    Button{
-                        viewModel.cleanQuery()
-                    } label: {
-                        Image("xBtn")
+                    withAnimation(
+                        .smooth(duration: 1.5)
+                        .repeatForever(autoreverses: true)
+                    ) {
+                        glow = true
                     }
-                    .buttonStyle(.plain)
-                }
-                .padding([.vertical, .horizontal], 5)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(.bgTextField))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(borderColor, lineWidth: 2)
+                } label: {
+                    Image("AISearch")
+                        .resizable()
+                        .frame(width: 22, height: 22)
+                        .foregroundColor(isSearchHover || viewModel.mode == .semantic ? .textTag : .iconDefault)
+                        .padding(.bottom, 2)     // 균형 맞추기 용
+                        .padding(.horizontal, 2)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .foregroundStyle(isSearchHover ? .actionDefault : .clear)
                         )
-                        .shadow(color: viewModel.mode == .semantic ? .textTag.opacity(0.5) : .clear, radius: 4, x: 0, y: 0)
-                )
-                .padding(.vertical, 4)
+                }
+                .onHover(perform: { hovering in
+                    isSearchHover = hovering
+                })
+                .buttonStyle(.plain)
+                .padding(.leading, 1)
+                TextField("Search your notes", text: $viewModel.query)
+                    .focused($focusField, equals: .search)
+                    .coteFont(.text2, color: .textSelected)
+                    .tint(.textDefault)
+                    .textFieldStyle(.plain)
+                    .onSubmit(of: .text) {
+                        withAnimation(.easeInOut) {
+                            focusField = nil
+                        }
+                    }
+                Spacer()
                 
-                HStack {
-                    Text("\(viewModel.resultCount)개의 노트")
-                        .coteFont(.text3, color: .textSecondary)
-                    Spacer()
+                Button{
+                    viewModel.cleanQuery()
+                } label: {
+                    Image("xBtn")
+                }
+                .buttonStyle(.plain)
+            }
+            .padding([.vertical, .horizontal], 5)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(.bgTextField)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(borderColor, lineWidth: 2)
+                    )
+                    .shadow(color: viewModel.mode == .semantic ? .textTag.opacity(glow ? 0.4 : 0.8) : .clear, radius: glow ? 5 : 2, x: 0, y: 0)
+            )
+            .padding(.vertical, 4)
+            
+            Spacer().frame(height: 8)
+            
+            // 정렬
+            HStack(spacing: 0) {
+                Text("\(viewModel.resultCount)개의 노트")
+                    .coteFont(.text3, color: .textSecondary)
+                
+                Spacer()
+                
+                Button {
+                    withAnimation(.easeInOut) {
+                        showOption.toggle()
+                    }
+                } label: {
+                    Image("filter2")
+                        .foregroundStyle(isOptionHover ? .iconSelected : .iconSecondary)
+                        .padding(3)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .foregroundStyle(isOptionHover ? .actionDefault : .clear)
+                        )
+                }
+                .buttonStyle(.plain)
+                .onHover(perform: { hovering in
+                    isOptionHover = hovering
+                })
+            }
+            .padding(.leading, 8)
+            
+            Spacer().frame(height: 4)
+            
+            // 필터
+            if showOption {
+                HStack(spacing: 3) {
                     Menu {
                         Button {
                             viewModel.setSort(.newest)
                         } label: {
                             Label("Newest", systemImage: viewModel.sort == .newest ? "checkmark" : "")
                         }
-
+                        
                         Button {
                             viewModel.setSort(.oldest)
                         } label: {
@@ -119,52 +162,110 @@ struct SearchView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Text(viewModel.sort.rawValue)
-                                .coteFont(.text2, color: isFilterHover ? .textDefault : .textSecondary)
-
-                            Image(systemName: "chevron.up.chevron.down")
-                                .foregroundStyle(isFilterHover ? .iconDefault : .iconSecondary)
+                                .coteFont(.text2, color: isSortHover ? .textDefault : .textSecondary)
+                            
+                            Image(systemName: "chevron.down")
+                                .foregroundStyle(isSortHover ? .iconDefault : .iconMuted)
                         }
                         .padding(.vertical, 3)
-                        .padding(.horizontal, 5)
+                        .padding(.horizontal, 8)
                         .background(
-                            RoundedRectangle(cornerRadius: 4)
-                                .foregroundStyle(isFilterHover ? .actionDefault : .clear)
+                            RoundedRectangle(cornerRadius: 10)
+                                .foregroundStyle(isSortHover ? .actionDefault.opacity(0.5) : .clear)
                         )
                     }
                     .buttonStyle(.plain)
                     .onHover(perform: { hovering in
-                        isFilterHover = hovering
+                        isSortHover = hovering
                     })
-                }
-                .padding(.leading, 3)
-
-                // 검색 결과 리스트
-                if viewModel.results.isEmpty {
-                    Spacer()
-                    VStack {
-                        Text("No results found.")
-                            .coteFont(.text1, color: .textSecondary)
-                    }
-                    Spacer()
-                } else {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(viewModel.results) { result in
-                            SearchCell(selectedNoteID: state.selectedNoteID, result: result) {
-                                state.selectedNoteID = result.noteID
+                    .transition(
+                        .move(edge: .top)
+                        .combined(with: .opacity)
+                    )
+                    
+                    if viewModel.mode == .keyword {
+                        Menu {
+                            Button {
+                                viewModel.setFilter(.note)
+                            } label: {
+                                Label("Title", systemImage: viewModel.filter == .note ? "checkmark" : "")
                             }
+                            
+                            Button {
+                                viewModel.setFilter(.folder)
+                            } label: {
+                                Label("Folder", systemImage: viewModel.filter == .folder ? "checkmark" : "")
+                            }
+                            
+                            Button {
+                                viewModel.setFilter(.content)
+                            } label: {
+                                Label("Content", systemImage: viewModel.filter == .content ? "checkmark" : "")
+                            }
+                            
+                            Button {
+                                viewModel.setFilter(.tag)
+                            } label: {
+                                Label("Tag", systemImage: viewModel.filter == .tag ? "checkmark" : "")
+                            }
+                            
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(viewModel.filter.rawValue)
+                                    .coteFont(.text2, color: isFilterHover ? .textDefault : .textSecondary)
+                                
+                                Image(systemName: "chevron.down")
+                                    .foregroundStyle(isFilterHover ? .iconDefault : .iconMuted)
+                            }
+                            .padding(.vertical, 3)
+                            .padding(.horizontal, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .foregroundStyle(isFilterHover ? .actionDefault.opacity(0.5) : .clear)
+                            )
                         }
-                        Spacer()
+                        .buttonStyle(.plain)
+                        .onHover(perform: { hovering in
+                            isFilterHover = hovering
+                        })
+                        .transition(
+                            .move(edge: .top)
+                            .combined(with: .opacity)
+                        )
                     }
+                    Spacer()
                 }
             }
-            .padding(.horizontal, 10)
-            .onAppear(){
-                focusField = .search
+            
+            Spacer().frame(height: 8)
+            
+            // 검색 결과 리스트
+            if viewModel.results.isEmpty {
+                Spacer()
+                VStack {
+                    Text("No results found.")
+                        .coteFont(.text1, color: .textSecondary)
+                }
+                Spacer()
+            } else {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(viewModel.results) { result in
+                        SearchCell(selectedNoteID: state.selectedNoteID, result: result) {
+                            state.selectedNoteID = result.noteID
+                        }
+                    }
+                    Spacer()
+                }
             }
+        }
+        .padding(.horizontal, 10)
+        .onAppear(){
+            focusField = .search
+        }
         // focus 해제
-            .contentShape(Rectangle())
-            .onTapGesture {
-                focusField = nil
-            }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            focusField = nil
+        }
     }
 }
