@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SideToolbar: View {
     @State private var selectedButtonID: UUID?
-    
+    @Binding var offset: CGFloat
     @EnvironmentObject private var state: UIState
 
     private var visibleIcons: [Icon] {
@@ -23,7 +23,7 @@ struct SideToolbar: View {
     var body: some View {
         HStack(spacing: 4) {
             Spacer()
-            HStack(spacing: 0) {
+            HStack(spacing: 2) {
                 ForEach(visibleIcons) { button in
                     MenuButton(
                         selected: Binding(
@@ -38,7 +38,7 @@ struct SideToolbar: View {
             .padding(.trailing, 12)
         }
         .frame(alignment: .leading)
-        .frame(width: state.isSidebarOpen ? 210 : 125, height: 42)  //높이 고정
+        .frame(width: state.isSidebarOpen ? offset : 125, height: 42)  //높이 고정
         .animation(.snappy(duration: 0.2), value: state.isSidebarOpen)
         .onAppear {
             if selectedButtonID == nil {

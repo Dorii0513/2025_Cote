@@ -21,5 +21,5 @@ protocol NoteRepositoryProtocol {
     func createFolder(name: String, parentID: UUID?) async throws -> UUID
     func deleteFolder(id: UUID) async throws
     
-    func fetchNoteLight(limit: Int?) async throws -> [(UUID, String, String, [Float]?)]
+    func fetchNoteLight(limit: Int?) async throws -> [(UUID, String, String, [String], Date, [String], [Float]?)]
 }

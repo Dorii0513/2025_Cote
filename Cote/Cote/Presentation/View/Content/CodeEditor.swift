@@ -224,7 +224,9 @@ private enum TextSystemFactory {
         let textStorage = CodeAttributedString()
         
         textStorage.language = language
-        textStorage.highlightr.setTheme(to: "atelier-heath")
+        textStorage.highlightr.setTheme(to: "atom-one-dark")
+        //atom-one-dark
+        
         
         // 폰트 재적용
         textStorage.highlightr.theme.codeFont = NSFont(name: "JetBrainsMono-Medium", size: 13) ?? .monospacedSystemFont(ofSize: 13, weight: .regular)

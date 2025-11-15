@@ -10,7 +10,8 @@ import AppKit
 
 struct HomeView: View {
     @State private var isBtnTapped: Bool = false
-    @State private var window: NSWindow?
+    @State private var sidebarWidth: CGFloat = 210
+    @State private var showEdge: Bool = false
     @StateObject private var viewModel = ContentViewModel()
     @StateObject private var state = UIState()
     
@@ -23,14 +24,31 @@ struct HomeView: View {
                     BlurEffect().ignoresSafeArea()
                     Color.bgSidebar.ignoresSafeArea()
                     
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: 42)  //높이 고정
-                        Sidebar()
+                    HStack {
+                        VStack(spacing: 0) {
+                            Spacer().frame(height: 42)  //높이 고정
+                            Sidebar(width: $sidebarWidth)
+                        }
+                        .ignoresSafeArea()
+                        .frame(width: 210)
                     }
-                    .ignoresSafeArea()
-                    .frame(width: 210)
                 }
-                .frame(width: 210)
+                .frame(width: sidebarWidth)
+                
+                ResizableEdgeView { delta in
+                    let newWidth = sidebarWidth + delta
+                    sidebarWidth = max(210, min(newWidth, 400))
+                }
+                .frame(width: showEdge ? 6 : 2)
+                .background(showEdge ? .bgTag : .bgSidebar)
+                .onHover(perform: { hovering in
+                    showEdge = hovering
+                })
+                .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
+                    showEdge = isPressing
+                }, perform: {
+                    // No-op on long press completion; keep current state or add action if needed
+                })
             }
             ZStack {
                 Color.bgToolbar
@@ -46,7 +64,7 @@ struct HomeView: View {
         .frame(alignment: .leading)
         .overlay(alignment: .topLeading){
             HStack(spacing: 0) {
-                SideToolbar()
+                SideToolbar(offset: $sidebarWidth)
                 Cote.contentToolbar(isBtnTapped: $isBtnTapped)
             }
             .background(state.isSidebarOpen ? Color.clear : Color.bgToolbar)
@@ -87,14 +105,15 @@ private struct contentToolbar: View {
     
     var body: some View {
         HStack(spacing: 0) {
+            Spacer().frame(width: 20)
             Text(viewModel.title.isEmpty ? "" : viewModel.title)
-                .coteFont(.title1,
+                .coteFont(.title,
                           color: .textStrong)
-                .padding(.trailing, 8)
+                .padding(.trailing, 10)
             
             if !viewModel.noteTags.isEmpty {
                 tagChipsView
-                    .padding(.trailing, 8)
+                    .padding(.trailing, 10)
             }
             
             if isBtnTapped {
@@ -116,7 +135,7 @@ private struct contentToolbar: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color.border, lineWidth: isFocused ? 2 : 1)
+                            .stroke(Color.borderDefault, lineWidth: isFocused ? 2 : 1)
                     )
                     .onSubmit(of: .text) {
                         let tagToAdd = newTag
@@ -145,8 +164,8 @@ private struct contentToolbar: View {
                     viewModel.showSuggestions()
                 } label: {
                     Text("Add Tags")
-                        .coteFont(.title2,
-                                  color: .textDefault)
+                        .coteFont(.text2,
+                                  color: .textMuted)
                 }
                 .buttonStyle(.plain)
             }
@@ -170,6 +189,7 @@ private struct TagFieldAnchorKey: PreferenceKey {
 //MARK: - Sidebar
 private struct Sidebar: View {
     @EnvironmentObject private var state: UIState
+    @Binding var width: CGFloat
 
     var body: some View {
         ZStack {
@@ -185,14 +205,8 @@ private struct Sidebar: View {
                 }
             }
         }
-        .frame(minWidth: 210, minHeight: 700)
+        .frame(width: width)
+        .frame(minHeight: 700)
         .background(Color.clear)
     }
 }
-
-
-//#Preview {
-//    MainView()
-//        .environmentObject(UIState())
-//}
-

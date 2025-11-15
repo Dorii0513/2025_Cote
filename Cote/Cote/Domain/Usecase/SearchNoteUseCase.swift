@@ -1,13 +1,13 @@
 import NaturalLanguage
 import Foundation
 
-protocol SearchUseCase {
-    func execute(query: String, topK: Int) async throws -> [SearchResult]
+protocol searchUseCase {
+    func execute(query: String, topK: Int, mode: SearchMode) async throws -> [SearchResult]
 }
 
-struct DefaultSearchUseCase: SearchUseCase {
+struct DefaultSearchUseCase: searchUseCase {
     private let repository: NoteRepositoryProtocol
-    private let threshold: Double = 0.85
+    private let threshold: Double = 0.86
     private let embeddingModel = E5EmbeddingModel()
     
     init(repository: NoteRepositoryProtocol) {
@@ -19,45 +19,63 @@ struct DefaultSearchUseCase: SearchUseCase {
         self.init(repository: NoteRepository())
     }
     
-    func execute(query: String, topK: Int = 200) async throws -> [SearchResult] {
+    func execute(query: String, topK: Int = 200, mode: SearchMode) async throws -> [SearchResult] {
         // 검색어 임베딩 계산
-        let queryVec = try embeddingModel.embedding(for: "query: \(query)")
+        let queryVec = try embeddingModel.embedding(for: "query: \(query) 코드")
 
         // 노트 목록 가져오기
         let notes = try await repository.fetchNoteLight(limit: topK)
 
         var results: [SearchResult] = []
         
-        // 검색어-노트 유사도 계산
-        for (id, title, preview, embF) in notes {
+        for (id, title, content, folders, updatedAt, tags, embF) in notes {
             guard let embF, !embF.isEmpty else { continue }
             let noteVec = embF.map { Double($0) }
             let similarity = cosineSimilarity(queryVec, noteVec)
-            let lengthPenalty = calculateLengthPenalty(contentLength: preview.count)
+            let lengthPenalty = calculateLengthPenalty(contentLength: content.count)
             
             // 제목 매칭 점수
             let titleBonus = calculateTitleBonus(query: query, title: title)
             
             // 키워드 매칭 점수
-            let keywordBonus = calculateKeywordBonus(query: query, preview: preview)
+            let keywordBonus = calculateKeywordBonus(query: query, content: content)
             
             // 최종 점수
             let adjusted = similarity * lengthPenalty + titleBonus + keywordBonus
-
-            if adjusted >= threshold {
+            
+            // semanticSearch
+            if mode == .semantic {
+                if adjusted >= threshold {
+                    results.append(
+                        SearchResult(
+                            noteID: id,
+                            title: title,
+                            content: content,
+                            folders: folders,
+                            updatedAt: updatedAt,
+                            tags: tags,
+                            score: adjusted
+                        )
+                    )
+                }
+                
+             // keywordSearch
+            } else {
                 results.append(
                     SearchResult(
                         noteID: id,
                         title: title,
-                        preview: preview,
+                        content: content,
+                        folders: folders,
+                        updatedAt: updatedAt,
+                        tags: tags,
                         score: adjusted
                     )
                 )
             }
         }
-
-        // 정렬 (유사도 높은 순)
-        return results.sorted { $0.score > $1.score }
+        
+        return results
     }
     
     // MARK: - Scoring Helpers
@@ -81,9 +99,9 @@ struct DefaultSearchUseCase: SearchUseCase {
     }
     
     // 키워드 매칭
-    private func calculateKeywordBonus(query: String, preview: String) -> Double {
+    private func calculateKeywordBonus(query: String, content: String) -> Double {
         let queryTokens = tokenize(query)
-        let previewLower = preview.lowercased()
+        let previewLower = content.lowercased()
         
         let matches = queryTokens.filter { token in
             previewLower.contains(token.lowercased())

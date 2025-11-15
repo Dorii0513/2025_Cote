@@ -24,6 +24,7 @@ struct DefaultCreateNoteUseCase: CreateNoteUseCase {
     }
 
     func execute(note: Note) async throws {
+//        let allNotes = try await repository.fetchNote()
         try await repository.createNote(note: note)
     }
 }
