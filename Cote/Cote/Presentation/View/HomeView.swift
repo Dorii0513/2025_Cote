@@ -13,10 +13,11 @@ struct HomeView: View {
     @State private var sidebarWidth: CGFloat = 210
     @State private var showEdge: Bool = false
     @State private var showChat: Bool = false
-    @StateObject private var viewModel = ContentViewModel()
+    @StateObject private var contentViewModel = ContentViewModel()
     @StateObject private var state = UIState()
     
     var body: some View {
+        
         HStack {
             HStack(spacing: 0) {
                 // SideBar
@@ -76,28 +77,34 @@ struct HomeView: View {
             }
             .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
                 GeometryReader { proxy in
-                    if viewModel.showTags, let anchor {
+                    if contentViewModel.showTags, let anchor {
                         let rect = proxy[anchor]
                         TagSuggestionsView()
-                            .onDisappear { viewModel.hideSuggestions() }
+                            .onDisappear { contentViewModel.hideSuggestions() }
                             .frame(maxWidth: 400, alignment: .leading)
                             .position(x: rect.minX + 200,
                                       y: rect.maxY + 80)
                     }
                 }
             }
-            .environmentObject(viewModel)
+            .environmentObject(contentViewModel)
             .environmentObject(state)
             .ignoresSafeArea()
             
             //TODO: - contentView 너비 조정 기능 추가
             // AI Chatbot
+            
             if showChat {
                 ZStack {
                     BlurEffect().ignoresSafeArea()
                     Color.bgSidebar.ignoresSafeArea()
                     
-                    ChatView(message: "")
+                    if #available(macOS 26.0, *) {
+                        ChatView()
+                            .environmentObject(ChatViewModel())
+                    } else {
+                        // Fallback on earlier versions
+                    }
                 }
                 .frame(minWidth: 210)
                 .frame(maxWidth: 320)

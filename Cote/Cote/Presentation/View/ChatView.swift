@@ -6,18 +6,36 @@
 //
 
 import SwiftUI
+import FoundationModels
 
-//@available(macOS 26.0, *)
+@available(macOS 26.0, *)
 struct ChatView: View {
-    @State var message: String
-//    @EnvironmentObject private var viewModel: ChatViewModel
+    @StateObject private var viewModel = ChatViewModel()
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Spacer()
+            
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 12) {
+                    ForEach (viewModel.messages) { message in
+                        MarkdownText(markdown: message.content)
+                            .modifier(StreamingViewModifier(sender: message.sender))
+                    }
+                    
+                    if let partial = viewModel.partial, let id = viewModel.partialId {
+                        StreamingResponseView(partial: partial)
+                            .id(id)
+                    } else if viewModel.isResponding {
+                        ProgressView()
+                    }
+                    
+                    Text(viewModel.partial ?? "")
+                }
+            }
+            
             HStack {
                 Button {
-                    
+
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "sparkles.2")
@@ -56,16 +74,19 @@ struct ChatView: View {
             }
             
             HStack {
-                TextField("", text: $message)
+                TextField("Write a question here...", text: $viewModel.userInput)
                     .coteFont(.text2, color: .textSelected)
                     .tint(.textDefault)
                     .textFieldStyle(.plain)
                     .padding(.leading, 6)
+                    .onSubmit {
+                        viewModel.sendMessage()
+                    }
                 
                 Spacer()
                 
                 Button {
-                    
+                    viewModel.sendMessage()
                 } label: {
                     Image("arrow_up")
                         .resizable()
@@ -92,6 +113,34 @@ struct ChatView: View {
     }
 }
 
-#Preview {
-    ChatView(message: "zz")
+struct StreamingResponseView: View {
+    
+    let partial: String
+    
+    var body: some View {
+        MarkdownText(markdown: partial)
+            .modifier(StreamingViewModifier(sender: .assistant))
+            .contentTransition(.opacity)
+            .animation(.easeInOut(duration: 0.7), value: partial)
+    }
 }
+
+struct StreamingViewModifier: ViewModifier {
+    
+    let sender: ChatMessage.Sender
+    
+    func body(content: Content) -> some View {
+        content
+            .padding()
+            .background(sender == .user ? Color.blue.opacity(0.3) : Color.gray.opacity(0.3))
+            .cornerRadius(12)
+            .padding(sender == .user ? .leading : .trailing, 20)
+            .frame(maxWidth: .infinity,
+                   alignment: sender == .user ? .trailing : .leading)
+    }
+}
+
+//#Preview {
+//    ChatView(message: "zz")
+//}
+
