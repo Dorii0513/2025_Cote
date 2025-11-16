@@ -12,78 +12,98 @@ struct HomeView: View {
     @State private var isBtnTapped: Bool = false
     @State private var sidebarWidth: CGFloat = 210
     @State private var showEdge: Bool = false
+    @State private var showChat: Bool = false
     @StateObject private var viewModel = ContentViewModel()
     @StateObject private var state = UIState()
     
     var body: some View {
-        
-        HStack(spacing: 0) {
-            if state.isSidebarOpen {
+        HStack {
+            HStack(spacing: 0) {
+                // SideBar
+                if state.isSidebarOpen {
+                    ZStack {
+                        
+                        BlurEffect().ignoresSafeArea()
+                        Color.bgSidebar.ignoresSafeArea()
+                        
+                        HStack {
+                            VStack(spacing: 0) {
+                                Spacer().frame(height: 42)  //높이 고정
+                                Sidebar(width: $sidebarWidth)
+                            }
+                            .ignoresSafeArea()
+                            .frame(width: 210)
+                        }
+                    }
+                    .frame(width: sidebarWidth)
+                    
+                    // 너비 조정
+                    ResizableEdgeView { delta in
+                        let newWidth = sidebarWidth + delta
+                        sidebarWidth = max(210, min(newWidth, 400))
+                    }
+                    .frame(width: showEdge ? 6 : 2)
+                    .background(showEdge ? .bgTag : .bgSidebar)
+                    .onHover(perform: { hovering in
+                        showEdge = hovering
+                    })
+                    .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
+                        showEdge = isPressing
+                    }, perform: {})
+                }
+                
+                // ContentView
                 ZStack {
-                    //블러 효과
+                    Color.bgToolbar
+                        .ignoresSafeArea(edges: .top)
+                    if state.selectedNoteID == nil {
+                        Text("Tap a note or create one")
+                            .coteFont(.code1, color: .textDefault)
+                    } else {
+                        ContentView()
+                    }
+                }
+            }
+            .frame(alignment: .leading)
+            
+            // Toolbar
+            .overlay(alignment: .topLeading){
+                HStack(spacing: 0) {
+                    SideToolbar(offset: $sidebarWidth)
+                    Cote.contentToolbar(isBtnTapped: $isBtnTapped, showChat: $showChat)
+                }
+                .background(state.isSidebarOpen ? Color.clear : Color.bgToolbar)
+            }
+            .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
+                GeometryReader { proxy in
+                    if viewModel.showTags, let anchor {
+                        let rect = proxy[anchor]
+                        TagSuggestionsView()
+                            .onDisappear { viewModel.hideSuggestions() }
+                            .frame(maxWidth: 400, alignment: .leading)
+                            .position(x: rect.minX + 200,
+                                      y: rect.maxY + 80)
+                    }
+                }
+            }
+            .environmentObject(viewModel)
+            .environmentObject(state)
+            .ignoresSafeArea()
+            
+            //TODO: - contentView 너비 조정 기능 추가
+            // AI Chatbot
+            if showChat {
+                ZStack {
                     BlurEffect().ignoresSafeArea()
                     Color.bgSidebar.ignoresSafeArea()
                     
-                    HStack {
-                        VStack(spacing: 0) {
-                            Spacer().frame(height: 42)  //높이 고정
-                            Sidebar(width: $sidebarWidth)
-                        }
-                        .ignoresSafeArea()
-                        .frame(width: 210)
-                    }
+                    ChatView(message: "")
                 }
-                .frame(width: sidebarWidth)
-                
-                ResizableEdgeView { delta in
-                    let newWidth = sidebarWidth + delta
-                    sidebarWidth = max(210, min(newWidth, 400))
-                }
-                .frame(width: showEdge ? 6 : 2)
-                .background(showEdge ? .bgTag : .bgSidebar)
-                .onHover(perform: { hovering in
-                    showEdge = hovering
-                })
-                .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
-                    showEdge = isPressing
-                }, perform: {
-                    // No-op on long press completion; keep current state or add action if needed
-                })
-            }
-            ZStack {
-                Color.bgToolbar
-                    .ignoresSafeArea(edges: .top)
-                if state.selectedNoteID == nil {
-                    Text("Tap a note or create one")
-                        .coteFont(.code1, color: .textDefault)
-                } else {
-                    ContentView()
-                }
+                .frame(minWidth: 210)
+                .frame(maxWidth: 320)
             }
         }
-        .frame(alignment: .leading)
-        .overlay(alignment: .topLeading){
-            HStack(spacing: 0) {
-                SideToolbar(offset: $sidebarWidth)
-                Cote.contentToolbar(isBtnTapped: $isBtnTapped)
-            }
-            .background(state.isSidebarOpen ? Color.clear : Color.bgToolbar)
-        }
-        .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
-            GeometryReader { proxy in
-                if viewModel.showTags, let anchor {
-                    let rect = proxy[anchor]
-                    TagSuggestionsView()
-                        .onDisappear { viewModel.hideSuggestions() }
-                        .frame(maxWidth: 400, alignment: .leading)
-                        .position(x: rect.minX + 200,
-                                  y: rect.maxY + 80)
-                }
-            }
-        }
-        .environmentObject(viewModel)
-        .environmentObject(state)
-        .ignoresSafeArea()
+        
     }
 }
 
@@ -94,6 +114,7 @@ private struct contentToolbar: View {
     @FocusState private var isFocused: Bool
     @State private var newTag: Tag = .init(name: "")
     @Binding var isBtnTapped: Bool
+    @Binding var showChat: Bool
     
     private var tagChipsView: some View {
         HStack(spacing: 6) {
@@ -171,6 +192,33 @@ private struct contentToolbar: View {
             }
             
             Spacer()
+            
+            // setting Button
+            Menu {
+                Button {
+                    
+                } label: {
+                    HStack {
+                        Image(systemName: "tag")
+                        Text("Edit Tags")
+                    }
+                }
+            } label: {
+                Image("setting")
+                
+            }
+            .buttonStyle(.plain)
+            
+            // chatbot Button
+            Button {
+                withAnimation(.easeInOut){
+                    showChat.toggle()
+                }
+            } label: {
+                
+                Image("generate_line")
+            }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 15)
         .frame(height: 42)  //높이 고정
