@@ -10,7 +10,9 @@ import SwiftUI
 struct ChatMessage: Identifiable, Codable {
     
     enum Sender: String, Codable {
-        case user, assistant
+        case user
+        case assistant
+        case noteInfo
     }
     
     let id: UUID

@@ -13,15 +13,20 @@ import SwiftUI
 @MainActor
 final class ChatViewModel: ObservableObject {
     
+    private let fetchUseCase: FetchNotesUseCase
+    
     @Published var messages: [ChatMessage] = []
     @Published var userInput: String = ""
     @Published var isResponding = false
+    
+    @Published var selectedNote: FocusedNote?
+    @Published var focusedNotes: [FocusedNote] = []
     
     @Published var partial: String?
     @Published var partialId: UUID?
     
     private var session: LanguageModelSession
-    private let instructions = """
+    private static let instructions = """
 You are a helpful code tutor for developers taking notes. Your role is to:
 
 1. Explain code snippets from the user's notes in a clear, educational way
@@ -42,8 +47,19 @@ Respond in Korean if the user writes in Korean, otherwise use English.
 """
     private var streamingTask: Task<Void, Never>?
     
-    init() {
-        self.session = LanguageModelSession(instructions: instructions)
+    init(
+        fetchUseCase: FetchNotesUseCase,
+        session: LanguageModelSession
+    ) {
+        self.fetchUseCase = fetchUseCase
+        self.session = session
+    }
+    
+    convenience init() {
+        self.init(
+            fetchUseCase: DefaultFetchNotesUseCase(),
+            session: LanguageModelSession(instructions: ChatViewModel.instructions)
+        )
     }
     
     func sendMessage() {
@@ -52,13 +68,25 @@ Respond in Korean if the user writes in Korean, otherwise use English.
         let inputText = userInput
         let newMessage = ChatMessage(sender: .user, content: inputText)
         messages.append(newMessage)
-        
-        print("📝 Messages count: \(messages.count)")
-        print("📝 Added message: \(newMessage.content)")
-        print("📝 All messages: \(messages.map { $0.content })")
-        
-        
         userInput = ""
+        
+        var fullPrompt = inputText
+        if !focusedNotes.isEmpty {
+            let noteContext = focusedNotes.map { note in
+                    """
+                    ### \(note.title)
+                    \(note.content)
+                    """
+            }.joined(separator: "\n\n---\n\n")
+            
+            fullPrompt = """
+                [참고할 코드]
+                \(noteContext)
+                
+                [사용자 질문]
+                \(inputText)
+                """
+        }
         
         Task {
             do {
@@ -66,7 +94,7 @@ Respond in Korean if the user writes in Korean, otherwise use English.
                 partialId = UUID()
                 partial = ""
                 
-                let stream = session.streamResponse(to: userInput)
+                let stream = session.streamResponse(to: fullPrompt)
                 
                 for try await partial in stream {
                     self.partial = partial.content
@@ -91,10 +119,42 @@ Respond in Korean if the user writes in Korean, otherwise use English.
         }
     }
     
+    func fetchFocusNote(id: UUID) async {
+        do {
+            if let note = try await fetchUseCase.execute(noteID: id) {
+                selectedNote = FocusedNote(
+                    id: note.id,
+                    title: note.title,
+                    content: note.content
+                )
+            }
+        } catch {
+            print("fetchFocusNote error =", error)
+        }
+        
+    }
+    
+    func addFocusedNotes() {
+        if let note = selectedNote {
+            if !focusedNotes.contains(where: { $0.id == note.id }) {
+                focusedNotes.append(note)
+            }
+        }
+    }
+    
+    func deleteFocusedNote(id: UUID) {
+        focusedNotes.removeAll { $0.id == id }
+    }
+    
     func reset() {
         messages = []
         userInput = ""
         isResponding = false
     }
-    
+}
+
+struct FocusedNote: Identifiable {
+    let id: UUID
+    let title: String
+    let content: String
 }

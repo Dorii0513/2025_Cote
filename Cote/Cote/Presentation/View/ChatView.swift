@@ -11,7 +11,11 @@ import FoundationModels
 @available(macOS 26.0, *)
 struct ChatView: View {
     @StateObject private var viewModel = ChatViewModel()
+    @StateObject private var state = UIState()
     @FocusState private var isFocused: Bool
+    
+    @State private var showNote: Bool = false
+    @State private var addNote: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -22,7 +26,7 @@ struct ChatView: View {
             } else {
                 MessageView
             }
-            RecommendView
+            //RecommendView
             TextFieldView
         }
         .padding(.top, 20)
@@ -33,6 +37,13 @@ struct ChatView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             isFocused = false
+        }
+        .onChange(of: state.selectedNoteID) {
+            if let id = state.selectedNoteID {
+                Task { @MainActor in
+                    await viewModel.fetchFocusNote(id: id)
+                }
+            }
         }
     }
     
@@ -74,6 +85,33 @@ struct ChatView: View {
                     }
                 }
             }
+        }
+    }
+    
+    @ViewBuilder
+    private var FocusNoteView: some View {
+        
+        HStack(spacing: 4) {
+            if !viewModel.focusedNotes.isEmpty {
+                ForEach(viewModel.focusedNotes) { note in
+                    NoteCell(selectedNote: note,
+                             mode: .label,
+                             onSelect: {
+                        viewModel.deleteFocusedNote(id: note.id)
+                    })
+                }
+            }
+            
+            //해야하는 거 : 내가 선택한
+            if !viewModel.focusedNotes.contains(where: { $0.id == state.selectedNoteID }) {
+                NoteCell(selectedNote: viewModel.selectedNote,
+                         mode: .button,
+                         onSelect: {
+                    viewModel.addFocusedNotes()
+                })
+            }
+            
+            Spacer()
         }
     }
     
@@ -122,29 +160,52 @@ struct ChatView: View {
     
     @ViewBuilder
     private var TextFieldView: some View {
-        HStack {
-            TextField("Write a question here...", text: $viewModel.userInput)
-                .focused($isFocused, equals: true)
-                .coteFont(.text2, color: .textSelected)
-                .tint(.textDefault)
-                .textFieldStyle(.plain)
-                .padding(.leading, 6)
-                .onSubmit {
-                    viewModel.sendMessage()
-                }
-            
-            Spacer()
-            
-            Button {
-                viewModel.sendMessage()
-            } label: {
-                Image("arrow_up")
-                    .resizable()
-                    .frame(width: 24, height: 24)
-                    .foregroundStyle(viewModel.userInput.isEmpty ? .clear : .aiDefault)
+        VStack {
+            if showNote {
+                FocusNoteView
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 6)
             }
-            .buttonStyle(.plain)
-            .transition(.opacity.combined(with: .scale))
+            HStack {
+                
+                Button {
+                    if let id = state.selectedNoteID {
+                        Task { @MainActor in
+                            await viewModel.fetchFocusNote(id: id)
+                            showNote.toggle()
+                        }
+                    }
+                } label: {
+                    Image(systemName: "eyeglasses")
+                        .foregroundStyle(showNote ? .aiDefault : .iconDefault)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 6)
+                //            .tooltip("Preview note focus mode.")
+                
+                TextField("Write a question here...", text: $viewModel.userInput)
+                    .focused($isFocused, equals: true)
+                    .coteFont(.text2, color: .textSelected)
+                    .tint(.textDefault)
+                    .textFieldStyle(.plain)
+                    .padding(.leading, 4)
+                    .onSubmit {
+                        viewModel.sendMessage()
+                    }
+                
+                Spacer()
+                
+                Button {
+                    viewModel.sendMessage()
+                } label: {
+                    Image("arrow_up")
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(viewModel.userInput.isEmpty ? .clear : .aiDefault)
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity.combined(with: .scale))
+            }
         }
         .padding([.vertical, .horizontal], 5)
         .background(
@@ -186,3 +247,4 @@ struct StreamingViewModifier: ViewModifier {
                    alignment: sender == .user ? .trailing : .leading)
     }
 }
+

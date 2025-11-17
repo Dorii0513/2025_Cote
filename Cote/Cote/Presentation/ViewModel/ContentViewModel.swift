@@ -116,12 +116,7 @@ final class ContentViewModel: ObservableObject {
     
     // 선택 노트 로드
     func loadNote(by id: UUID) async {
-            if currentNoteID == id {
-                print("ℹ️ Already loaded note \(id)")
-                return
-            }
-            
-            print("📖 Loading note \(id)...")
+        
             isLoading = true
             currentNoteID = id
             

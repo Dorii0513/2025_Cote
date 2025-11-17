@@ -107,7 +107,7 @@ struct HomeView: View {
                 ResizableEdgeView (
                     onDrag: { delta in
                         let newWidth = chatViewWidth + delta
-                        chatViewWidth = max(250, min(newWidth, 400))
+                        chatViewWidth = max(250, min(newWidth, 450))
                     }, edge: .right
                 )
                 .frame(width: showEdge_R ? 6 : 2)
@@ -121,7 +121,7 @@ struct HomeView: View {
                 
                 ZStack {
                     BlurEffect().ignoresSafeArea()
-                    Color.bgSidebar.ignoresSafeArea()
+                    Color.bgEditor.opacity(0.95).ignoresSafeArea()
                     
                     if #available(macOS 26.0, *) {
                         ChatView()
@@ -251,7 +251,7 @@ private struct contentToolbar: View {
             
             // chatbot Button
             Button {
-                withAnimation(.easeInOut){
+                withAnimation(.smooth){
                     showChat.toggle()
                 }
             } label: {
