@@ -16,7 +16,7 @@ struct TagChip: View {
             action()
         } label: {
             Text(tag)
-                .coteFont(.tag, color: .textTag)
+                .coteFont(.tag, color: .aiSecondary)
                 .tracking(0.5)
             
                 .buttonStyle(.plain)
@@ -24,7 +24,7 @@ struct TagChip: View {
                 .padding(.horizontal, 6)
                 .background(
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(.bgTag)
+                        .fill(.aiDark)
                 )
         }
         .buttonStyle(.plain)

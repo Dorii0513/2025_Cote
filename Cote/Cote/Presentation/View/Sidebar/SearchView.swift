@@ -29,15 +29,15 @@ struct SearchView: View {
     
     private var borderColor: Color {
         if isFocused && viewModel.mode == .semantic {
-            return .textTag.opacity(0.7)
+            return .aiSecondary.opacity(0.7)
         }
         if isFocused && viewModel.mode == .keyword {
             return .borderDefault.opacity(0.8)
         }
         if !isFocused && viewModel.mode == .semantic {
-            return .textTag.opacity(0.4)
+            return .aiMuted
         }
-        return .borderSecondary.opacity(0.5)
+        return .borderMuted
     }
     
     var body: some View {
@@ -61,7 +61,7 @@ struct SearchView: View {
                     Image("AISearch")
                         .resizable()
                         .frame(width: 22, height: 22)
-                        .foregroundColor(isSearchHover || viewModel.mode == .semantic ? .textTag : .iconDefault)
+                        .foregroundColor(isSearchHover || viewModel.mode == .semantic ? .aiDefault : .iconDefault)
                         .padding(.bottom, 2)     // 균형 맞추기 용
                         .padding(.horizontal, 2)
                         .background(
@@ -101,7 +101,7 @@ struct SearchView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(borderColor, lineWidth: 2)
                     )
-                    .shadow(color: viewModel.mode == .semantic ? .textTag.opacity(glow ? 0.4 : 0.8) : .clear, radius: glow ? 5 : 2, x: 0, y: 0)
+                    .shadow(color: viewModel.mode == .semantic ? .aiSecondary.opacity(glow ? 0.4 : 0.8) : .clear, radius: glow ? 5 : 2, x: 0, y: 0)
             )
             .padding(.vertical, 4)
             

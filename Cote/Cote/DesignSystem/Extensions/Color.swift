@@ -10,6 +10,7 @@ import SwiftUI
 extension ShapeStyle where Self == Color {
     static var borderDefault: Self { Color("gray90") }
     static var borderSecondary: Self { Color("black60") }
+    static var borderMuted: Self { Color("black60").opacity(0.5) }
     
     // icon
     static var iconDefault: Self { Color("gray80") }
@@ -24,11 +25,9 @@ extension ShapeStyle where Self == Color {
     static var textDefault:  Self { Color("gray80") }
     static var textSecondary:     Self { Color("gray100") }
     static var textMuted:Self { Color("gray100") }
-    static var textTag:   Self { Color("purple20") }
     
     // background
     static var bgTextField: Self { Color("black200_5") }
-    static var bgTag:            Self { Color("purple100_15") }
     static var bgEditor:   Self { Color("black100") }
     static var bgElevatedDefault:Self { Color("black70") }
     static var bgGutter:  Self { Color("black200") }
@@ -39,4 +38,12 @@ extension ShapeStyle where Self == Color {
     
     // action
     static var actionDefault: Self { Color("gray80_10pct") }
+    static var actionSecondary: Self { Color("gray80_10pct").opacity(0.5) }
+    static var actionDrag: Self { Color("purple20").opacity(0.2) }
+    
+    //AI
+    static var aiDefault: Self { Color("purple30")}
+    static var aiSecondary: Self { Color("purple20")}
+    static var aiMuted: Self { Color("purple20").opacity(0.4)}
+    static var aiDark: Self { Color("purple100_15")}
 }

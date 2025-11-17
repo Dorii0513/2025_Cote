@@ -9,16 +9,19 @@ import SwiftUI
 import AppKit
 
 struct HomeView: View {
-    @State private var isBtnTapped: Bool = false
     @State private var sidebarWidth: CGFloat = 210
-    @State private var showEdge: Bool = false
+    @State private var chatViewWidth: CGFloat = 250
+    
+    @State private var isBtnTapped: Bool = false
+    @State private var showEdge_L: Bool = false
+    @State private var showEdge_R: Bool = false
     @State private var showChat: Bool = false
     @StateObject private var contentViewModel = ContentViewModel()
     @StateObject private var state = UIState()
     
     var body: some View {
         
-        HStack {
+        HStack(spacing: 0) {
             HStack(spacing: 0) {
                 // SideBar
                 if state.isSidebarOpen {
@@ -39,17 +42,19 @@ struct HomeView: View {
                     .frame(width: sidebarWidth)
                     
                     // 너비 조정
-                    ResizableEdgeView { delta in
-                        let newWidth = sidebarWidth + delta
-                        sidebarWidth = max(210, min(newWidth, 400))
-                    }
-                    .frame(width: showEdge ? 6 : 2)
-                    .background(showEdge ? .bgTag : .bgSidebar)
+                    ResizableEdgeView (
+                        onDrag: { delta in
+                            let newWidth = sidebarWidth + delta
+                            sidebarWidth = max(210, min(newWidth, 400))
+                        }, edge: .left
+                    )
+                    .frame(width: showEdge_L ? 6 : 2)
+                    .background(showEdge_L ? .actionDrag : .bgSidebar)
                     .onHover(perform: { hovering in
-                        showEdge = hovering
+                        showEdge_L = hovering
                     })
                     .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
-                        showEdge = isPressing
+                        showEdge_L = isPressing
                     }, perform: {})
                 }
                 
@@ -91,10 +96,29 @@ struct HomeView: View {
             .environmentObject(state)
             .ignoresSafeArea()
             
-            //TODO: - contentView 너비 조정 기능 추가
-            // AI Chatbot
             
+            Divider()
+                .ignoresSafeArea()
+                .frame(width: 1)
+                .tint(.borderSecondary)
+            
+            // AI Chatbot
             if showChat {
+                ResizableEdgeView (
+                    onDrag: { delta in
+                        let newWidth = chatViewWidth + delta
+                        chatViewWidth = max(250, min(newWidth, 400))
+                    }, edge: .right
+                )
+                .frame(width: showEdge_R ? 6 : 2)
+                .background(showEdge_R ? .actionDrag : .bgSidebar)
+                .onHover(perform: { hovering in
+                    showEdge_R = hovering
+                })
+                .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
+                    showEdge_R = isPressing
+                }, perform: {})
+                
                 ZStack {
                     BlurEffect().ignoresSafeArea()
                     Color.bgSidebar.ignoresSafeArea()
@@ -102,12 +126,10 @@ struct HomeView: View {
                     if #available(macOS 26.0, *) {
                         ChatView()
                             .environmentObject(ChatViewModel())
-                    } else {
-                        // Fallback on earlier versions
-                    }
+                            .ignoresSafeArea()
+                    } else { }
                 }
-                .frame(minWidth: 210)
-                .frame(maxWidth: 320)
+                .frame(width: chatViewWidth)
             }
         }
         
@@ -120,6 +142,8 @@ private struct contentToolbar: View {
     @EnvironmentObject private var state: UIState
     @FocusState private var isFocused: Bool
     @State private var newTag: Tag = .init(name: "")
+    @State private var isSettingHover: Bool = false
+    @State private var isChatHover: Bool = false
     @Binding var isBtnTapped: Bool
     @Binding var showChat: Bool
     
@@ -212,9 +236,18 @@ private struct contentToolbar: View {
                 }
             } label: {
                 Image("setting")
-                
+                    .foregroundStyle(isSettingHover ? .iconSelected : .iconSecondary)
             }
             .buttonStyle(.plain)
+            .padding(5)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSettingHover ? .actionSecondary : .clear)
+            )
+            .onHover(perform: { hovering in
+                isSettingHover = hovering
+            })
+            .padding(.trailing, 4)
             
             // chatbot Button
             Button {
@@ -222,10 +255,20 @@ private struct contentToolbar: View {
                     showChat.toggle()
                 }
             } label: {
-                
-                Image("generate_line")
+                Image("AIChat")
+                    .resizable()
+                    .frame(width: 24, height: 24)
+                    .foregroundStyle(isChatHover || showChat ? .aiDefault : .iconSecondary)
             }
             .buttonStyle(.plain)
+            .padding(3)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isChatHover || showChat ? .actionSecondary : .clear)
+            )
+            .onHover(perform: { hovering in
+                isChatHover = hovering
+            })
         }
         .padding(.horizontal, 15)
         .frame(height: 42)  //높이 고정
