@@ -17,6 +17,16 @@ struct ChatView: View {
     @State private var showNote: Bool = false
     @State private var isHover: Bool = false
     
+    private var focusColor: Color {
+        if viewModel.focusedNotes.isEmpty && showNote || isHover {
+            return .iconDefault
+        }
+        if !viewModel.focusedNotes.isEmpty {
+            return .aiDefault
+        }
+        return .iconSecondary
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             
@@ -68,7 +78,7 @@ struct ChatView: View {
         Spacer()
         HStack(alignment: .center) {
             Text("New Conversation with Cote")
-                .coteFont(.text1, color: .textDefault)
+                .coteFont(.text1, color: .textSecondary)
         }
         .frame(maxWidth: .infinity)
         Spacer()
@@ -108,8 +118,7 @@ struct ChatView: View {
     private var FocusNoteView: some View {
         
         HStack(spacing: 10) {
-            
-            CustomChipLayout(spacing: 10) {
+            CustomChipLayout(spacing: 8) {
                 if !viewModel.focusedNotes.isEmpty {
                     ForEach(viewModel.focusedNotes) { note in
                         NoteChip(selectedNote: note,
@@ -200,13 +209,19 @@ struct ChatView: View {
                         }
                     }
                 } label: {
-                    Image(systemName: "eye")
-                        .foregroundStyle(showNote ? .aiDefault : .iconSecondary)
-                        .padding(3)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill( isHover ? .actionDefault : .clear)
-                        )
+                    HStack(spacing: 1) {
+                        Image(systemName: "eye")
+                            .foregroundStyle(focusColor)
+                            .padding(3)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill( isHover ? .aiMuted.opacity(0.5) : .clear)
+                            )
+                        if !viewModel.focusedNotes.isEmpty {
+                            Text("\(viewModel.focusedNotes.count)")
+                                .coteFont(.code2, color: .aiDefault)
+                        }
+                    }
                 }
                 .buttonStyle(.plain)
                 .padding(.leading, 6)
@@ -214,6 +229,22 @@ struct ChatView: View {
                     isHover = hovering
                 })
                 //            .tooltip("Preview note focus mode.")
+                
+//                ZStack(alignment: .center) {
+//                    Color.clear
+//                    if viewModel.userInput.isEmpty {
+//                        Text("Write a question here…")
+//                            .coteFont(.text2, color: .textSecondary)
+//                            .padding(.leading, 4)
+//                            .padding(.top, 8)
+//                    }
+//                    
+//                    TextEditor(text: $viewModel.userInput)
+//                        .coteFont(.text2, color: .textSelected)
+//                        .frame(minHeight: textHeight)
+//                }
+//                .frame(height: textHeight)
+//                .padding(.bottom, 1)
                 
                 TextField("Write a question here...", text: $viewModel.userInput)
                     .focused($isFocused, equals: true)

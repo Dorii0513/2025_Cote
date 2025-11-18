@@ -162,33 +162,3 @@ struct CodeBlockView: View {
         }
     }
 }
-
-//#Preview {
-//    ScrollView {
-//        MarkdownText(markdown: """
-//            Hello world
-//            *this is* bold and **italic**
-//            text
-//            
-//            **Description**: Poodles are highly intelligent.
-//            - **Grooming**: Needs brushing
-//            - **Exercise**: Daily
-//            
-//            Here's some Swift code:
-//```swift
-//            func hello() {
-//                print("Hello, World!")
-//            }
-//```
-//            
-//            And Python:
-//```python
-//            def greet():
-//                print("Hello!")
-//```
-//            
-//            More text here.
-//            """)
-//        .padding()
-//    }
-//}

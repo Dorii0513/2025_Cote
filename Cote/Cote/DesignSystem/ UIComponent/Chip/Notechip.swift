@@ -37,11 +37,10 @@ struct NoteChip: View {
                 .buttonStyle(.plain)
             } else {
                 HStack(spacing: 4) {
-                    
-                    Image("language")
-                        .resizable()
-                        .frame(width: 12, height: 12)
-                        .foregroundStyle(.aiSecondary)
+//                    Image("language")
+//                        .resizable()
+//                        .frame(width: 12, height: 14)
+//                        .foregroundStyle(.aiSecondary)
                     if let note = selectedNote {
                         Text(note.title)
                             .coteFont(.text3, color: .aiSecondary)
