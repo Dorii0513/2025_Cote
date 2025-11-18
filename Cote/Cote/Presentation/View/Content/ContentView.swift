@@ -127,7 +127,7 @@ private struct BottomBar: View {
                     .frame(height: 100)
                 } label: {
                     HStack(spacing: 4) {
-                        Image("language")
+//                        Image("language")
                         Text(language)
                             .coteFont(.code2, color: .textMuted)
                     }

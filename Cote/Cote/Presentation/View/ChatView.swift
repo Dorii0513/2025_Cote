@@ -15,15 +15,31 @@ struct ChatView: View {
     @FocusState private var isFocused: Bool
     
     @State private var showNote: Bool = false
-    @State private var addNote: Bool = false
+    @State private var isHover: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Spacer().frame(height: 20)
             
             if viewModel.messages.isEmpty {
                 EmptyView
             } else {
+                
+                HStack {
+                    Spacer()
+                    Button {
+                        viewModel.reset()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.trianglehead.clockwise")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.iconSecondary)
+                            Text("Reset")
+                                .coteFont(.text3, color: .iconSecondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+                
                 MessageView
             }
             //RecommendView
@@ -91,26 +107,32 @@ struct ChatView: View {
     @ViewBuilder
     private var FocusNoteView: some View {
         
-        HStack(spacing: 4) {
-            if !viewModel.focusedNotes.isEmpty {
-                ForEach(viewModel.focusedNotes) { note in
-                    NoteCell(selectedNote: note,
-                             mode: .label,
+        HStack(spacing: 10) {
+            
+            CustomChipLayout(spacing: 10) {
+                if !viewModel.focusedNotes.isEmpty {
+                    ForEach(viewModel.focusedNotes) { note in
+                        NoteChip(selectedNote: note,
+                                 mode: .label,
+                                 onSelect: {
+                            withAnimation(.easeInOut(duration: 0.2) ){
+                                viewModel.deleteFocusedNote(id: note.id)
+                            }
+                        })
+                        .transition(.opacity.combined(with: .scale))
+                    }
+                }
+                if !viewModel.focusedNotes.contains(where: { $0.id == state.selectedNoteID }) {
+                    NoteChip(selectedNote: viewModel.selectedNote,
+                             mode: .button,
                              onSelect: {
-                        viewModel.deleteFocusedNote(id: note.id)
+                        withAnimation(.easeInOut(duration: 0.2 )) {
+                            viewModel.addFocusedNotes()
+                        }
                     })
+                    .transition(.opacity.combined(with: .scale))
                 }
             }
-            
-            //해야하는 거 : 내가 선택한
-            if !viewModel.focusedNotes.contains(where: { $0.id == state.selectedNoteID }) {
-                NoteCell(selectedNote: viewModel.selectedNote,
-                         mode: .button,
-                         onSelect: {
-                    viewModel.addFocusedNotes()
-                })
-            }
-            
             Spacer()
         }
     }
@@ -172,15 +194,25 @@ struct ChatView: View {
                     if let id = state.selectedNoteID {
                         Task { @MainActor in
                             await viewModel.fetchFocusNote(id: id)
-                            showNote.toggle()
+                            withAnimation(.easeInOut) {
+                                showNote.toggle()
+                            }
                         }
                     }
                 } label: {
-                    Image(systemName: "eyeglasses")
-                        .foregroundStyle(showNote ? .aiDefault : .iconDefault)
+                    Image(systemName: "eye")
+                        .foregroundStyle(showNote ? .aiDefault : .iconSecondary)
+                        .padding(3)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill( isHover ? .actionDefault : .clear)
+                        )
                 }
                 .buttonStyle(.plain)
                 .padding(.leading, 6)
+                .onHover(perform: { hovering in
+                    isHover = hovering
+                })
                 //            .tooltip("Preview note focus mode.")
                 
                 TextField("Write a question here...", text: $viewModel.userInput)

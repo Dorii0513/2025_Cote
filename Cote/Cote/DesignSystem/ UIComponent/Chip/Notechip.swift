@@ -1,5 +1,5 @@
 //
-//  NoteCell.swift
+//  NoteChip.swift
 //  Cote
 //
 //  Created by 김예림 on 11/18/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct NoteCell: View {
+struct NoteChip: View {
     let selectedNote: FocusedNote?
     let mode: CellMode
     let onSelect: () -> Void
@@ -20,9 +20,11 @@ struct NoteCell: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.textDefault)
                         if let note = selectedNote {
                             Text(note.title)
-                                .coteFont(.text2, color: .textDefault)
+                                .coteFont(.text3, color: .textDefault)
                         }
                     }
                     .padding(.vertical, 5)
@@ -35,16 +37,21 @@ struct NoteCell: View {
                 .buttonStyle(.plain)
             } else {
                 HStack(spacing: 4) {
+                    
+                    Image("language")
+                        .resizable()
+                        .frame(width: 12, height: 12)
+                        .foregroundStyle(.aiSecondary)
                     if let note = selectedNote {
                         Text(note.title)
-                            .coteFont(.text2, color: .textSelected)
+                            .coteFont(.text3, color: .aiSecondary)
                     }
                     Button {
                         onSelect()
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 10))
-                            .foregroundStyle(.textSelected)
+                            .foregroundStyle(.aiSecondary.opacity(0.7))
                     }
                     .buttonStyle(.plain)
                 }
@@ -52,7 +59,11 @@ struct NoteCell: View {
                 .padding(.horizontal, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(.aiMuted)
+                        .fill(.aiMuted.opacity(0.3))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(.aiMuted.opacity(0.8), lineWidth: 1)
+                        )
                 )
             }
         }
