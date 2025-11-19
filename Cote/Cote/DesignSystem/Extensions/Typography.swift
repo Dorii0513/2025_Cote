@@ -18,6 +18,10 @@ public enum CoteFontType {
     case text3
     case code1
     case code2
+    case markL
+    case markM
+    case markS
+    case mark
     
     //font
     static let pretendardSemiBoldFont: String = "Pretendard-SemiBold"
@@ -27,6 +31,10 @@ public enum CoteFontType {
     static let JetBrainsMonoRegular: String = "JetBrainsMono-Regular"
     
     //size
+    static let markdownL: CGFloat = 20
+    static let markdownM: CGFloat = 18
+    static let markdownS: CGFloat = 16
+    
     static let head: CGFloat = 16
     static let bodyL: CGFloat = 14
     static let bodyM: CGFloat = 12
@@ -37,9 +45,9 @@ public enum CoteFontType {
         switch self {
         case .input, .text1, .text2, .tag, .text3:
             return CoteFontType.pretendardMediumFont
-        case .gutter :
+        case .gutter, .mark :
             return CoteFontType.pretendardRegularFont
-        case .title:
+        case .title, .markL, .markM, .markS:
             return CoteFontType.pretendardSemiBoldFont
         case .code1 :
             return CoteFontType.JetBrainsMonoMedium
@@ -60,6 +68,14 @@ public enum CoteFontType {
             return CoteFontType.caption
         case .title:
             return CoteFontType.head
+        case .mark:
+            return CoteFontType.bodyL
+        case .markL:
+            return CoteFontType.markdownL
+        case .markM:
+            return CoteFontType.markdownM
+        case .markS:
+            return CoteFontType.markdownS
         }
     }
 }

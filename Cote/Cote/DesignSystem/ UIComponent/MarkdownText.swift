@@ -34,16 +34,69 @@ struct MarkdownText: View {
     func render(line: String) -> some View {
         let trimmed = line.trimmingCharacters(in: .whitespaces)
         
-        if trimmed.hasPrefix("- ") {
+        // 0. 테이블 행 처리: 파이프로 시작하는 줄
+        if trimmed.hasPrefix("|") {
+            // | ... | 형태에서 양 끝 파이프 포함한 상태
+            let rawCells = trimmed.split(separator: "|", omittingEmptySubsequences: false)
+            
+            // 보통 맨 앞/뒤는 빈 셀이라 버림
+            let cellStrings = rawCells
+                .dropFirst()
+                .dropLast()
+                .map { String($0).trimmingCharacters(in: .whitespaces) }
+            
+            // 구분선(---, :---:, 등)만 있는 줄이면 스킵
+            let dashSet = CharacterSet(charactersIn: "-: ")
+            let isSeparatorRow = cellStrings.allSatisfy { cell in
+                cell.unicodeScalars.allSatisfy { dashSet.contains($0) }
+            }
+            
+            if isSeparatorRow {
+                EmptyView()
+            } else {
+                HStack(alignment: .top, spacing: 12) {
+                    ForEach(Array(cellStrings.enumerated()), id: \.offset) { _, cell in
+                        Text(try! AttributedString(markdown: cell))
+                            .coteFont(.text1, color: .textDefault)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            
+        // 1. 헤더
+        } else if trimmed.hasPrefix("### ") {
+            Text(String(trimmed.dropFirst(4)))
+                .coteFont(.markS, color: .textDefault)
+                .padding(.top, 20)
+                .padding(.bottom, 12)
+            
+        } else if trimmed.hasPrefix("## ") {
+            Text(String(trimmed.dropFirst(3)))
+                .coteFont(.markM, color: .textDefault)
+                .padding(.top, 20)
+                .padding(.bottom, 12)
+            
+        } else if trimmed.hasPrefix("# ") {
+            Text(String(trimmed.dropFirst(2)))
+                .coteFont(.markL, color: .textDefault)
+                .padding(.top, 20)
+                .padding(.bottom, 12)
+            
+        // 2. 리스트(-, *)
+        } else if trimmed.hasPrefix("- ") || trimmed.hasPrefix("* ") {
+            let content = String(trimmed.dropFirst(2))
             HStack(alignment: .top, spacing: 8) {
                 Text("•")
-                    .coteFont(.text1, color: .textDefault)
-                Text(try! AttributedString(markdown: String(trimmed.dropFirst(2))))
-                    .coteFont(.text1, color: .textDefault)
+                    .coteFont(.mark, color: .textDefault)
+                Text(try! AttributedString(markdown: content))
+                    .coteFont(.mark, color: .textDefault)
             }
+            
+        // 3. 일반 텍스트
         } else if !trimmed.isEmpty {
             Text(try! AttributedString(markdown: trimmed))
-                .coteFont(.text1, color: .textDefault)
+                .coteFont(.mark, color: .textDefault)
         }
     }
 

@@ -32,6 +32,7 @@ struct DefaultGenerateCommentUseCase: GenerateCommentUseCase {
             2. 빈 줄도 줄 번호에 포함됩니다.
             3. 간단한 UI 코드에는 주석을 달지 마세요.
             4. 복잡한 로직이 있을 때만 주석을 다세요.
+            5. 각각의 함수 또는 뷰가 어떤 역할을 수행하고 있는지 함수 시작 또는 뷰가 시작되는 코드 윗 줄에 주석을 다세요.
             
             만약 주석을 달 만한 코드가 없다면 빈 배열을 반환하세요: { "comments": [] }
             

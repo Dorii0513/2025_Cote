@@ -48,7 +48,7 @@ struct ContentView: View {
             }
         }
         .ignoresSafeArea()
-        .frame(minWidth: 540)
+        .frame(minWidth: 400)
     }
     
     private func clearEditor() {

@@ -105,7 +105,7 @@ struct HomeView: View {
                 ResizableEdgeView (
                     onDrag: { delta in
                         let newWidth = chatViewWidth + delta
-                        chatViewWidth = max(250, min(newWidth, 450))
+                        chatViewWidth = max(250, min(newWidth, 500))
                     }, edge: .right
                 )
                 .frame(width: showEdge_R ? 6 : 2)
