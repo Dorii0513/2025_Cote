@@ -25,7 +25,8 @@ struct ContentView: View {
                 
                 // 에디터 뷰
                 CodeEditor(text: $viewModel.content,
-                           language: $viewModel.language)
+                           language: $viewModel.language,
+                           aiComments: $viewModel.aiComments)
                     .id(viewModel.currentNoteID)
                     .onChange(of: viewModel.content, scheduleAutosave)
                     .onChange(of: viewModel.title, scheduleAutosave)

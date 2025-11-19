@@ -126,6 +126,8 @@ func example() {
                 
                 for try await partial in stream {
                     self.partial = partial.content
+                    
+                    print(partial)
                 }
                 
                 if let finalContent = partial {

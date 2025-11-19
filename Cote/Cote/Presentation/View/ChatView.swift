@@ -10,18 +10,19 @@ import FoundationModels
 
 @available(macOS 26.0, *)
 struct ChatView: View {
-    @StateObject private var viewModel = ChatViewModel()
-    @StateObject private var state = UIState()
+    @StateObject private var chatViewModel = ChatViewModel()
+    @EnvironmentObject private var contentViewModel: ContentViewModel
+    @EnvironmentObject private var state: UIState
     @FocusState private var isFocused: Bool
     
     @State private var showNote: Bool = false
     @State private var isHover: Bool = false
     
     private var focusColor: Color {
-        if viewModel.focusedNotes.isEmpty && showNote || isHover {
+        if chatViewModel.focusedNotes.isEmpty && showNote || isHover {
             return .iconDefault
         }
-        if !viewModel.focusedNotes.isEmpty {
+        if !chatViewModel.focusedNotes.isEmpty {
             return .aiDefault
         }
         return .iconSecondary
@@ -30,14 +31,14 @@ struct ChatView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             
-            if viewModel.messages.isEmpty {
+            if chatViewModel.messages.isEmpty {
                 EmptyView
             } else {
                 
                 HStack {
                     Spacer()
                     Button {
-                        viewModel.reset()
+                        chatViewModel.reset()
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "arrow.trianglehead.clockwise")
@@ -52,7 +53,10 @@ struct ChatView: View {
                 
                 MessageView
             }
-            //RecommendView
+            
+            if chatViewModel.focusedNotes.count == 1 {
+                RecommendView
+            }
             TextFieldView
         }
         .padding(.top, 20)
@@ -67,7 +71,7 @@ struct ChatView: View {
         .onChange(of: state.selectedNoteID) {
             if let id = state.selectedNoteID {
                 Task { @MainActor in
-                    await viewModel.fetchFocusNote(id: id)
+                    await chatViewModel.fetchFocusNote(id: id)
                 }
             }
         }
@@ -89,22 +93,22 @@ struct ChatView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
-                    ForEach (viewModel.messages) { message in
+                    ForEach (chatViewModel.messages) { message in
                         MarkdownText(markdown: message.content)
                             .modifier(StreamingViewModifier(sender: message.sender))
                     }
                     
-                    if let partial = viewModel.partial, let id = viewModel.partialId {
+                    if let partial = chatViewModel.partial, let id = chatViewModel.partialId {
                         StreamingResponseView(partial: partial)
                             .id(id)
-                    } else if viewModel.isResponding {
+                    } else if chatViewModel.isResponding {
                         ProgressView()
                     }
                 }
                 .padding(.horizontal, 10)
                 // 아래로 자동 스크롤
-                .onChange(of: viewModel.partial) { _, _ in
-                    if let id = viewModel.partialId {
+                .onChange(of: chatViewModel.partial) { _, _ in
+                    if let id = chatViewModel.partialId {
                         withAnimation {
                             proxy.scrollTo(id, anchor: .bottom)
                         }
@@ -119,24 +123,24 @@ struct ChatView: View {
         
         HStack(spacing: 10) {
             CustomChipLayout(spacing: 8) {
-                if !viewModel.focusedNotes.isEmpty {
-                    ForEach(viewModel.focusedNotes) { note in
+                if !chatViewModel.focusedNotes.isEmpty {
+                    ForEach(chatViewModel.focusedNotes) { note in
                         NoteChip(selectedNote: note,
                                  mode: .label,
                                  onSelect: {
                             withAnimation(.easeInOut(duration: 0.2) ){
-                                viewModel.deleteFocusedNote(id: note.id)
+                                chatViewModel.deleteFocusedNote(id: note.id)
                             }
                         })
                         .transition(.opacity.combined(with: .scale))
                     }
                 }
-                if !viewModel.focusedNotes.contains(where: { $0.id == state.selectedNoteID }) {
-                    NoteChip(selectedNote: viewModel.selectedNote,
+                if !chatViewModel.focusedNotes.contains(where: { $0.id == state.selectedNoteID }) {
+                    NoteChip(selectedNote: chatViewModel.selectedNote,
                              mode: .button,
                              onSelect: {
                         withAnimation(.easeInOut(duration: 0.2 )) {
-                            viewModel.addFocusedNotes()
+                            chatViewModel.addFocusedNotes()
                         }
                     })
                     .transition(.opacity.combined(with: .scale))
@@ -150,7 +154,9 @@ struct ChatView: View {
     private var RecommendView: some View {
         HStack {
             Button {
-                
+                Task { @MainActor in
+                    await contentViewModel.generateComments()
+                }
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "sparkles.2")
@@ -202,7 +208,7 @@ struct ChatView: View {
                 Button {
                     if let id = state.selectedNoteID {
                         Task { @MainActor in
-                            await viewModel.fetchFocusNote(id: id)
+                            await chatViewModel.fetchFocusNote(id: id)
                             withAnimation(.easeInOut) {
                                 showNote.toggle()
                             }
@@ -217,8 +223,8 @@ struct ChatView: View {
                                 RoundedRectangle(cornerRadius: 6)
                                     .fill( isHover ? .aiMuted.opacity(0.5) : .clear)
                             )
-                        if !viewModel.focusedNotes.isEmpty {
-                            Text("\(viewModel.focusedNotes.count)")
+                        if !chatViewModel.focusedNotes.isEmpty {
+                            Text("\(chatViewModel.focusedNotes.count)")
                                 .coteFont(.code2, color: .aiDefault)
                         }
                     }
@@ -246,25 +252,25 @@ struct ChatView: View {
 //                .frame(height: textHeight)
 //                .padding(.bottom, 1)
                 
-                TextField("Write a question here...", text: $viewModel.userInput)
+                TextField("Write a question here...", text: $chatViewModel.userInput)
                     .focused($isFocused, equals: true)
                     .coteFont(.text2, color: .textSelected)
                     .tint(.textDefault)
                     .textFieldStyle(.plain)
                     .padding(.leading, 4)
                     .onSubmit {
-                        viewModel.sendMessage()
+                        chatViewModel.sendMessage()
                     }
                 
                 Spacer()
                 
                 Button {
-                    viewModel.sendMessage()
+                    chatViewModel.sendMessage()
                 } label: {
                     Image("arrow_up")
                         .resizable()
                         .frame(width: 24, height: 24)
-                        .foregroundStyle(viewModel.userInput.isEmpty ? .clear : .aiDefault)
+                        .foregroundStyle(chatViewModel.userInput.isEmpty ? .clear : .aiDefault)
                 }
                 .buttonStyle(.plain)
                 .transition(.opacity.combined(with: .scale))
@@ -281,7 +287,7 @@ struct ChatView: View {
                 )
         )
         .padding(.bottom, 20)
-        .animation(.easeInOut(duration: 0.2), value: viewModel.userInput.isEmpty)
+        .animation(.easeInOut(duration: 0.2), value: chatViewModel.userInput.isEmpty)
     }
 }
 

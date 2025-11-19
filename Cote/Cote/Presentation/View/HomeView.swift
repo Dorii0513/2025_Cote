@@ -92,8 +92,6 @@ struct HomeView: View {
                     }
                 }
             }
-            .environmentObject(contentViewModel)
-            .environmentObject(state)
             .ignoresSafeArea()
             
             
@@ -132,7 +130,8 @@ struct HomeView: View {
                 .frame(width: chatViewWidth)
             }
         }
-        
+        .environmentObject(contentViewModel)
+        .environmentObject(state)
     }
 }
 
