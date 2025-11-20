@@ -66,7 +66,7 @@ final class ContentViewModel: ObservableObject {
         showTags = true
         Task { await generateTags() }
     }
-
+    
     func hideSuggestions() {
         guard showTags else { return }
         showTags = false
@@ -124,45 +124,45 @@ final class ContentViewModel: ObservableObject {
     // 선택 노트 로드
     func loadNote(by id: UUID) async {
         
-            isLoading = true
-            currentNoteID = id
-            
-            do {
-                // 첫 시도
-                if let note = try await fetchUseCase.execute(noteID: id) {
-                    apply(note)
-
-                    try await Task.sleep(nanoseconds: 50_000_000)
-                    isLoading = false
-                    return
-                }
-                
-                // 재시도
-                try await Task.sleep(nanoseconds: 150_000_000)
-                if let note = try await fetchUseCase.execute(noteID: id) {
-                    apply(note)
-                    
-                    try await Task.sleep(nanoseconds: 50_000_000)
-                    isLoading = false
-                    return
-                }
-                
-                isLoading = false
-            } catch {
-                print("❌ [VM] load error=", error)
-                isLoading = false
-            }
-        }
+        isLoading = true
+        currentNoteID = id
         
-        private func apply(_ note: Note) {
-            objectWillChange.send()
+        do {
+            // 첫 시도
+            if let note = try await fetchUseCase.execute(noteID: id) {
+                apply(note)
+                
+                try await Task.sleep(nanoseconds: 50_000_000)
+                isLoading = false
+                return
+            }
             
-            self.title = note.title
-            self.content = note.content
-            self.noteTags = note.tags
-            self.updatedAt = note.updatedAt
-            self.language = note.language.isEmpty ? "plaintext" : note.language
+            // 재시도
+            try await Task.sleep(nanoseconds: 150_000_000)
+            if let note = try await fetchUseCase.execute(noteID: id) {
+                apply(note)
+                
+                try await Task.sleep(nanoseconds: 50_000_000)
+                isLoading = false
+                return
+            }
+            
+            isLoading = false
+        } catch {
+            print("❌ [VM] load error=", error)
+            isLoading = false
         }
+    }
+    
+    private func apply(_ note: Note) {
+        objectWillChange.send()
+        
+        self.title = note.title
+        self.content = note.content
+        self.noteTags = note.tags
+        self.updatedAt = note.updatedAt
+        self.language = note.language.isEmpty ? "plaintext" : note.language
+    }
     
     //MARK: - Comment
     func applyCommentsToCode() {
@@ -171,52 +171,40 @@ final class ContentViewModel: ObservableObject {
         var lines = content.components(separatedBy: "\n")
         let commentDict = Dictionary(uniqueKeysWithValues: aiComments.map { ($0.line, $0.text) })
         
-        print("=== 주석 적용 전 검증 ===")
         for (lineNum, comment) in commentDict.sorted(by: { $0.key < $1.key }) {
             let arrayIndex = lineNum - 1
             if arrayIndex >= 0 && arrayIndex < lines.count {
-                print("줄 \(lineNum): \(lines[arrayIndex])")
-                print("  → 주석: \(comment)")
-            } else {
-                print("줄 \(lineNum): ⚠️ 범위 벗어남 (총 \(lines.count)줄)")
-            }
+            } else { }
         }
         
-        // 뒤에서부터 삽입 (앞에서부터 하면 인덱스 꼬임)
         for lineNumber in commentDict.keys.sorted(by: >) {
             let arrayIndex = lineNumber - 1
             
             guard arrayIndex >= 0 && arrayIndex < lines.count else {
-                print("⚠️ 줄 \(lineNumber) 무시: 유효하지 않은 범위")
                 continue
             }
             
             let originalLine = lines[arrayIndex]
             let comment = commentDict[lineNumber] ?? ""
             
-            // 이미 주석이 있으면 스킵
+            // 이미 주석이 있으면 추가 X
             if originalLine.trimmingCharacters(in: .whitespaces).hasPrefix("//") {
-                print("⚠️ 줄 \(lineNumber) 무시: 이미 주석 존재")
                 continue
             }
             
-            // 빈 줄이면 스킵
+            // 빈 줄이면 넘어가기
             if originalLine.trimmingCharacters(in: .whitespaces).isEmpty {
-                print("⚠️ 줄 \(lineNumber) 무시: 빈 줄")
                 continue
             }
             
-            // 원본 줄의 들여쓰기 추출
+            // 아래 줄의 들여쓰기 가져옴
             let leadingWhitespace = originalLine.prefix(while: { $0.isWhitespace })
             
-            // 주석 포맷 정리
             let finalComment = comment.hasPrefix("//") ? comment : "// " + comment
             
-            // 주석을 해당 줄 위에 삽입 (같은 들여쓰기 적용)
+            // 주석을 해당 줄 위에 추가 (들여쓰기 고려)
             let commentLine = String(leadingWhitespace) + finalComment
             lines.insert(commentLine, at: arrayIndex)
-            
-            print("✅ 줄 \(lineNumber) 위에 주석 추가됨")
         }
         
         content = lines.joined(separator: "\n")
@@ -225,19 +213,12 @@ final class ContentViewModel: ObservableObject {
     
     func generateComments() async {
         do {
+            
             let comments = try await generateUseCase.execute(code: content)
-            print("=== AI 주석 생성 완료 ===")
-            print("생성된 주석 개수: \(comments.count)")
-            
             self.aiComments = comments
-            
-            // 주석을 바로 코드에 적용
             applyCommentsToCode()
             
-        } catch {
-            print("AI 주석 생성 실패: \(error)")
-            self.aiComments = []
-        }
+        } catch { self.aiComments = [] }
     }
 }
 

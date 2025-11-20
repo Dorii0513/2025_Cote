@@ -34,7 +34,6 @@ final class ChatViewModel: ObservableObject {
     필요에 따라 표 형태를 사용해줘
     그리고 집중해야 하는 코드 부분에만 코드 블럭을 적극적으로 활용해줘.
     """
-    private var streamingTask: Task<Void, Never>?
     
     init(
         fetchUseCase: FetchNotesUseCase,
