@@ -64,16 +64,8 @@ struct DefaultGenerateCommentUseCase: GenerateCommentUseCase {
             userContent: userContent
         )
         
-        print("=== OpenAI 원본 응답 ===")
-        print(response)
-        print("==================")
-        
         // JSON 추출 및 정제
         let jsonString = cleanJSONResponse(response)
-        
-        print("=== 정제된 JSON ===")
-        print(jsonString)
-        print("==================")
         
         let decoded = try parseComments(from: jsonString)
         let totalLines = code.split(separator: "\n", omittingEmptySubsequences: false).count
@@ -103,7 +95,7 @@ private func addLineNumbers(to code: String) -> String {
 }
 
 private func parseComments(from jsonString: String) throws -> AICommentResponse {
-    var trimmed = jsonString.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmed = jsonString.trimmingCharacters(in: .whitespacesAndNewlines)
     
     func decode(_ s: String) -> AICommentResponse? {
         guard let data = s.data(using: .utf8) else { return nil }
