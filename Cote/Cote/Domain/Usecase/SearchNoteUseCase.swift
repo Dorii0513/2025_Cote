@@ -7,7 +7,7 @@ protocol searchUseCase {
 
 struct DefaultSearchUseCase: searchUseCase {
     private let repository: NoteRepositoryProtocol
-    private let threshold: Double = 0.86
+    private let threshold: Double = 0.85
     private let embeddingModel = E5EmbeddingModel()
     
     init(repository: NoteRepositoryProtocol) {

@@ -68,19 +68,19 @@ struct MarkdownText: View {
         } else if trimmed.hasPrefix("### ") {
             Text(String(trimmed.dropFirst(4)))
                 .coteFont(.markS, color: .textDefault)
-                .padding(.top, 20)
+                .padding(.top, 25)
                 .padding(.bottom, 12)
             
         } else if trimmed.hasPrefix("## ") {
             Text(String(trimmed.dropFirst(3)))
                 .coteFont(.markM, color: .textDefault)
-                .padding(.top, 20)
+                .padding(.top, 25)
                 .padding(.bottom, 12)
             
         } else if trimmed.hasPrefix("# ") {
             Text(String(trimmed.dropFirst(2)))
                 .coteFont(.markL, color: .textDefault)
-                .padding(.top, 20)
+                .padding(.top, 25)
                 .padding(.bottom, 12)
             
         // 2. 리스트(-, *)
@@ -203,6 +203,7 @@ struct CodeBlockView: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Color.gray.opacity(0.2), lineWidth: 1)
         )
+        .padding(.vertical, 15)
     }
     
     func copyToClipboard() {
