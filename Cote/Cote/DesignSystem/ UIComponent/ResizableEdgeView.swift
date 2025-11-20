@@ -10,10 +10,12 @@ import SwiftUI
 
 struct ResizableEdgeView: NSViewRepresentable {
     var onDrag: (CGFloat) -> Void
+    var edge: ResizableEdge
 
     func makeNSView(context: Context) -> NSView {
         let view = CursorTrackingView()
         view.onDrag = onDrag
+        view.edge = edge
         return view
     }
 
@@ -22,6 +24,7 @@ struct ResizableEdgeView: NSViewRepresentable {
 
 final class CursorTrackingView: NSView {
     var onDrag: ((CGFloat) -> Void)?
+    var edge: ResizableEdge? = .left
 
     private var isDragging = false
     private var lastLocation: NSPoint?
@@ -38,7 +41,12 @@ final class CursorTrackingView: NSView {
     override func mouseDragged(with event: NSEvent) {
         guard let last = lastLocation else { return }
         let newLocation = event.locationInWindow
-        let delta = newLocation.x - last.x
+        var delta: CGFloat = .zero
+        if edge == .left {
+            delta = newLocation.x - last.x
+        } else {
+            delta = last.x - newLocation.x
+        }
         lastLocation = newLocation
         onDrag?(delta)
     }
@@ -47,4 +55,9 @@ final class CursorTrackingView: NSView {
         isDragging = false
         lastLocation = nil
     }
+}
+
+enum ResizableEdge: Hashable {
+    case left
+    case right
 }

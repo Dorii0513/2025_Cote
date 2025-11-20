@@ -53,15 +53,20 @@ struct CoteApp: SwiftUI.App {
     }
     var body: some Scene {
         WindowGroup {
-            HomeView()
-                .navigationTitle("")
-                .toolbarBackground(.hidden, for: .windowToolbar)
-                .environment(\.realmConfiguration, Realm.Configuration.defaultConfiguration)
-                .task {
-                    await EmbeddingBackFill().run()
-                }
+            if #available(macOS 26.0, *) {
+                HomeView()
+                    .navigationTitle("")
+                    .toolbarBackground(.hidden, for: .windowToolbar)
+                    .environment(\.realmConfiguration, Realm.Configuration.defaultConfiguration)
+                    .task {
+                        await EmbeddingBackFill().run()
+                    }
+            } else {
+                // Minimal fallback for older macOS versions to satisfy availability
+                Text("Unsupported macOS version")
+                    .padding()
+            }
         }
         .windowResizability(.contentSize)
     }
 }
-

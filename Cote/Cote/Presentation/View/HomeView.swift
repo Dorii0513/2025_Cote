@@ -9,81 +9,129 @@ import SwiftUI
 import AppKit
 
 struct HomeView: View {
-    @State private var isBtnTapped: Bool = false
     @State private var sidebarWidth: CGFloat = 210
-    @State private var showEdge: Bool = false
-    @StateObject private var viewModel = ContentViewModel()
+    @State private var chatViewWidth: CGFloat = 250
+    
+    @State private var isBtnTapped: Bool = false
+    @State private var showEdge_L: Bool = false
+    @State private var showEdge_R: Bool = false
+    @State private var showChat: Bool = false
+    @StateObject private var contentViewModel = ContentViewModel()
     @StateObject private var state = UIState()
     
     var body: some View {
         
         HStack(spacing: 0) {
-            if state.isSidebarOpen {
-                ZStack {
-                    //블러 효과
-                    BlurEffect().ignoresSafeArea()
-                    Color.bgSidebar.ignoresSafeArea()
-                    
-                    HStack {
-                        VStack(spacing: 0) {
-                            Spacer().frame(height: 42)  //높이 고정
-                            Sidebar(width: $sidebarWidth)
+            HStack(spacing: 0) {
+                // SideBar
+                if state.isSidebarOpen {
+                    ZStack {
+                        
+                        BlurEffect().ignoresSafeArea()
+                        Color.bgSidebar.ignoresSafeArea()
+                        
+                        HStack {
+                            VStack(spacing: 0) {
+                                Spacer().frame(height: 42)  //높이 고정
+                                Sidebar(width: $sidebarWidth)
+                            }
+                            .ignoresSafeArea()
+                            .frame(width: 210)
                         }
-                        .ignoresSafeArea()
-                        .frame(width: 210)
+                    }
+                    .frame(width: sidebarWidth)
+                    
+                    // 너비 조정
+                    ResizableEdgeView (
+                        onDrag: { delta in
+                            let newWidth = sidebarWidth + delta
+                            sidebarWidth = max(210, min(newWidth, 400))
+                        }, edge: .left
+                    )
+                    .frame(width: showEdge_L ? 6 : 2)
+                    .background(showEdge_L ? .actionDrag : .bgSidebar)
+                    .onHover(perform: { hovering in
+                        showEdge_L = hovering
+                    })
+                    .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
+                        showEdge_L = isPressing
+                    }, perform: {})
+                }
+                
+                // ContentView
+                ZStack {
+                    Color.bgToolbar
+                        .ignoresSafeArea(edges: .top)
+                    if state.selectedNoteID == nil {
+                        Text("Tap a note or create one")
+                            .coteFont(.code1, color: .textDefault)
+                    } else {
+                        ContentView()
                     }
                 }
-                .frame(width: sidebarWidth)
-                
-                ResizableEdgeView { delta in
-                    let newWidth = sidebarWidth + delta
-                    sidebarWidth = max(210, min(newWidth, 400))
+            }
+            .frame(alignment: .leading)
+            
+            // Toolbar
+            .overlay(alignment: .topLeading){
+                HStack(spacing: 0) {
+                    SideToolbar(offset: $sidebarWidth)
+                    Cote.contentToolbar(isBtnTapped: $isBtnTapped, showChat: $showChat)
                 }
-                .frame(width: showEdge ? 6 : 2)
-                .background(showEdge ? .bgTag : .bgSidebar)
+                .background(state.isSidebarOpen ? Color.clear : Color.bgToolbar)
+            }
+            .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
+                GeometryReader { proxy in
+                    if contentViewModel.showTags, let anchor {
+                        let rect = proxy[anchor]
+                        TagSuggestionsView()
+                            .onDisappear { contentViewModel.hideSuggestions() }
+                            .frame(maxWidth: 400, alignment: .leading)
+                            .position(x: rect.minX + 200,
+                                      y: rect.maxY + 80)
+                    }
+                }
+            }
+            .ignoresSafeArea()
+            
+            
+            Divider()
+                .ignoresSafeArea()
+                .frame(width: 1)
+                .tint(.borderSecondary)
+            
+            // AI Chatbot
+            if showChat {
+                ResizableEdgeView (
+                    onDrag: { delta in
+                        let newWidth = chatViewWidth + delta
+                        chatViewWidth = max(250, min(newWidth, 500))
+                    }, edge: .right
+                )
+                .frame(width: showEdge_R ? 6 : 2)
+                .background(showEdge_R ? .actionDrag : .bgSidebar)
                 .onHover(perform: { hovering in
-                    showEdge = hovering
+                    showEdge_R = hovering
                 })
                 .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
-                    showEdge = isPressing
-                }, perform: {
-                    // No-op on long press completion; keep current state or add action if needed
-                })
-            }
-            ZStack {
-                Color.bgToolbar
-                    .ignoresSafeArea(edges: .top)
-                if state.selectedNoteID == nil {
-                    Text("Tap a note or create one")
-                        .coteFont(.code1, color: .textDefault)
-                } else {
-                    ContentView()
+                    showEdge_R = isPressing
+                }, perform: {})
+                
+                ZStack {
+                    BlurEffect().ignoresSafeArea()
+                    Color.bgEditor.opacity(0.95).ignoresSafeArea()
+                    
+                    if #available(macOS 26.0, *) {
+                        ChatView()
+                            .environmentObject(ChatViewModel())
+                            .ignoresSafeArea()
+                    } else { }
                 }
+                .frame(width: chatViewWidth)
             }
         }
-        .frame(alignment: .leading)
-        .overlay(alignment: .topLeading){
-            HStack(spacing: 0) {
-                SideToolbar(offset: $sidebarWidth)
-                Cote.contentToolbar(isBtnTapped: $isBtnTapped)
-            }
-            .background(state.isSidebarOpen ? Color.clear : Color.bgToolbar)
-        }
-        .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
-            GeometryReader { proxy in
-                if viewModel.showTags, let anchor {
-                    let rect = proxy[anchor]
-                    TagSuggestionsView()
-                        .onDisappear { viewModel.hideSuggestions() }
-                        .frame(maxWidth: 400, alignment: .leading)
-                        .position(x: rect.minX + 200,
-                                  y: rect.maxY + 80)
-                }
-            }
-        }
-        .environmentObject(viewModel)
+        .environmentObject(contentViewModel)
         .environmentObject(state)
-        .ignoresSafeArea()
     }
 }
 
@@ -93,7 +141,10 @@ private struct contentToolbar: View {
     @EnvironmentObject private var state: UIState
     @FocusState private var isFocused: Bool
     @State private var newTag: Tag = .init(name: "")
+    @State private var isSettingHover: Bool = false
+    @State private var isChatHover: Bool = false
     @Binding var isBtnTapped: Bool
+    @Binding var showChat: Bool
     
     private var tagChipsView: some View {
         HStack(spacing: 6) {
@@ -171,6 +222,52 @@ private struct contentToolbar: View {
             }
             
             Spacer()
+            
+            // setting Button
+            Menu {
+                Button {
+                    
+                } label: {
+                    HStack {
+                        Image(systemName: "tag")
+                        Text("Edit Tags")
+                    }
+                }
+            } label: {
+                Image("setting")
+                    .foregroundStyle(isSettingHover ? .iconSelected : .iconSecondary)
+            }
+            .buttonStyle(.plain)
+            .padding(5)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSettingHover ? .actionSecondary : .clear)
+            )
+            .onHover(perform: { hovering in
+                isSettingHover = hovering
+            })
+            .padding(.trailing, 4)
+            
+            // chatbot Button
+            Button {
+                withAnimation(.smooth){
+                    showChat.toggle()
+                }
+            } label: {
+                Image("AIChat")
+                    .resizable()
+                    .frame(width: 24, height: 24)
+                    .foregroundStyle(isChatHover || showChat ? .aiDefault : .iconSecondary)
+            }
+            .buttonStyle(.plain)
+            .padding(3)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isChatHover || showChat ? .actionSecondary : .clear)
+            )
+            .onHover(perform: { hovering in
+                isChatHover = hovering
+            })
         }
         .padding(.horizontal, 15)
         .frame(height: 42)  //높이 고정

@@ -15,6 +15,7 @@ final class ContentViewModel: ObservableObject {
     private let tagUseCase: GenerateTagsUseCase
     private let saveUseCase: SaveNoteUseCase
     private let fetchUseCase: FetchNotesUseCase
+    private let generateUseCase: GenerateCommentUseCase
     
     // 노트 편집
     @Published private(set) var currentNoteID: UUID? = nil
@@ -30,21 +31,27 @@ final class ContentViewModel: ObservableObject {
     @Published var isGenerating: Bool = false
     @Published var isLoading: Bool = false
     
+    // 주석 생성
+    @Published var aiComments: [AIComment] = []
+    
     init(
         tagUseCase: GenerateTagsUseCase,
         saveUseCase: SaveNoteUseCase,
-        fetchUseCase: FetchNotesUseCase
+        fetchUseCase: FetchNotesUseCase,
+        generateUseCase: GenerateCommentUseCase
     ) {
         self.tagUseCase = tagUseCase
         self.saveUseCase = saveUseCase
         self.fetchUseCase = fetchUseCase
+        self.generateUseCase = generateUseCase
     }
     
     convenience init() {
         self.init(
             tagUseCase: DefaultGenerateTagsUseCase(),
             saveUseCase: DefaultSaveNoteUseCase(),
-            fetchUseCase: DefaultFetchNotesUseCase()
+            fetchUseCase: DefaultFetchNotesUseCase(),
+            generateUseCase: DefaultGenerateCommentUseCase()
         )
     }
     
@@ -59,7 +66,7 @@ final class ContentViewModel: ObservableObject {
         showTags = true
         Task { await generateTags() }
     }
-
+    
     func hideSuggestions() {
         guard showTags else { return }
         showTags = false
@@ -116,50 +123,116 @@ final class ContentViewModel: ObservableObject {
     
     // 선택 노트 로드
     func loadNote(by id: UUID) async {
-            if currentNoteID == id {
-                print("ℹ️ Already loaded note \(id)")
+        
+        isLoading = true
+        currentNoteID = id
+        
+        do {
+            // 첫 시도
+            if let note = try await fetchUseCase.execute(noteID: id) {
+                apply(note)
+                
+                try await Task.sleep(nanoseconds: 50_000_000)
+                isLoading = false
                 return
             }
             
-            print("📖 Loading note \(id)...")
-            isLoading = true
-            currentNoteID = id
-            
-            do {
-                // 첫 시도
-                if let note = try await fetchUseCase.execute(noteID: id) {
-                    apply(note)
-
-                    try await Task.sleep(nanoseconds: 50_000_000)
-                    isLoading = false
-                    return
-                }
+            // 재시도
+            try await Task.sleep(nanoseconds: 150_000_000)
+            if let note = try await fetchUseCase.execute(noteID: id) {
+                apply(note)
                 
-                // 재시도
-                try await Task.sleep(nanoseconds: 150_000_000)
-                if let note = try await fetchUseCase.execute(noteID: id) {
-                    apply(note)
-                    
-                    try await Task.sleep(nanoseconds: 50_000_000)
-                    isLoading = false
-                    return
-                }
-                
+                try await Task.sleep(nanoseconds: 50_000_000)
                 isLoading = false
-            } catch {
-                print("❌ [VM] load error=", error)
-                isLoading = false
+                return
             }
+            
+            isLoading = false
+        } catch {
+            print("❌ [VM] load error=", error)
+            isLoading = false
+        }
+    }
+    
+    private func apply(_ note: Note) {
+        objectWillChange.send()
+        
+        self.title = note.title
+        self.content = note.content
+        self.noteTags = note.tags
+        self.updatedAt = note.updatedAt
+        self.language = note.language.isEmpty ? "plaintext" : note.language
+    }
+    
+    //MARK: - Comment
+    func applyCommentsToCode() {
+        guard !aiComments.isEmpty else { return }
+        
+        var lines = content.components(separatedBy: "\n")
+        let commentDict = Dictionary(uniqueKeysWithValues: aiComments.map { ($0.line, $0.text) })
+        
+        for (lineNum, comment) in commentDict.sorted(by: { $0.key < $1.key }) {
+            let arrayIndex = lineNum - 1
+            if arrayIndex >= 0 && arrayIndex < lines.count {
+            } else { }
         }
         
-        private func apply(_ note: Note) {
-            objectWillChange.send()
+        for lineNumber in commentDict.keys.sorted(by: >) {
+            let arrayIndex = lineNumber - 1
             
-            self.title = note.title
-            self.content = note.content
-            self.noteTags = note.tags
-            self.updatedAt = note.updatedAt
-            self.language = note.language.isEmpty ? "plaintext" : note.language
+            guard arrayIndex >= 0 && arrayIndex < lines.count else {
+                continue
+            }
+            
+            let originalLine = lines[arrayIndex]
+            let comment = commentDict[lineNumber] ?? ""
+            
+            // 이미 주석이 있으면 추가 X
+            if originalLine.trimmingCharacters(in: .whitespaces).hasPrefix("//") {
+                continue
+            }
+            
+            // 빈 줄이면 넘어가기
+            if originalLine.trimmingCharacters(in: .whitespaces).isEmpty {
+                continue
+            }
+            
+            // 아래 줄의 들여쓰기 가져옴
+            let leadingWhitespace = originalLine.prefix(while: { $0.isWhitespace })
+            
+            let finalComment = comment.hasPrefix("//") ? comment : "// " + comment
+            
+            // 주석을 해당 줄 위에 추가 (들여쓰기 고려)
+            let commentLine = String(leadingWhitespace) + finalComment
+            lines.insert(commentLine, at: arrayIndex)
         }
+        
+        content = lines.joined(separator: "\n")
+        aiComments = []
+    }
+    
+    func generateComments() async {
+        do {
+            
+            let comments = try await generateUseCase.execute(code: content)
+            self.aiComments = comments
+            applyCommentsToCode()
+            
+        } catch { self.aiComments = [] }
+    }
 }
 
+struct AIComment: Identifiable, Equatable {
+    let id: UUID
+    let line: Int
+    let text: String
+}
+
+struct AICommentResponse: Codable {
+    struct Comment: Codable {
+        let line: Int
+        let comment: String
+    }
+    
+    let comments: [Comment]
+}

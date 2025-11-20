@@ -7,7 +7,7 @@ protocol searchUseCase {
 
 struct DefaultSearchUseCase: searchUseCase {
     private let repository: NoteRepositoryProtocol
-    private let threshold: Double = 0.86
+    private let threshold: Double = 0.85
     private let embeddingModel = E5EmbeddingModel()
     
     init(repository: NoteRepositoryProtocol) {
@@ -21,7 +21,7 @@ struct DefaultSearchUseCase: searchUseCase {
     
     func execute(query: String, topK: Int = 200, mode: SearchMode) async throws -> [SearchResult] {
         // 검색어 임베딩 계산
-        let queryVec = try embeddingModel.embedding(for: "query: \(query) 코드")
+        let queryVec = try embeddingModel.embedding(for: "query: \(query)")
 
         // 노트 목록 가져오기
         let notes = try await repository.fetchNoteLight(limit: topK)

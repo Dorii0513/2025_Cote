@@ -49,6 +49,7 @@ public struct CodeEditorConfiguration {
 public struct CodeEditor: NSViewRepresentable {
     @Binding var text: String
     @Binding var language: String
+    @Binding var aiComments: [AIComment]
     private let configuration: CodeEditorConfiguration
     
     public init(
@@ -58,25 +59,20 @@ public struct CodeEditor: NSViewRepresentable {
     ) {
         self._text = text
         self._language = language
+        self._aiComments = .constant([])
         self.configuration = configuration
     }
     
-    public init(
+    init(
         text: Binding<String>,
-        language: Binding<String>
+        language: Binding<String>,
+        aiComments: Binding<[AIComment]>,
+        configuration: CodeEditorConfiguration = .defaultConfig
     ) {
-        self.init(
-            text: text,
-            language: language,
-            configuration: CodeEditorConfiguration(
-                font: CodeEditorConfiguration.defaultConfig.font,
-                gutterWidth: CodeEditorConfiguration.defaultConfig.gutterWidth,
-                gutterPadding: CodeEditorConfiguration.defaultConfig.gutterPadding,
-                textInset: CodeEditorConfiguration.defaultConfig.textInset,
-                lineNumberFont: CodeEditorConfiguration.defaultConfig.lineNumberFont,
-                theme: CodeEditorConfiguration.defaultConfig.theme
-            )
-        )
+        self._text = text
+        self._language = language
+        self._aiComments = aiComments
+        self.configuration = configuration
     }
     
     public func makeCoordinator() -> Coordinator {
@@ -115,6 +111,7 @@ public struct CodeEditor: NSViewRepresentable {
             textView.string = text
         }
         
+        context.coordinator.updateComments(aiComments)
         context.coordinator.scheduleGutterRedraw()
     }
 
@@ -268,6 +265,13 @@ extension CodeEditor {
             NotificationCenter.default.removeObserver(self)
         }
         
+        // 주석 생성
+        func updateComments(_ comments: [AIComment]) {
+            let lines = Set(comments.map { $0.line })
+            gutter?.commentLines = lines
+            gutter?.needsDisplay = true
+        }
+        
         func scheduleGutterRedraw() {
             guard !gutterRedrawScheduled else { return }
             gutterRedrawScheduled = true
@@ -376,6 +380,7 @@ class CodeTextView: NSTextView {
 class LineNumberGutter: NSRulerView {
     private weak var textView: CodeTextView?
     private let configuration: CodeEditorConfiguration
+    var commentLines: Set<Int> = []
     
     init(textView: CodeTextView, configuration: CodeEditorConfiguration) {
         self.textView = textView
@@ -405,7 +410,8 @@ class LineNumberGutter: NSRulerView {
             layoutManager: layoutManager,
             textContainer: textContainer,
             scrollView: scrollView,
-            configuration: configuration
+            configuration: configuration,
+            commentLines: commentLines
         )
     }
     
@@ -424,7 +430,8 @@ private enum GutterRenderer {
         layoutManager: NSLayoutManager,
         textContainer: NSTextContainer,
         scrollView: NSScrollView,
-        configuration: CodeEditorConfiguration
+        configuration: CodeEditorConfiguration,
+        commentLines: Set<Int>
     ) {
         drawBackground(in: gutter)
         
@@ -441,7 +448,8 @@ private enum GutterRenderer {
             layoutManager: layoutManager,
             scrollView: scrollView,
             glyphRange: visibleGlyphRange,
-            configuration: configuration
+            configuration: configuration,
+            commentLines: commentLines
         )
     }
     
@@ -457,7 +465,8 @@ private enum GutterRenderer {
         layoutManager: NSLayoutManager,
         scrollView: NSScrollView,
         glyphRange: NSRange,
-        configuration: CodeEditorConfiguration
+        configuration: CodeEditorConfiguration,
+        commentLines: Set<Int>
     ) {
         let renderer = LineNumberRenderer(
             font: configuration.lineNumberFont,

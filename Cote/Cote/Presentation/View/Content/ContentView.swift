@@ -25,7 +25,8 @@ struct ContentView: View {
                 
                 // 에디터 뷰
                 CodeEditor(text: $viewModel.content,
-                           language: $viewModel.language)
+                           language: $viewModel.language,
+                           aiComments: $viewModel.aiComments)
                     .id(viewModel.currentNoteID)
                     .onChange(of: viewModel.content, scheduleAutosave)
                     .onChange(of: viewModel.title, scheduleAutosave)
@@ -47,7 +48,7 @@ struct ContentView: View {
             }
         }
         .ignoresSafeArea()
-        .frame(minWidth: 540)
+        .frame(minWidth: 400)
     }
     
     private func clearEditor() {
@@ -127,7 +128,7 @@ private struct BottomBar: View {
                     .frame(height: 100)
                 } label: {
                     HStack(spacing: 4) {
-                        Image("language")
+//                        Image("language")
                         Text(language)
                             .coteFont(.code2, color: .textMuted)
                     }

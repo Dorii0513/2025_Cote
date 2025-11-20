@@ -40,6 +40,6 @@ enum FocusTarget: Hashable {
     case folder
     case note
     case tag
-    case content
+    case chat
     case search
 }
