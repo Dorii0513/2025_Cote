@@ -36,12 +36,6 @@ struct NoteRepository: @preconcurrency NoteRepositoryProtocol {
                         .map { Note($0) }
                         .map(NoteItems.note)
                     
-                    for item in rootNotes {
-                        if case let .note(note) = item {
-                            print("전체 노트 : ", note.title)
-                        }
-                    }
-                    
                     // 3) 합치고 정렬 규칙 적용
                     let merged = Array(rootFolders) + Array(rootNotes)
                     continuation.yield(merged.sortNotes())

@@ -154,14 +154,16 @@ struct FolderView: View {
                     )
                     .onSubmit(of: .text) {
                         withAnimation(.easeInOut) {
-                            print("엔터 버튼 눌림")
                             if !newNoteTitle.isEmpty {
-                                print("노트 저장 시작")
-                                viewModel.createNote(title: newNoteTitle)
-                                newNoteTitle = ""
-                                state.selectedNoteID = viewModel.selectedNoteID
+                                Task {
+                                    await viewModel.createNote(title: newNoteTitle)
+                                    newNoteTitle = ""
+                                    await MainActor.run {
+                                        state.selectedNoteID = viewModel.selectedNoteID
+                                    }
+                                    focusField = nil
+                                }
                             }
-                            focusField = nil
                         }
                     }
             }
@@ -193,14 +195,14 @@ struct FolderView: View {
                     addNoteSelected = false
                 }
             }
-            .onChange(of: focusField) { oldValue, newValue in
-                if oldValue == .addNote && newValue != .addNote && showNoteField && newNoteTitle.isEmpty {
+            .onChange(of: focusField) { _, newValue in
+                if newValue != .addNote && showNoteField && newNoteTitle.isEmpty {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         showNoteField = false
                     }
                 }
                 
-                if oldValue == .addFolder && newValue != .addFolder && showFolderField && newFolder.name.isEmpty {
+                if newValue != .addFolder && showFolderField && newFolder.name.isEmpty {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         showFolderField = false
                     }

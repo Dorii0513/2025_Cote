@@ -27,22 +27,19 @@ final class SideBarViewModel: ObservableObject {
         createNoteUseCase: CreateNoteUseCase,
         createFolderUseCase: CreateFolderUseCase,
         repo: NoteRepositoryProtocol,
-        state: UIState? = nil
     ) {
         self.createNoteUseCase = createNoteUseCase
         self.createFolderUseCase = createFolderUseCase
         self.repo = repo
         self.newNote = .init(NoteObject.init())
         observeItems()
-        if let s = state { selectedNoteID = s.selectedNoteID }
     }
     
     convenience init() {
         let repo = NoteRepository()
         self.init(
             createNoteUseCase: DefaultCreateNoteUseCase(repository: repo), createFolderUseCase: DefaultCreateFolderUseCase(repository: repo),
-            repo: repo,
-            state: nil
+            repo: repo
         )
     }
     
@@ -63,7 +60,7 @@ final class SideBarViewModel: ObservableObject {
     }
     
     func select(_ id: UUID) {
-        self.selectedNoteID = id
+        selectedNoteID = id
         noteTask?.cancel()
         noteTask = Task { [weak self] in
             guard let self else { return }
@@ -74,21 +71,20 @@ final class SideBarViewModel: ObservableObject {
     
     //MARK: - Note
     
-    func createNote(title: String) {
+    func createNote(title: String) async{
         noteTask?.cancel()
         itemsTask?.cancel()
         
-        Task {
-            do {
-                var note = Note.init(NoteObject.init())
-                note.title = title
-                try await createNoteUseCase.execute(note: note)
-                observeItems()
-                select(note.id)
-            } catch {
-                print("[SideBarVM] addNewNote failed:", error.localizedDescription)
-            }
+        do {
+            var note = Note.init(NoteObject.init())
+            note.title = title
+            try await createNoteUseCase.execute(note: note)
+            observeItems()
+            select(note.id)
+        } catch {
+            print("[SideBarVM] addNewNote failed:", error.localizedDescription)
         }
+        
     }
     
     func deleteNote(id: UUID) {
