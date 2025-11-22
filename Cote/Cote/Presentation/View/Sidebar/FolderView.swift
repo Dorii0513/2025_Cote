@@ -18,7 +18,7 @@ struct FolderView: View {
     @State var addFolderSelected: Bool = false
     @State var addNoteSelected: Bool = false
     
-    @State private var newNote: Note = .init(NoteObject.init())
+    @State private var newNoteTitle: String = ""
     @State private var newFolder: Folder = .init(FolderObject.init())
     
     @FocusState var focusField: FocusTarget?
@@ -132,7 +132,7 @@ struct FolderView: View {
         if showNoteField {
             HStack {
                 Spacer().frame(width: 20)
-                TextField("", text: $newNote.title)
+                TextField("", text: $newNoteTitle)
                     .focused($focusField, equals: .addNote)
                     .tint(.textDefault)
                     .coteFont(.text3, color: .textDefault)
@@ -154,10 +154,12 @@ struct FolderView: View {
                     )
                     .onSubmit(of: .text) {
                         withAnimation(.easeInOut) {
-                            if !newNote.title.isEmpty {
-                                viewModel.createNote(note: newNote)
-                                newNote.title = ""
-                                state.selectedNoteID = newNote.id
+                            print("엔터 버튼 눌림")
+                            if !newNoteTitle.isEmpty {
+                                print("노트 저장 시작")
+                                viewModel.createNote(title: newNoteTitle)
+                                newNoteTitle = ""
+                                state.selectedNoteID = viewModel.selectedNoteID
                             }
                             focusField = nil
                         }
@@ -192,7 +194,7 @@ struct FolderView: View {
                 }
             }
             .onChange(of: focusField) { oldValue, newValue in
-                if oldValue == .addNote && newValue != .addNote && showNoteField && newNote.title.isEmpty {
+                if oldValue == .addNote && newValue != .addNote && showNoteField && newNoteTitle.isEmpty {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         showNoteField = false
                     }

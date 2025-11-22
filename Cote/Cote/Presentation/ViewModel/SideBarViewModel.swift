@@ -63,7 +63,7 @@ final class SideBarViewModel: ObservableObject {
     }
     
     func select(_ id: UUID) {
-        print("select id =", id)
+        self.selectedNoteID = id
         noteTask?.cancel()
         noteTask = Task { [weak self] in
             guard let self else { return }
@@ -72,28 +72,17 @@ final class SideBarViewModel: ObservableObject {
         }
     }
     
-    func containsNote(id: UUID) -> Bool {
-        func dfs(_ item: NoteItems) -> Bool {
-            switch item {
-            case .note(let n): return n.id == id
-            case .folder(let f):
-                return f.notes.contains(where: { $0.id == id })
-                || f.children.map(NoteItems.folder).contains(where: dfs)
-            }
-        }
-        return roots.contains(where: dfs)
-    }
-    
     //MARK: - Note
     
-    func createNote(note: Note) {
+    func createNote(title: String) {
         noteTask?.cancel()
         itemsTask?.cancel()
         
         Task {
             do {
+                var note = Note.init(NoteObject.init())
+                note.title = title
                 try await createNoteUseCase.execute(note: note)
-                self.selectedNoteID = note.id
                 observeItems()
                 select(note.id)
             } catch {
