@@ -19,7 +19,7 @@ struct FolderView: View {
     @State var addNoteSelected: Bool = false
     
     @State private var newNoteTitle: String = ""
-    @State private var newFolder: Folder = .init(FolderObject.init())
+    @State private var newFolderName: String = ""
     
     @FocusState var focusField: FocusTarget?
     @State private var hasLoaded = false    // cell
@@ -92,7 +92,7 @@ struct FolderView: View {
             HStack(spacing: 0) {
                 Image("arrow_right")
                     .foregroundStyle(.iconSecondary)
-                TextField("", text: $newFolder.name)
+                TextField("", text: $newFolderName)
                     .focused($focusField, equals: .addFolder)
                     .tint(.textDefault)
                     .coteFont(.text3, color: .textDefault)
@@ -114,9 +114,9 @@ struct FolderView: View {
                     )
                     .onSubmit(of: .text) {
                         withAnimation(.easeInOut) {
-                            if !newFolder.name.isEmpty {
-                                viewModel.createFolder(name: newFolder.name)
-                                newFolder.name = ""
+                            if !newFolderName.isEmpty {
+                                viewModel.createFolder(name: newFolderName)
+                                newFolderName = ""
                             }
                             focusField = nil
                         }
@@ -202,7 +202,7 @@ struct FolderView: View {
                     }
                 }
                 
-                if newValue != .addFolder && showFolderField && newFolder.name.isEmpty {
+                if newValue != .addFolder && showFolderField && newFolderName.isEmpty {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         showFolderField = false
                     }
