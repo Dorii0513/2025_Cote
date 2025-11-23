@@ -7,7 +7,8 @@
 
 import Foundation
 
-// 노트를 선택하는 케이스만 존재함
+//TODO: - Repo -> UseCase로 대체해야 함
+
 @MainActor
 final class SideBarViewModel: ObservableObject {
     private let createNoteUseCase: CreateNoteUseCase

@@ -13,7 +13,19 @@ final class UIState: ObservableObject {
     @Published var isFolderView = true
     @Published var isSearchView = false
     
+    @AppStorage("previousNoteID") private var previousNoteIDString: String?
     @AppStorage("selectedNoteID") private var selectedNoteIDString: String?
+    
+    var previousNoteID: UUID? {
+        get {
+            guard let string = previousNoteIDString else { return nil }
+            return UUID(uuidString: string)
+        }
+        set {
+            previousNoteIDString = newValue?.uuidString
+            objectWillChange.send()
+        }
+    }
 
     var selectedNoteID: UUID? {
         get {

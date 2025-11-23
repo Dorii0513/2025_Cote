@@ -233,6 +233,20 @@ private struct contentToolbar: View {
                         Text("Edit Tags")
                     }
                 }
+                
+                Button {
+                    if let id = state.selectedNoteID {
+                        viewModel.deleteNote(id: id)
+                    }
+                    state.selectedNoteID = state.previousNoteID
+                } label: {
+                    HStack {
+                        Image(systemName: "trash")
+                        Text("노트 삭제하기")
+                    }
+                }
+                
+                
             } label: {
                 Image("setting")
                     .foregroundStyle(isSettingHover ? .iconSelected : .iconSecondary)

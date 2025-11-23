@@ -47,10 +47,9 @@ struct FolderView: View {
                     item: item,
                     depth: 0
                 ) { id in
+                    state.previousNoteID = state.selectedNoteID
                     state.selectedNoteID = id
                     viewModel.select(id)
-                    print("탭")
-                    print(state.selectedNoteID ?? "nil")
                 }
                 // 위치 관련 수정 필요
                 .contextMenu {

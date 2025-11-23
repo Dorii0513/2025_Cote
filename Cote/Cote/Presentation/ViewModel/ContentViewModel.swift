@@ -16,6 +16,7 @@ final class ContentViewModel: ObservableObject {
     private let saveUseCase: SaveNoteUseCase
     private let fetchUseCase: FetchNotesUseCase
     private let generateUseCase: GenerateCommentUseCase
+    private let deleteUseCase: DeleteNoteUseCase
     
     // 노트 편집
     @Published private(set) var currentNoteID: UUID? = nil
@@ -38,12 +39,14 @@ final class ContentViewModel: ObservableObject {
         tagUseCase: GenerateTagsUseCase,
         saveUseCase: SaveNoteUseCase,
         fetchUseCase: FetchNotesUseCase,
-        generateUseCase: GenerateCommentUseCase
+        generateUseCase: GenerateCommentUseCase,
+        deleteUseCase: DeleteNoteUseCase
     ) {
         self.tagUseCase = tagUseCase
         self.saveUseCase = saveUseCase
         self.fetchUseCase = fetchUseCase
         self.generateUseCase = generateUseCase
+        self.deleteUseCase = deleteUseCase
     }
     
     convenience init() {
@@ -51,7 +54,8 @@ final class ContentViewModel: ObservableObject {
             tagUseCase: DefaultGenerateTagsUseCase(),
             saveUseCase: DefaultSaveNoteUseCase(),
             fetchUseCase: DefaultFetchNotesUseCase(),
-            generateUseCase: DefaultGenerateCommentUseCase()
+            generateUseCase: DefaultGenerateCommentUseCase(),
+            deleteUseCase: DefaultDeleteNoteUseCase()
         )
     }
     
@@ -162,6 +166,16 @@ final class ContentViewModel: ObservableObject {
         self.noteTags = note.tags
         self.updatedAt = note.updatedAt
         self.language = note.language.isEmpty ? "plaintext" : note.language
+    }
+    
+    func deleteNote(id: UUID) {
+        Task {
+            do {
+                try await deleteUseCase.execute(id: id)
+            } catch {
+                print("[SideBarVM] delete failed: \(error)")
+            }
+        }
     }
     
     //MARK: - Comment
