@@ -1,142 +1,13 @@
 //
-//  HomeView.swift
+//  ContentToolbar.swift
 //  Cote
 //
-//  Created by 김예림 on 7/26/25.
+//  Created by 김예림 on 11/24/25.
 //
 
 import SwiftUI
-import AppKit
 
-struct HomeView: View {
-    @State private var sidebarWidth: CGFloat = 210
-    @State private var chatViewWidth: CGFloat = 250
-    
-    @State private var isBtnTapped: Bool = false
-    @State private var showEdge_L: Bool = false
-    @State private var showEdge_R: Bool = false
-    @State private var showChat: Bool = false
-    @StateObject private var contentViewModel = ContentViewModel()
-    @StateObject private var state = UIState()
-    
-    var body: some View {
-        
-        HStack(spacing: 0) {
-            HStack(spacing: 0) {
-                // SideBar
-                if state.isSidebarOpen {
-                    ZStack {
-                        
-                        BlurEffect().ignoresSafeArea()
-                        Color.bgSidebar.ignoresSafeArea()
-                        
-                        HStack {
-                            VStack(spacing: 0) {
-                                Spacer().frame(height: 42)  //높이 고정
-                                Sidebar(width: $sidebarWidth)
-                            }
-                            .ignoresSafeArea()
-                            .frame(width: 210)
-                        }
-                    }
-                    .frame(width: sidebarWidth)
-                    
-                    // 너비 조정
-                    ResizableEdgeView (
-                        onDrag: { delta in
-                            let newWidth = sidebarWidth + delta
-                            sidebarWidth = max(210, min(newWidth, 400))
-                        }, edge: .left
-                    )
-                    .frame(width: showEdge_L ? 6 : 2)
-                    .background(showEdge_L ? .actionDrag : .bgSidebar)
-                    .onHover(perform: { hovering in
-                        showEdge_L = hovering
-                    })
-                    .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
-                        showEdge_L = isPressing
-                    }, perform: {})
-                }
-                
-                // ContentView
-                ZStack {
-                    Color.bgToolbar
-                        .ignoresSafeArea(edges: .top)
-                    if state.selectedNoteID == nil {
-                        Text("Tap a note or create one")
-                            .coteFont(.code1, color: .textDefault)
-                    } else {
-                        ContentView()
-                    }
-                }
-            }
-            .frame(alignment: .leading)
-            
-            // Toolbar
-            .overlay(alignment: .topLeading){
-                HStack(spacing: 0) {
-                    SideToolbar(offset: $sidebarWidth)
-                    Cote.contentToolbar(isBtnTapped: $isBtnTapped, showChat: $showChat)
-                }
-                .background(state.isSidebarOpen ? Color.clear : Color.bgToolbar)
-            }
-            .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
-                GeometryReader { proxy in
-                    if contentViewModel.showTags, let anchor {
-                        let rect = proxy[anchor]
-                        TagSuggestionsView()
-                            .onDisappear { contentViewModel.hideSuggestions() }
-                            .frame(maxWidth: 400, alignment: .leading)
-                            .position(x: rect.minX + 200,
-                                      y: rect.maxY + 80)
-                    }
-                }
-            }
-            .ignoresSafeArea()
-            
-            
-            Divider()
-                .ignoresSafeArea()
-                .frame(width: 1)
-                .tint(.borderSecondary)
-            
-            // AI Chatbot
-            if showChat {
-                ResizableEdgeView (
-                    onDrag: { delta in
-                        let newWidth = chatViewWidth + delta
-                        chatViewWidth = max(250, min(newWidth, 500))
-                    }, edge: .right
-                )
-                .frame(width: showEdge_R ? 6 : 2)
-                .background(showEdge_R ? .actionDrag : .bgSidebar)
-                .onHover(perform: { hovering in
-                    showEdge_R = hovering
-                })
-                .onLongPressGesture(minimumDuration: 0.2, pressing: { isPressing in
-                    showEdge_R = isPressing
-                }, perform: {})
-                
-                ZStack {
-                    BlurEffect().ignoresSafeArea()
-                    Color.bgEditor.opacity(0.95).ignoresSafeArea()
-                    
-                    if #available(macOS 26.0, *) {
-                        ChatView()
-                            .environmentObject(ChatViewModel())
-                            .ignoresSafeArea()
-                    } else { }
-                }
-                .frame(width: chatViewWidth)
-            }
-        }
-        .environmentObject(contentViewModel)
-        .environmentObject(state)
-    }
-}
-
-//MARK: - contentToolbar
-private struct contentToolbar: View {
+struct contentToolbar: View {
     @EnvironmentObject private var viewModel: ContentViewModel
     @EnvironmentObject private var state: UIState
     
@@ -349,35 +220,9 @@ private struct contentToolbar: View {
     }
 }
 
-private struct TagFieldAnchorKey: PreferenceKey {
+struct TagFieldAnchorKey: PreferenceKey {
     static var defaultValue: Anchor<CGRect>? = nil
     static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
         value = nextValue() ?? value
-    }
-}
-
-
-//MARK: - Sidebar
-private struct Sidebar: View {
-    @EnvironmentObject private var state: UIState
-    @Binding var width: CGFloat
-
-    var body: some View {
-        ZStack {
-            VStack(spacing: 4) {
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundStyle(.actionDefault)
-                if state.isFolderView {
-                    FolderView()
-                }
-                if state.isSearchView {
-                    SearchView()
-                }
-            }
-        }
-        .frame(width: width)
-        .frame(minHeight: 700)
-        .background(Color.clear)
     }
 }
