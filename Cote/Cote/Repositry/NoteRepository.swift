@@ -87,12 +87,50 @@ struct NoteRepository: @preconcurrency NoteRepositoryProtocol {
             realm.add(obj, update: .modified)
         }
     }
-    
-    func saveNote(note: Note) async throws {
+
+    func updateNoteTitle(id: UUID, title: String) async throws {
         let realm = try openRealm()
-        try await realm.asyncWrite {
-            let obj = NoteObject(from: note)
-            realm.add(obj, update: .modified)
+        if let obj = realm.object(ofType: NoteObject.self, forPrimaryKey: id) {
+            try realm.write {
+                obj.title = title
+                obj.updatedAt = Date()
+            }
+        }
+    }
+    
+    func updateNoteContent(id: UUID, content: String, embadding: Data) async throws {
+        let realm = try openRealm()
+        if let obj = realm.object(ofType: NoteObject.self, forPrimaryKey: id) {
+            try realm.write {
+                obj.content = content
+                obj.embedding = embadding
+                obj.updatedAt = Date()
+            }
+        }
+    }
+    
+    func updateNoteTags(id: UUID, tags: [Tag]) async throws {
+        let realm = try openRealm()
+        if let obj = realm.object(ofType: NoteObject.self, forPrimaryKey: id) {
+            try realm.write {
+                obj.tags.removeAll()
+                for t in tags {
+                    let to = TagObject()
+                    to.name = t.name
+                    obj.tags.append(to)
+                }
+                obj.updatedAt = Date()
+            }
+        }
+    }
+    
+    func updateNoteLanguage(id: UUID, language: String) async throws {
+        let realm = try openRealm()
+        if let obj = realm.object(ofType: NoteObject.self, forPrimaryKey: id) {
+            try realm.write {
+                obj.language = language
+                obj.updatedAt = Date()
+            }
         }
     }
     

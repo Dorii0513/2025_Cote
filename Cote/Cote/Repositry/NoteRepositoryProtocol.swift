@@ -11,7 +11,11 @@ protocol NoteRepositoryProtocol {
     func itemStream() -> AsyncStream<[NoteItems]>
     func noteStream(id: UUID) -> AsyncStream<Note?>
     
-    func saveNote(note: Note) async throws
+//    func saveNote(note: Note) async throws
+    func updateNoteTitle(id: UUID, title: String) async throws
+    func updateNoteContent(id: UUID, content: String, embadding: Data) async throws
+    func updateNoteTags(id: UUID, tags: [Tag]) async throws
+    func updateNoteLanguage(id: UUID, language: String) async throws
     func deleteNote(id: UUID) async throws
     func createNote(note: Note) async throws
     func fetchNote(by id: UUID) async throws -> Note?
