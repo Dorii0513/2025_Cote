@@ -20,9 +20,13 @@ struct DefaultSearchUseCase: searchUseCase {
     }
     
     func execute(query: String, topK: Int = 200, mode: SearchMode) async throws -> [SearchResult] {
+        
+        if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return []
+        }
         // 검색어 임베딩 계산
-        let queryVec = try embeddingModel.embedding(for: "query: \(query)")
-
+        let queryVec = try embeddingModel.embedding(for: "query: \(query) 코드")
+        
         // 노트 목록 가져오기
         let notes = try await repository.fetchNoteLight(limit: topK)
 
