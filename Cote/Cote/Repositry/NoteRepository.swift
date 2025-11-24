@@ -115,9 +115,14 @@ struct NoteRepository: @preconcurrency NoteRepositoryProtocol {
             try realm.write {
                 obj.tags.removeAll()
                 for t in tags {
-                    let to = TagObject()
-                    to.name = t.name
-                    obj.tags.append(to)
+                    if let existing = realm.object(ofType: TagObject.self, forPrimaryKey: t.name) {
+                        obj.tags.append(existing)
+                    } else {
+                        let to = TagObject()
+                        to.name = t.name
+                        realm.add(to)
+                        obj.tags.append(to)
+                    }
                 }
                 obj.updatedAt = Date()
             }

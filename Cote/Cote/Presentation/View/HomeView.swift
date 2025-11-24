@@ -139,10 +139,17 @@ struct HomeView: View {
 private struct contentToolbar: View {
     @EnvironmentObject private var viewModel: ContentViewModel
     @EnvironmentObject private var state: UIState
-    @FocusState private var isFocused: Bool
+    
+    @FocusState var focusField: FocusTarget?
+    @State private var showTagField: Bool = false
+    @State private var showTitleField: Bool = false
+    
+    @State private var newTitle: String = ""
     @State private var newTag: Tag = .init(name: "")
+    
     @State private var isSettingHover: Bool = false
     @State private var isChatHover: Bool = false
+    
     @Binding var isBtnTapped: Bool
     @Binding var showChat: Bool
     
@@ -157,20 +164,53 @@ private struct contentToolbar: View {
     var body: some View {
         HStack(spacing: 0) {
             Spacer().frame(width: 20)
-            Text(viewModel.title.isEmpty ? "" : viewModel.title)
-                .coteFont(.title,
-                          color: .textStrong)
+            
+            if showTitleField {
+                HStack {
+                    TextField("", text: $newTitle)
+                        .coteFont(.title, color: .textSelected)
+                        .tint(.actionFocus)
+                        .focused($focusField, equals: .note)
+                        .textFieldStyle(.plain)
+                }
+                .padding(.horizontal, 5)
+                .padding(.vertical, 3)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(.bgTextField)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(.borderDefault, lineWidth: 2)
+                        )
+                )
+                .frame(width: 200)
                 .padding(.trailing, 10)
+                .onSubmit(of: .text) {
+                    withAnimation(.easeInOut) {
+                        if !newTitle.isEmpty {
+                            viewModel.title = newTitle
+                        }
+                        focusField = nil
+                        showTitleField = false
+                        newTitle = ""
+                    }
+                }
+            } else {
+                Text(viewModel.title.isEmpty ? "" : viewModel.title)
+                    .coteFont(.title,
+                              color: .textStrong)
+                    .padding(.trailing, 10)
+            }
             
             if !viewModel.noteTags.isEmpty {
                 tagChipsView
                     .padding(.trailing, 10)
             }
             
-            if isBtnTapped {
+            if showTagField {
                 TextField("", text: $newTag.name)
-                    .focused($isFocused)
-                    .tint(.textDefault)
+                    .focused($focusField, equals: .tag)
+                    .tint(.actionFocus)
                     .coteFont(.tag, color: .textDefault)
                     .padding(.horizontal, 6)
                     .frame(height: 20)
@@ -186,7 +226,7 @@ private struct contentToolbar: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color.borderDefault, lineWidth: isFocused ? 2 : 1)
+                            .stroke(Color.borderDefault, lineWidth: showTagField ? 2 : 1)
                     )
                     .onSubmit(of: .text) {
                         let tagToAdd = newTag
@@ -194,24 +234,17 @@ private struct contentToolbar: View {
                             withAnimation(.smooth) {
                                 viewModel.addNewTag(tagToAdd)
                                 newTag = .init(name: "")
-                                isFocused = true
+                                showTagField = true
                                 viewModel.showSuggestions()
-                            }
-                        }
-                    }
-                    .onChange(of: isFocused, initial: false) { oldValue, newValue in
-                        if !newValue && newTag.name.isEmpty {
-                            withAnimation(.snappy) {
-                                isBtnTapped = false
                             }
                         }
                     }
             }
             
-            if !isBtnTapped && state.selectedNoteID != nil {
+            if !showTagField && state.selectedNoteID != nil {
                 Button {
-                    isBtnTapped = true
-                    isFocused = true
+                    focusField = .tag
+                    showTagField = true
                     viewModel.showSuggestions()
                 } label: {
                     Text("Add Tags")
@@ -235,6 +268,21 @@ private struct contentToolbar: View {
                 }
                 
                 Button {
+                    withAnimation(.snappy) {
+                        newTitle = viewModel.title
+                        showTitleField = true
+                        focusField = .note
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "pencil")
+                        Text("Rename Note")
+                    }
+                }
+                
+                Divider()
+                
+                Button {
                     if let id = state.selectedNoteID {
                         viewModel.deleteNote(id: id)
                     }
@@ -242,7 +290,7 @@ private struct contentToolbar: View {
                 } label: {
                     HStack {
                         Image(systemName: "trash")
-                        Text("노트 삭제하기")
+                        Text("Delete Note")
                     }
                 }
                 
@@ -286,6 +334,18 @@ private struct contentToolbar: View {
         .padding(.horizontal, 15)
         .frame(height: 42)  //높이 고정
         .background(Color.bgToolbar)
+        .onChange(of: focusField) { _, newValue in
+            if newValue != .tag && newTag.name.isEmpty {
+                withAnimation(.snappy) {
+                    showTagField = false
+                }
+            }
+            if newValue != .note && newTitle == viewModel.title {
+                withAnimation(.snappy) {
+                    showTitleField = false
+                }
+            }
+        }
     }
 }
 

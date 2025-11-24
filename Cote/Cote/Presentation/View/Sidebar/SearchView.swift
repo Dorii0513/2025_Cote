@@ -77,7 +77,7 @@ struct SearchView: View {
                 TextField("Search your notes", text: $viewModel.query)
                     .focused($focusField, equals: .search)
                     .coteFont(.text2, color: .textSelected)
-                    .tint(.textDefault)
+                    .tint(.actionFocus)
                     .textFieldStyle(.plain)
                     .onSubmit(of: .text) {
                         withAnimation(.easeInOut) {

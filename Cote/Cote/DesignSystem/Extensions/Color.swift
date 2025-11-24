@@ -40,6 +40,7 @@ extension ShapeStyle where Self == Color {
     static var actionDefault: Self { Color("gray80_10pct") }
     static var actionSecondary: Self { Color("gray80_10pct").opacity(0.5) }
     static var actionDrag: Self { Color("purple20").opacity(0.2) }
+    static var actionFocus: Self { Color("gray80")}
     
     //AI
     static var aiDefault: Self { Color("purple30")}
