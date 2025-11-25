@@ -66,7 +66,7 @@ struct FolderView: View {
                     Button(role: .destructive) {
                         viewModel.deleteNote(id: n.id)
                     } label: {
-                        Label("Delete", systemImage: "trash")
+                        Label("Deleted", systemImage: "trash")
                     }
                     
                 case .folder(let f):
