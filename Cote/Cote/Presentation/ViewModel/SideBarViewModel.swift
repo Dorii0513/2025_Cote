@@ -14,6 +14,7 @@ final class SideBarViewModel: ObservableObject {
     private let createNoteUseCase: CreateNoteUseCase
     private let createFolderUseCase: CreateFolderUseCase
     private let updateFolderUseCase: UpdateFolderUseCase
+    private let deleteFolderUseCase: DeleteFolderUseCase
     private let repo: NoteRepositoryProtocol
     
     @Published var roots: [NoteItems] = []
@@ -29,11 +30,13 @@ final class SideBarViewModel: ObservableObject {
         createNoteUseCase: CreateNoteUseCase,
         createFolderUseCase: CreateFolderUseCase,
         updateFolderUseCase: UpdateFolderUseCase,
+        deleteFolderUseCase: DeleteFolderUseCase,
         repo: NoteRepositoryProtocol
     ) {
         self.createNoteUseCase = createNoteUseCase
         self.createFolderUseCase = createFolderUseCase
         self.updateFolderUseCase = updateFolderUseCase
+        self.deleteFolderUseCase = deleteFolderUseCase
         self.repo = repo
         self.newNote = .init(NoteObject.init())
         observeItems()
@@ -42,8 +45,10 @@ final class SideBarViewModel: ObservableObject {
     convenience init() {
         let repo = NoteRepository()
         self.init(
-            createNoteUseCase: DefaultCreateNoteUseCase(repository: repo), createFolderUseCase: DefaultCreateFolderUseCase(repository: repo),
+            createNoteUseCase: DefaultCreateNoteUseCase(repository: repo),
+            createFolderUseCase: DefaultCreateFolderUseCase(repository: repo),
             updateFolderUseCase: DefaultUpdateFolderUseCase(repository: repo),
+            deleteFolderUseCase: DefaultDeleteFolderUseCase(repository: repo),
             repo: repo
         )
     }
@@ -118,15 +123,11 @@ final class SideBarViewModel: ObservableObject {
         }
     }
     
-    func deleteFolder(id: UUID) {
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                try await repo.deleteFolder(id: id)
-                if self.selectedFolderID == id { self.selectedFolderID = nil }
-            } catch {
-                print("[SideBarVM] deleteFolder failed: \(error)")
-            }
+    func deleteFolder(id: UUID) async {
+        do {
+            try await deleteFolderUseCase.execute(folderID: id)
+        } catch {
+            print("[FolderDelete] failed : \(error)")
         }
     }
     

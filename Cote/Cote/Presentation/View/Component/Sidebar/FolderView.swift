@@ -66,7 +66,7 @@ struct FolderView: View {
                     Button(role: .destructive) {
                         viewModel.deleteNote(id: n.id)
                     } label: {
-                        Label("노트 삭제하기", systemImage: "trash")
+                        Label("Delete", systemImage: "trash")
                     }
                     
                 case .folder(let f):
@@ -80,9 +80,11 @@ struct FolderView: View {
                     }
                     Divider()
                     Button(role: .destructive) {
-                        viewModel.deleteFolder(id: f.id)
+                        Task {
+                            await viewModel.deleteFolder(id: f.id)
+                        }
                     } label: {
-                        Label("폴더 삭제하기", systemImage: "trash")
+                        Label("Delete", systemImage: "trash")
                     }
                 }
             }
