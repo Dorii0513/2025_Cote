@@ -59,35 +59,18 @@ struct FolderView: View {
                     Task {
                         await viewModel.updateFolderName(id: id, newName: name)
                     }
+                }, onDeleteNote: { id in
+                    viewModel.deleteNote(id: id)
+                }, onStartRename: { id, name in
+                    withAnimation(.easeIn(duration: 0.3)) {
+                        renamingFolderID = id
+                        renamingFolderName = name
+                    }
+                }, onDeleteFolder: { id in
+                    Task {
+                        await viewModel.deleteFolder(id: id)
+                    }
                 })
-            .contextMenu {
-                switch item {
-                case .note(let n):
-                    Button(role: .destructive) {
-                        viewModel.deleteNote(id: n.id)
-                    } label: {
-                        Label("Deleted", systemImage: "trash")
-                    }
-                    
-                case .folder(let f):
-                    Button {
-                        withAnimation(.easeIn(duration: 0.3)) {
-                            renamingFolderID = f.id
-                            renamingFolderName = f.name
-                        }
-                    } label: {
-                        Label("Rename Folder", systemImage: "pencil")
-                    }
-                    Divider()
-                    Button(role: .destructive) {
-                        Task {
-                            await viewModel.deleteFolder(id: f.id)
-                        }
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                }
-            }
             .transition(.asymmetric(
                 insertion: .move(edge: .leading).combined(with: .opacity),
                 removal: .move(edge: .leading).combined(with: .opacity)

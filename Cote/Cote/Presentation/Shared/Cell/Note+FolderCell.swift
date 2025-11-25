@@ -21,6 +21,9 @@ struct ListCell: View {
     
     let onSelect: (UUID) -> Void
     let onCommitRename: (UUID, String) -> Void
+    let onDeleteNote: (UUID) -> Void
+    let onStartRename: (UUID, String) -> Void
+    let onDeleteFolder: (UUID) -> Void
     
     // expandedIDs 값이 존재할 때 true
     private var isExpanded: Bool {
@@ -114,7 +117,7 @@ struct ListCell: View {
                     Text(n.title)
                         .coteFont(.text2,
                                   color: isHover || isSelected ? .textStrong : .textDefault)
-                        .frame(height: 18) //tag 높이
+                        .frame(height: 18)
                 }
                 .buttonStyle(.plain)
                 .draggable(n.id.uuidString)
@@ -142,6 +145,29 @@ struct ListCell: View {
                 focusField = .folder
             }
         })
+        .contextMenu {
+            switch item {
+            case .note(let n):
+                Button(role: .destructive) {
+                    onDeleteNote(n.id)
+                } label: {
+                    Label("Delete Note", systemImage: "trash")
+                }
+                
+            case .folder(let f):
+                Button {
+                    onStartRename(f.id, f.name)
+                } label: {
+                    Label("Rename Folder", systemImage: "pencil")
+                }
+                Divider()
+                Button(role: .destructive) {
+                    onDeleteFolder(f.id)
+                } label: {
+                    Label("Delete Folder", systemImage: "trash")
+                }
+            }
+        }
         
         if isExpanded {
             ForEach(item.children) { child in
@@ -153,7 +179,10 @@ struct ListCell: View {
                     item: child,
                     depth: depth + 1,
                     onSelect: onSelect,
-                    onCommitRename: onCommitRename
+                    onCommitRename: onCommitRename,
+                    onDeleteNote: onDeleteNote,
+                    onStartRename: onStartRename,
+                    onDeleteFolder: onDeleteFolder
                 )
             }
         }
