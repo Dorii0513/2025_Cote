@@ -13,9 +13,10 @@ import RealmSwift
 final class ContentViewModel: ObservableObject {
     
     private let tagUseCase: GenerateTagsUseCase
-    private let saveUseCase: SaveNoteUseCase
+    private let updateNoteUseCase: UpdateNoteUseCase
     private let fetchUseCase: FetchNotesUseCase
     private let generateUseCase: GenerateCommentUseCase
+    private let deleteUseCase: DeleteNoteUseCase
     
     // 노트 편집
     @Published private(set) var currentNoteID: UUID? = nil
@@ -36,22 +37,25 @@ final class ContentViewModel: ObservableObject {
     
     init(
         tagUseCase: GenerateTagsUseCase,
-        saveUseCase: SaveNoteUseCase,
+        updateNoteUseCase: UpdateNoteUseCase,
         fetchUseCase: FetchNotesUseCase,
-        generateUseCase: GenerateCommentUseCase
+        generateUseCase: GenerateCommentUseCase,
+        deleteUseCase: DeleteNoteUseCase
     ) {
         self.tagUseCase = tagUseCase
-        self.saveUseCase = saveUseCase
+        self.updateNoteUseCase = updateNoteUseCase
         self.fetchUseCase = fetchUseCase
         self.generateUseCase = generateUseCase
+        self.deleteUseCase = deleteUseCase
     }
     
     convenience init() {
         self.init(
             tagUseCase: DefaultGenerateTagsUseCase(),
-            saveUseCase: DefaultSaveNoteUseCase(),
+            updateNoteUseCase: DefaultUpdateNoteUseCase(),
             fetchUseCase: DefaultFetchNotesUseCase(),
-            generateUseCase: DefaultGenerateCommentUseCase()
+            generateUseCase: DefaultGenerateCommentUseCase(),
+            deleteUseCase: DefaultDeleteNoteUseCase()
         )
     }
     
@@ -93,29 +97,24 @@ final class ContentViewModel: ObservableObject {
     }
     
     // MARK: - Note
-    
-    // 노트 저장
-    func saveCurrentNote(by id: UUID) async {
+    func updateNote(by id: UUID, save: NoteSaveField) async {
         
         guard !isLoading else {
             print("⛔️ save blocked - note is loading")
             return
         }
         
-        let safeTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Untitled" : title
-        let safeDate = updatedAt ?? Date()
-        
-        let note = Note(
-            id: id,
-            title: safeTitle,
-            content: content,
-            tags: noteTags,
-            sortIndex: 0,
-            updatedAt: safeDate,
-            language: language
-        )
         do {
-            try await saveUseCase.execute(note: note)
+            switch save {
+            case .title:
+                try await updateNoteUseCase.execute(id: id, save: .title(title))
+            case .content:
+                try await updateNoteUseCase.execute(id: id, save: .content(content))
+            case .tags:
+                try await updateNoteUseCase.execute(id: id, save: .tags(noteTags))
+            case .language:
+                try await updateNoteUseCase.execute(id: id, save: .language(language))
+            }
         } catch {
             print("[NoteSave] failed: \(type(of: error)) - \(error.localizedDescription)")
         }
@@ -162,6 +161,16 @@ final class ContentViewModel: ObservableObject {
         self.noteTags = note.tags
         self.updatedAt = note.updatedAt
         self.language = note.language.isEmpty ? "plaintext" : note.language
+    }
+    
+    func deleteNote(id: UUID) {
+        Task {
+            do {
+                try await deleteUseCase.execute(id: id)
+            } catch {
+                print("[SideBarVM] delete failed: \(error)")
+            }
+        }
     }
     
     //MARK: - Comment
@@ -226,13 +235,4 @@ struct AIComment: Identifiable, Equatable {
     let id: UUID
     let line: Int
     let text: String
-}
-
-struct AICommentResponse: Codable {
-    struct Comment: Codable {
-        let line: Int
-        let comment: String
-    }
-    
-    let comments: [Comment]
 }

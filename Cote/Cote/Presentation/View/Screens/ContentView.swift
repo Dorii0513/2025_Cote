@@ -25,13 +25,21 @@ struct ContentView: View {
                 
                 // 에디터 뷰
                 CodeEditor(text: $viewModel.content,
-                           language: $viewModel.language,
+                           language: $viewModel.language, 
                            aiComments: $viewModel.aiComments)
                     .id(viewModel.currentNoteID)
-                    .onChange(of: viewModel.content, scheduleAutosave)
-                    .onChange(of: viewModel.title, scheduleAutosave)
-                    .onChange(of: viewModel.noteTags, scheduleAutosave)
-                    .onChange(of: viewModel.language, scheduleAutosave)
+                    .onChange(of: viewModel.title) { _,newValue in
+                        scheduleAutosave(field: .title(newValue))
+                    }
+                    .onChange(of: viewModel.content) { _,newValue  in
+                        scheduleAutosave(field: .content(newValue))
+                    }
+                    .onChange(of: viewModel.noteTags) { _,newValue  in
+                        scheduleAutosave(field: .tags(newValue))
+                    }
+                    .onChange(of: viewModel.language) { _,newValue  in
+                        scheduleAutosave(field: .language(newValue))
+                    }
                     .onChange(of: state.selectedNoteID) { _, newID in
                         guard let id = newID else { return }
                         _ = try! Realm()
@@ -58,16 +66,15 @@ struct ContentView: View {
         viewModel.language = "plainText"
     }
     
-    private func scheduleAutosave(oldValue: Any, newValue: Any) {
+    private func scheduleAutosave(field: NoteSaveField) {
         guard !viewModel.isLoading else { return }
         AutosaveScheduler.shared.schedule {
-            guard !viewModel.isLoading else {
-                return
-            }
+            
+            guard !viewModel.isLoading else { return }
             
             Task { @MainActor in
                 if let id = viewModel.currentNoteID {
-                    await viewModel.saveCurrentNote(by: id)
+                    await viewModel.updateNote(by: id, save: field)
                 }
             }
         }

@@ -192,3 +192,13 @@ enum GenerateCommentError: LocalizedError {
         }
     }
 }
+
+
+private struct AICommentResponse: Codable {
+    struct Comment: Codable {
+        let line: Int
+        let comment: String
+    }
+    
+    let comments: [Comment]
+}

@@ -255,7 +255,7 @@ struct ChatView: View {
                 TextField("Write a question here...", text: $chatViewModel.userInput)
                     .focused($isFocused, equals: true)
                     .coteFont(.text2, color: .textSelected)
-                    .tint(.textDefault)
+                    .tint(.actionFocus)
                     .textFieldStyle(.plain)
                     .padding(.leading, 4)
                     .onSubmit {

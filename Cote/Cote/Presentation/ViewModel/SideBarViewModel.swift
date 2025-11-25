@@ -7,11 +7,14 @@
 
 import Foundation
 
-// 노트를 선택하는 케이스만 존재함
+//TODO: - Repo -> UseCase로 대체해야 함
+
 @MainActor
 final class SideBarViewModel: ObservableObject {
     private let createNoteUseCase: CreateNoteUseCase
     private let createFolderUseCase: CreateFolderUseCase
+    private let updateFolderUseCase: UpdateFolderUseCase
+    private let deleteFolderUseCase: DeleteFolderUseCase
     private let repo: NoteRepositoryProtocol
     
     @Published var roots: [NoteItems] = []
@@ -26,23 +29,27 @@ final class SideBarViewModel: ObservableObject {
     init(
         createNoteUseCase: CreateNoteUseCase,
         createFolderUseCase: CreateFolderUseCase,
-        repo: NoteRepositoryProtocol,
-        state: UIState? = nil
+        updateFolderUseCase: UpdateFolderUseCase,
+        deleteFolderUseCase: DeleteFolderUseCase,
+        repo: NoteRepositoryProtocol
     ) {
         self.createNoteUseCase = createNoteUseCase
         self.createFolderUseCase = createFolderUseCase
+        self.updateFolderUseCase = updateFolderUseCase
+        self.deleteFolderUseCase = deleteFolderUseCase
         self.repo = repo
         self.newNote = .init(NoteObject.init())
         observeItems()
-        if let s = state { selectedNoteID = s.selectedNoteID }
     }
     
     convenience init() {
         let repo = NoteRepository()
         self.init(
-            createNoteUseCase: DefaultCreateNoteUseCase(repository: repo), createFolderUseCase: DefaultCreateFolderUseCase(repository: repo),
-            repo: repo,
-            state: nil
+            createNoteUseCase: DefaultCreateNoteUseCase(repository: repo),
+            createFolderUseCase: DefaultCreateFolderUseCase(repository: repo),
+            updateFolderUseCase: DefaultUpdateFolderUseCase(repository: repo),
+            deleteFolderUseCase: DefaultDeleteFolderUseCase(repository: repo),
+            repo: repo
         )
     }
     
@@ -63,7 +70,7 @@ final class SideBarViewModel: ObservableObject {
     }
     
     func select(_ id: UUID) {
-        print("select id =", id)
+        selectedNoteID = id
         noteTask?.cancel()
         noteTask = Task { [weak self] in
             guard let self else { return }
@@ -72,34 +79,22 @@ final class SideBarViewModel: ObservableObject {
         }
     }
     
-    func containsNote(id: UUID) -> Bool {
-        func dfs(_ item: NoteItems) -> Bool {
-            switch item {
-            case .note(let n): return n.id == id
-            case .folder(let f):
-                return f.notes.contains(where: { $0.id == id })
-                || f.children.map(NoteItems.folder).contains(where: dfs)
-            }
-        }
-        return roots.contains(where: dfs)
-    }
-    
     //MARK: - Note
     
-    func createNote(note: Note) {
+    func createNote(title: String) async{
         noteTask?.cancel()
         itemsTask?.cancel()
         
-        Task {
-            do {
-                try await createNoteUseCase.execute(note: note)
-                self.selectedNoteID = note.id
-                observeItems()
-                select(note.id)
-            } catch {
-                print("[SideBarVM] addNewNote failed:", error.localizedDescription)
-            }
+        do {
+            var note = Note.init(NoteObject.init())
+            note.title = title
+            try await createNoteUseCase.execute(note: note)
+            observeItems()
+            select(note.id)
+        } catch {
+            print("[SideBarVM] addNewNote failed:", error.localizedDescription)
         }
+        
     }
     
     func deleteNote(id: UUID) {
@@ -128,15 +123,19 @@ final class SideBarViewModel: ObservableObject {
         }
     }
     
-    func deleteFolder(id: UUID) {
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                try await repo.deleteFolder(id: id)
-                if self.selectedFolderID == id { self.selectedFolderID = nil }
-            } catch {
-                print("[SideBarVM] deleteFolder failed: \(error)")
-            }
+    func deleteFolder(id: UUID) async {
+        do {
+            try await deleteFolderUseCase.execute(folderID: id)
+        } catch {
+            print("[FolderDelete] failed : \(error)")
+        }
+    }
+    
+    func updateFolderName(id: UUID, newName: String) async {
+        do {
+            try await updateFolderUseCase.execute(id: id, newName: newName)
+        } catch {
+            print("[FolderUpdate] failed : \(error)")
         }
     }
     
