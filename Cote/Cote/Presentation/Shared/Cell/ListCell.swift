@@ -9,13 +9,18 @@ import SwiftUI
 
 struct ListCell: View {
     @State var isHover = false
+    @FocusState var focusField: FocusTarget?
+    
     @Binding var expandedIDs: Set<UUID>
+    @Binding var renamingFolderID: UUID?
+    @Binding var renamingName: String
     
     let selectedNoteID: UUID?
     let item: NoteItems
     let depth: Int
     
     let onSelect: (UUID) -> Void
+    let onCommitRename: (UUID, String) -> Void
     
     // expandedIDs 값이 존재할 때 true
     private var isExpanded: Bool {
@@ -32,6 +37,11 @@ struct ListCell: View {
         }
     }
     
+    private var isRenamingFolder: Bool {
+        guard case .folder(let f) = item else { return false }
+        return renamingFolderID == f.id
+    }
+    
     var body: some View {
         HStack(spacing: 0) {
             Spacer()
@@ -39,20 +49,59 @@ struct ListCell: View {
             
             switch item {
             case.folder(let f):
-                Button {
-                    toggleExpansion()
-                } label: {
-                    FolderCell(isExpanded: isExpanded, folder: f, isHover: $isHover)
-                }
-                .buttonStyle(.plain)
-                .dropDestination(for: String.self) { items, location in
-                    if let first = items.first, let noteID = UUID(uuidString: first) {
-                        NotificationCenter.default.post(name: .moveNoteRequest, object: nil, userInfo: ["noteID": noteID, "folderID": f.id])
-                        return true
+                
+                if isRenamingFolder {
+                    HStack(spacing: 0) {
+                        Image(isExpanded ? "arrow_down" : "arrow_right")
+                            .foregroundStyle(.iconSecondary)
+                        
+                        TextField("", text: $renamingName)
+                            .coteFont(.text3, color: .textSelected)
+                            .tint(.actionFocus)
+                            .focused($focusField, equals: .folder)
+                            .textFieldStyle(.plain)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(.bgTextField)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .stroke(.borderDefault, lineWidth: 2)
+                                    )
+                            )
+                            .onSubmit {
+                                let name = renamingName.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if !name.isEmpty {
+                                    onCommitRename(f.id, name)
+                                }
+                                withAnimation(.easeIn(duration: 0.3)) {
+                                    renamingFolderID = nil
+                                    focusField = nil
+                                }
+                            }
+                            .onChange(of: focusField, {
+                                if focusField == nil && renamingName == f.name {
+                                    withAnimation(.easeIn(duration: 0.3)) {
+                                        renamingFolderID = nil
+                                    }
+                                }
+                            })
                     }
-                    return false
-                } isTargeted: { _ in
-                    true
+                } else {
+                    Button {
+                        toggleExpansion()
+                    } label: {
+                        FolderCell(isExpanded: isExpanded, folder: f, isHover: $isHover)
+                    }
+                    .buttonStyle(.plain)
+                    .dropDestination(for: String.self) { items, location in
+                        if let first = items.first, let noteID = UUID(uuidString: first) {
+                            NotificationCenter.default.post(name: .moveNoteRequest, object: nil, userInfo: ["noteID": noteID, "folderID": f.id])
+                            return true
+                        }
+                        return false
+                    } isTargeted: { _ in }
                 }
                 
             case.note(let n):
@@ -82,18 +131,29 @@ struct ListCell: View {
         )
         .cornerRadius(8)
         .onHover { (entered) in
-            isHover = entered
+            if isRenamingFolder {
+                isHover = false
+            } else {
+                isHover = entered
+            }
         }
+        .onChange(of: isRenamingFolder, {
+            if isRenamingFolder {
+                focusField = .folder
+            }
+        })
         
         if isExpanded {
             ForEach(item.children) { child in
                 ListCell(
-                    isHover: false,
                     expandedIDs: $expandedIDs,
+                    renamingFolderID: $renamingFolderID,
+                    renamingName: $renamingName,
                     selectedNoteID: selectedNoteID,
                     item: child,
                     depth: depth + 1,
-                    onSelect: onSelect
+                    onSelect: onSelect,
+                    onCommitRename: onCommitRename
                 )
             }
         }
@@ -107,9 +167,12 @@ struct ListCell: View {
 }
 
 struct FolderCell: View {
-    var isExpanded: Bool
+    @EnvironmentObject private var viewModel: SideBarViewModel
+    
+    let isExpanded: Bool
     let folder: Folder
     @Binding var isHover: Bool
+    
     var body: some View {
         HStack(spacing: 0) {
             if isExpanded {

@@ -13,6 +13,7 @@ import Foundation
 final class SideBarViewModel: ObservableObject {
     private let createNoteUseCase: CreateNoteUseCase
     private let createFolderUseCase: CreateFolderUseCase
+    private let updateFolderUseCase: UpdateFolderUseCase
     private let repo: NoteRepositoryProtocol
     
     @Published var roots: [NoteItems] = []
@@ -27,10 +28,12 @@ final class SideBarViewModel: ObservableObject {
     init(
         createNoteUseCase: CreateNoteUseCase,
         createFolderUseCase: CreateFolderUseCase,
-        repo: NoteRepositoryProtocol,
+        updateFolderUseCase: UpdateFolderUseCase,
+        repo: NoteRepositoryProtocol
     ) {
         self.createNoteUseCase = createNoteUseCase
         self.createFolderUseCase = createFolderUseCase
+        self.updateFolderUseCase = updateFolderUseCase
         self.repo = repo
         self.newNote = .init(NoteObject.init())
         observeItems()
@@ -40,6 +43,7 @@ final class SideBarViewModel: ObservableObject {
         let repo = NoteRepository()
         self.init(
             createNoteUseCase: DefaultCreateNoteUseCase(repository: repo), createFolderUseCase: DefaultCreateFolderUseCase(repository: repo),
+            updateFolderUseCase: DefaultUpdateFolderUseCase(repository: repo),
             repo: repo
         )
     }
@@ -123,6 +127,14 @@ final class SideBarViewModel: ObservableObject {
             } catch {
                 print("[SideBarVM] deleteFolder failed: \(error)")
             }
+        }
+    }
+    
+    func updateFolderName(id: UUID, newName: String) async {
+        do {
+            try await updateFolderUseCase.execute(id: id, newName: newName)
+        } catch {
+            print("[FolderUpdate] failed : \(error)")
         }
     }
     

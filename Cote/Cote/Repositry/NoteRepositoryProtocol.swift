@@ -11,7 +11,6 @@ protocol NoteRepositoryProtocol {
     func itemStream() -> AsyncStream<[NoteItems]>
     func noteStream(id: UUID) -> AsyncStream<Note?>
     
-//    func saveNote(note: Note) async throws
     func updateNoteTitle(id: UUID, title: String) async throws
     func updateNoteContent(id: UUID, content: String, embadding: Data) async throws
     func updateNoteTags(id: UUID, tags: [Tag]) async throws
@@ -24,6 +23,7 @@ protocol NoteRepositoryProtocol {
     
     func createFolder(name: String, parentID: UUID?) async throws -> UUID
     func deleteFolder(id: UUID) async throws
+    func updateFolderName(id: UUID, name: String) async throws
     
     func fetchNoteLight(limit: Int?) async throws -> [(UUID, String, String, [String], Date, [String], [Float]?)]
 }

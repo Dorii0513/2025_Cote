@@ -185,6 +185,15 @@ struct NoteRepository: @preconcurrency NoteRepositoryProtocol {
         return id
     }
     
+    func updateFolderName(id: UUID, name: String) async throws {
+        let realm = try openRealm()
+        if let obj = realm.object(ofType: FolderObject.self, forPrimaryKey: id) {
+            try realm.write {
+                obj.name = name
+            }
+        }
+    }
+    
     // MARK: - Drag & Drop
     func moveNote(noteID: UUID, toFolderID folderID: UUID) async throws {
         let realm = try openRealm()
