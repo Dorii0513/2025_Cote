@@ -225,7 +225,7 @@ private enum TextSystemFactory {
         textStorage.language = language
         
         // 폰트 재적용
-        textStorage.highlightr.theme.codeFont = NSFont(name: "JetBrainsMono-Medium", size: 13) ?? .monospacedSystemFont(ofSize: 13, weight: .regular)
+        textStorage.highlightr.theme.codeFont = NSFont(name: "JetBrainsMono-Medium", size: 12) ?? .monospacedSystemFont(ofSize: 12, weight: .regular)
         
         let layoutManager = NSLayoutManager()
         textStorage.addLayoutManager(layoutManager)
@@ -515,7 +515,7 @@ private enum GutterRenderer {
         let caretLocation = textView.selectedRange.location
         let caretLine = textView.string.lineNumber(at: caretLocation)
         
-        guard drawnLines.contains(caretLine) else { return }
+        guard !drawnLines.contains(caretLine) else { return }
         
         let caretGlyphIndex = layoutManager.glyphIndexForCharacter(at: caretLocation)
         
