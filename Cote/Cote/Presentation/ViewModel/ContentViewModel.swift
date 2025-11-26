@@ -26,6 +26,8 @@ final class ContentViewModel: ObservableObject {
     @Published var noteTags: [Tag] = []
     @Published var updatedAt: Date? = nil
     @Published var language: String = ""
+    @Published private var contentBeforeComment: String? = nil
+    @Published var showUndoButton: Bool = false
     
     // 태그 생성
     @Published var generatedTags: [Tag] = []
@@ -35,6 +37,10 @@ final class ContentViewModel: ObservableObject {
     
     // 주석 생성
     @Published var aiComments: [AIComment] = []
+    
+    var canUndoComments: Bool {
+        contentBeforeComment != nil
+    }
     
     init(
         tagUseCase: GenerateTagsUseCase,
@@ -191,6 +197,8 @@ final class ContentViewModel: ObservableObject {
     func applyCommentsToCode() {
         guard !aiComments.isEmpty else { return }
         
+        contentBeforeComment = content
+        
         var lines = content.components(separatedBy: "\n")
         let commentDict = Dictionary(uniqueKeysWithValues: aiComments.map { ($0.line, $0.text) })
         
@@ -232,6 +240,10 @@ final class ContentViewModel: ObservableObject {
         
         content = lines.joined(separator: "\n")
         aiComments = []
+        
+        DispatchQueue.main.async {
+            self.showUndoButton = true
+        }
     }
     
     func generateComments() async {
@@ -242,6 +254,17 @@ final class ContentViewModel: ObservableObject {
             applyCommentsToCode()
             
         } catch { self.aiComments = [] }
+    }
+    
+    func undoComments() {
+        guard let previousContent = contentBeforeComment else { return }
+        content = previousContent
+        contentBeforeComment = nil
+        aiComments = []
+        
+        DispatchQueue.main.async {
+            self.showUndoButton = false
+        }
     }
 }
 

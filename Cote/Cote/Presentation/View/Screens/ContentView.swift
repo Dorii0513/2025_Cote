@@ -8,7 +8,6 @@
 import SwiftUI
 import AppKit
 import RealmSwift
-import Highlightr
 
 //MARK: - ContentView
 
@@ -17,10 +16,10 @@ struct ContentView: View {
     @EnvironmentObject private var state: UIState
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             Color.bgEditor
+            
             VStack(alignment: .leading, spacing: 0) {
-                
                 Spacer().frame(height: 38)
                 
                 // 에디터 뷰
@@ -54,9 +53,40 @@ struct ContentView: View {
                     viewModel.language = select
                 }
             }
+            
+            if viewModel.showUndoButton {
+                UndoCommentsButton
+                    .padding(.bottom, 60)
+                    .transition(
+                        .move(edge: .bottom).combined(with: .opacity)
+                    )
+            }
         }
         .ignoresSafeArea()
         .frame(minWidth: 400)
+        .animation(.smooth(duration: 0.3), value: viewModel.showUndoButton)
+    }
+    
+    @ViewBuilder
+    private var UndoCommentsButton: some View {
+        Button {
+            viewModel.undoComments()
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.uturn.backward")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.textSelected)
+                Text("Undo Comment")
+                    .coteFont(.text2, color: .textSelected)
+            }
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.ultraThinMaterial)
+                    .shadow(color: .black200 , radius: 9)
+            )
+        }
+        .buttonStyle(.plain)
     }
     
     private func clearEditor() {
@@ -78,86 +108,6 @@ struct ContentView: View {
                 }
             }
         }
-    }
-}
-
-//MARK: - BottomBar
-private struct BottomBar: View {
-    let date: Date?
-    let highlightr = Highlightr()!
-    @Binding var language: String
-    let onSelect: (String) -> Void
-    
-    @State private var isHover: Bool = false
-
-    var body: some View {
-        let languages = highlightr.supportedLanguages()
-        
-        HStack {
-            HStack(spacing: 15) {
-                if let date {
-                    Text(date, style: .date)
-                    Text(date, style: .time)
-                } else {
-                    Text("")
-                }
-            }
-            
-            Spacer()
-            
-            HStack(spacing: 15) {
-//                HStack(spacing: 4) {
-//                    Text("Line")
-//                        .foregroundStyle(.textInfo)
-//                    Text("123")
-//                }
-//                
-//                HStack(spacing: 4) {
-//                    Text("Col")
-//                        .foregroundStyle(.textInfo)
-//                    Text("299")
-//                }
-                
-                // language 선택
-                Menu {
-                    ForEach(languages, id: \.self) { select in
-                        Button {
-                            onSelect(select)
-                        } label: {
-                            HStack {
-                                Text(select)
-                                if select == language {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                    .frame(height: 100)
-                } label: {
-                    HStack(spacing: 4) {
-//                        Image("language")
-                        Text(language)
-                            .coteFont(.code2, color: .textMuted)
-                    }
-                }
-                .menuStyle(.borderlessButton)
-                .tint(isHover ? .textDefault : .textMuted)
-                .padding(.vertical, 2)
-                .padding(.horizontal, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .foregroundStyle(.actionDefault)
-                        .opacity(isHover ? 1.0 : 0)
-                )
-                .onHover(perform: { hover in
-                    isHover = hover
-                })
-            }
-        }
-        .coteFont(.code2, color: .textMuted)
-        .padding(.leading, 15)
-        .padding([.vertical, .trailing], 8)
-        .background(.bgEditor)
     }
 }
 
