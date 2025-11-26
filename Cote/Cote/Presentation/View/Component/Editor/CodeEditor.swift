@@ -20,12 +20,12 @@ public struct CodeEditorConfiguration {
     
     
     public static let defaultConfig = CodeEditorConfiguration(
-        font: NSFont(name: "JetBrainsMono-Medium", size: 12) ?? .monospacedSystemFont(ofSize: 13, weight: .regular),
+        font: NSFont(name: "JetBrainsMono-Medium", size: 10) ?? .monospacedSystemFont(ofSize: 10, weight: .regular),
         gutterWidth: 35,
         gutterPadding: 8,
-        textInset: NSEdgeInsets(top: 40, left: 10, bottom: 0, right: 10),
-        lineNumberFont: NSFont(name: "JetBrainsMono-Regular", size: 12) ?? .monospacedSystemFont(ofSize: 12, weight: .regular),
-        theme: "paraiso-dark"
+        textInset: NSEdgeInsets(top: 30, left: 12, bottom: 0, right: 10),
+        lineNumberFont: NSFont(name: "JetBrainsMono-Regular", size: 10) ?? .monospacedSystemFont(ofSize: 10, weight: .regular),
+        theme: "atom-one-dark"
     )
     
     public init(
@@ -145,7 +145,7 @@ private enum ScrollViewFactory {
 
 private enum TextViewFactory {
     static func create(configuration: CodeEditorConfiguration, coordinator: CodeEditor.Coordinator, language: String) -> CodeTextView {
-        let textSystem = TextSystemFactory.create(language: language)
+        let textSystem = TextSystemFactory.create(language: language, configuration: configuration)
         let textView = CodeTextView(frame: .zero, textContainer: textSystem.textContainer)
         
         configure(textView, with: configuration, coordinator: coordinator)
@@ -167,12 +167,13 @@ private enum TextViewFactory {
         textView.minSize = NSSize(width: 0, height: 0)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         
-        let horizontalInset = config.textInset.left + config.textInset.right
-        let verticalInset = config.textInset.top + config.textInset.bottom
-        textView.textContainerInset = NSSize(width: horizontalInset / 2, height: verticalInset / 2)
+        textView.textContainerInset = NSSize(
+            width: config.textInset.left,
+            height: config.textInset.top    // 위/아래 공통 여백
+        )
         
         textView.drawsBackground = false
-        textView.textColor = .gray80    // codeColor
+        //textView.textColor = .gray80    // codeColor
         textView.insertionPointColor = .gray50
         textView.typingAttributes[.font] = config.font
         textView.isRichText = false         // 서식 비활성화
@@ -180,7 +181,7 @@ private enum TextViewFactory {
         textView.usesRuler = false
         
         let style = NSMutableParagraphStyle()
-        style.lineSpacing = 5
+        style.lineSpacing = 8
         
         // 2) 이후 타이핑되는 텍스트에도 동일하게 적용
         textView.defaultParagraphStyle = style
@@ -215,15 +216,13 @@ private enum TextSystemFactory {
         let textContainer: NSTextContainer
     }
     
-    static func create(language: String) -> TextSystem {
+    static func create(language: String, configuration: CodeEditorConfiguration) -> TextSystem {
         
         // syntaxHighligt
         let textStorage = CodeAttributedString()
         
+        textStorage.highlightr.setTheme(to: configuration.theme)
         textStorage.language = language
-        textStorage.highlightr.setTheme(to: "atom-one-dark")
-        //atom-one-dark
-        
         
         // 폰트 재적용
         textStorage.highlightr.theme.codeFont = NSFont(name: "JetBrainsMono-Medium", size: 13) ?? .monospacedSystemFont(ofSize: 13, weight: .regular)
@@ -396,13 +395,11 @@ class LineNumberGutter: NSRulerView {
     
     override var isOpaque: Bool { false }
     
-    override func drawHashMarksAndLabels(in rect: NSRect) {
-        
+    override func draw(_ dirtyRect: NSRect) {
         guard let textView = textView,
               let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer,
               let scrollView = scrollView else { return }
-        
         
         GutterRenderer.render(
             in: self,
@@ -433,7 +430,9 @@ private enum GutterRenderer {
         configuration: CodeEditorConfiguration,
         commentLines: Set<Int>
     ) {
-        drawBackground(in: gutter)
+        //drawBackground(in: gutter)
+        
+        let visibleRect = textView.visibleRect
         
         // glyphRange는 텍스트가 입력될 수 있는 한 글자씩의 단위들이 모여 이루는 하나의 범위를 말 함.
         let visibleGlyphRange = layoutManager.glyphRange(
@@ -446,7 +445,7 @@ private enum GutterRenderer {
             in: gutter,
             textView: textView,
             layoutManager: layoutManager,
-            scrollView: scrollView,
+            scrollOffset: visibleRect.origin.y,
             glyphRange: visibleGlyphRange,
             configuration: configuration,
             commentLines: commentLines
@@ -455,15 +454,15 @@ private enum GutterRenderer {
     
     
     private static func drawBackground(in gutter: LineNumberGutter) {
-        NSColor.black200.setFill()
-        NSBezierPath(rect: gutter.bounds).fill()
+//        NSColor.clear
+//        NSBezierPath(rect: gutter.bounds).fill()
     }
     
     private static func drawLineNumbers(
         in gutter: LineNumberGutter,
         textView: CodeTextView,
         layoutManager: NSLayoutManager,
-        scrollView: NSScrollView,
+        scrollOffset: CGFloat,
         glyphRange: NSRange,
         configuration: CodeEditorConfiguration,
         commentLines: Set<Int>
@@ -474,7 +473,7 @@ private enum GutterRenderer {
             gutterWidth: gutter.bounds.width
         )
         
-        let scrollOffset = scrollView.contentView.bounds.minY
+        //let scrollOffset = scrollView.contentView.bounds.minY
         var drawnLines = Set<Int>()
         
         // glyphRange를 한 줄씩 순회
@@ -487,6 +486,7 @@ private enum GutterRenderer {
             guard drawnLines.insert(lineNumber).inserted else { return }
             
             let actualHeight = usedRect.height > 0 ? usedRect.height : rect.height
+            
             let yPosition = rect.minY + textView.textContainerOrigin.y - scrollOffset
             
             renderer.drawLineNumber(
@@ -514,7 +514,8 @@ private enum GutterRenderer {
     ) {
         let caretLocation = textView.selectedRange.location
         let caretLine = textView.string.lineNumber(at: caretLocation)
-        guard !drawnLines.contains(caretLine) else { return }
+        
+        guard drawnLines.contains(caretLine) else { return }
         
         let caretGlyphIndex = layoutManager.glyphIndexForCharacter(at: caretLocation)
         
@@ -526,13 +527,20 @@ private enum GutterRenderer {
         }
         
         let y = caretRect.minY + textView.textContainerOrigin.y - scrollOffset
-        renderer.drawLineNumber(caretLine, at: y, lineHeight: caretRect.height)
+        
+        renderer.drawLineNumber(
+            caretLine,
+            at: y,
+            lineHeight: caretRect.height,
+            isCurrent: true
+        )
     }
 }
 
 // MARK: - Line Number Renderer
 private struct LineNumberRenderer {
     private let attributes: [NSAttributedString.Key: Any]
+    private let highlightAttributes: [NSAttributedString.Key: Any]
     private let padding: CGFloat
     private let gutterWidth: CGFloat
     private let lineHeight: CGFloat
@@ -547,21 +555,32 @@ private struct LineNumberRenderer {
         
         self.attributes = [
             .font: font,
-            .foregroundColor: NSColor.black70,  // gutterColor
+            .foregroundColor: NSColor.black60,  // gutterColor
+            .paragraphStyle: paragraphStyle
+        ]
+        
+        self.highlightAttributes = [
+            .font: font,
+            .foregroundColor: NSColor.gray50,
             .paragraphStyle: paragraphStyle
         ]
     }
     
-    func drawLineNumber(_ lineNumber: Int, at y: CGFloat, lineHeight: CGFloat) {
+    func drawLineNumber(_ lineNumber: Int,
+                        at y: CGFloat,
+                        lineHeight: CGFloat,
+                        isCurrent: Bool = false) {
         let adjustedY = y + (lineHeight - self.lineHeight) / 2
         let numberRect = NSRect(
             x: padding,
-            y: max(0, adjustedY), // 음수 방지
+            y: max(0, adjustedY),
             width: gutterWidth - padding * 2,
             height: self.lineHeight
         )
         
-        NSAttributedString(string: "\(lineNumber)", attributes: attributes).draw(in: numberRect)
+        let attrs = isCurrent ? highlightAttributes : attributes
+        NSAttributedString(string: "\(lineNumber)", attributes: attrs)
+            .draw(in: numberRect)
     }
 }
 
