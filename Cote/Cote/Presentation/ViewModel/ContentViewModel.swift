@@ -62,9 +62,6 @@ final class ContentViewModel: ObservableObject {
             deleteTagUseCase: DefaultDeleteTagUseCase()
         )
     }
-    
-    //MARK: - 태그 관련
-    // ContentViewModel.swift - 수정된 태그 관련 함수들
 
     //MARK: - 태그 관련
     func addNewTag(_ tag: Tag) {
@@ -74,7 +71,7 @@ final class ContentViewModel: ObservableObject {
 
     func showSuggestions() {
         showTags = true
-        if generatedTags.isEmpty && !isGenerating {
+        if !isGenerating {
             Task { await generateTags() }
         }
     }
