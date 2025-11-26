@@ -26,21 +26,20 @@ final class ContentViewModel: ObservableObject {
     @Published var noteTags: [Tag] = []
     @Published var updatedAt: Date? = nil
     @Published var language: String = ""
-    @Published private var contentBeforeComment: String? = nil
+    
+    // 코멘트
+    @Published var contentBeforeComment: String? = nil
     @Published var showUndoButton: Bool = false
+    @Published var isCommentGenerating: Bool = false
     
     // 태그 생성
     @Published var generatedTags: [Tag] = []
     @Published var showTags: Bool = false
-    @Published var isGenerating: Bool = false
+    @Published var isTagGenerating: Bool = false
     @Published var isLoading: Bool = false
     
     // 주석 생성
     @Published var aiComments: [AIComment] = []
-    
-    var canUndoComments: Bool {
-        contentBeforeComment != nil
-    }
     
     init(
         tagUseCase: GenerateTagsUseCase,
@@ -77,7 +76,7 @@ final class ContentViewModel: ObservableObject {
 
     func showSuggestions() {
         showTags = true
-        if !isGenerating {
+        if !isTagGenerating {
             Task { await generateTags() }
         }
     }
@@ -87,15 +86,15 @@ final class ContentViewModel: ObservableObject {
     }
 
     func generateTags() async {
-        guard !isGenerating, !content.isEmpty else {
-            print("⚠️ [generateTags] blocked - isGenerating: \(isGenerating), content isEmpty: \(content.isEmpty)")
+        guard !isTagGenerating, !content.isEmpty else {
+            print("⚠️ [generateTags] blocked - isGenerating: \(isTagGenerating), content isEmpty: \(content.isEmpty)")
             return
         }
         
-        isGenerating = true
+        isTagGenerating = true
         generatedTags = []
         
-        defer { isGenerating = false }
+        defer { isTagGenerating = false }
         
         do {
             let tagNames = try await tagUseCase.generateTags(content: content)
@@ -194,15 +193,18 @@ final class ContentViewModel: ObservableObject {
     }
     
     //MARK: - Comment
-    func applyCommentsToCode() {
-        guard !aiComments.isEmpty else { return }
+    func applyCommentsToCode() async {
+        guard !aiComments.isEmpty else {
+            isCommentGenerating = false
+            return
+        }
         
         contentBeforeComment = content
         
         var lines = content.components(separatedBy: "\n")
         let commentDict = Dictionary(uniqueKeysWithValues: aiComments.map { ($0.line, $0.text) })
         
-        for (lineNum, comment) in commentDict.sorted(by: { $0.key < $1.key }) {
+        for (lineNum, _) in commentDict.sorted(by: { $0.key < $1.key }) {
             let arrayIndex = lineNum - 1
             if arrayIndex >= 0 && arrayIndex < lines.count {
             } else { }
@@ -241,17 +243,26 @@ final class ContentViewModel: ObservableObject {
         content = lines.joined(separator: "\n")
         aiComments = []
         
-        DispatchQueue.main.async {
+        
+        await MainActor.run {
+            self.isCommentGenerating = false
             self.showUndoButton = true
         }
+        
+        try? await Task.sleep(nanoseconds: 8_000_000_000)
+        
+        await MainActor.run {
+            self.showUndoButton = false
+        }
+        
     }
     
     func generateComments() async {
         do {
-            
+            isCommentGenerating = true
             let comments = try await generateUseCase.execute(code: content)
             self.aiComments = comments
-            applyCommentsToCode()
+            await applyCommentsToCode()
             
         } catch { self.aiComments = [] }
     }
@@ -265,6 +276,13 @@ final class ContentViewModel: ObservableObject {
         DispatchQueue.main.async {
             self.showUndoButton = false
         }
+    }
+    
+    func resetCommentState() {
+        isCommentGenerating = false
+        showUndoButton = false
+        contentBeforeComment = nil
+        aiComments = []
     }
 }
 

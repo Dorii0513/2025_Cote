@@ -41,6 +41,7 @@ struct ContentView: View {
                     }
                     .onChange(of: state.selectedNoteID) { _, newID in
                         guard let id = newID else { return }
+                        viewModel.resetCommentState()
                         _ = try! Realm()
                         Task { await viewModel.loadNote(by: id) }
                     }
@@ -61,13 +62,21 @@ struct ContentView: View {
                         .move(edge: .bottom).combined(with: .opacity)
                     )
             }
+            
+            if viewModel.isCommentGenerating {
+                CommentGenerating
+                    .padding(.bottom, 60)
+                    .transition(
+                        .move(edge: .bottom).combined(with: .opacity)
+                    )
+            }
         }
         .ignoresSafeArea()
         .frame(minWidth: 400)
         .animation(.smooth(duration: 0.3), value: viewModel.showUndoButton)
+        .animation(.smooth(duration: 0.3), value: viewModel.showUndoButton)
     }
     
-    @ViewBuilder
     private var UndoCommentsButton: some View {
         Button {
             viewModel.undoComments()
@@ -75,11 +84,12 @@ struct ContentView: View {
             HStack(spacing: 6) {
                 Image(systemName: "arrow.uturn.backward")
                     .font(.system(size: 12))
-                    .foregroundStyle(.textSelected)
+                    .foregroundStyle(.textDefault)
                 Text("Undo Comment")
-                    .coteFont(.text2, color: .textSelected)
+                    .coteFont(.text2, color: .textDefault)
             }
-            .padding(10)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 14)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(.ultraThinMaterial)
@@ -87,6 +97,25 @@ struct ContentView: View {
             )
         }
         .buttonStyle(.plain)
+    }
+    
+    private var CommentGenerating: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+                .progressViewStyle(.circular)
+                .scaleEffect(0.7)
+                .controlSize(.small)
+            Text("Generating comments…")
+                .coteFont(.text2, color: .textSecondary)
+                .foregroundStyle(Color.textSecondary)
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+                .shadow(color: .black200 , radius: 9)
+        )
     }
     
     private func clearEditor() {

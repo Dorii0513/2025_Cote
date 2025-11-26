@@ -122,20 +122,31 @@ struct ChatView: View {
     private var FocusNoteView: some View {
         
         HStack(spacing: 10) {
-            CustomChipLayout(spacing: 8) {
-                if !chatViewModel.focusedNotes.isEmpty {
-                    ForEach(chatViewModel.focusedNotes) { note in
-                        NoteChip(selectedNote: note,
-                                 mode: .label,
-                                 onSelect: {
-                            withAnimation(.easeInOut(duration: 0.2) ){
-                                chatViewModel.deleteFocusedNote(id: note.id)
-                            }
-                        })
-                        .transition(.opacity.combined(with: .scale))
+            if !chatViewModel.focusedNotes.isEmpty {
+                VStack {
+//                    HStack {
+//                        Text("in focus ...")
+//                            .coteFont(.text2, color: .textSecondary)
+//                        Spacer()
+//                    }
+//                    .padding(.leading, 4)
+                    
+                    CustomChipLayout(spacing: 8) {
+                        ForEach(chatViewModel.focusedNotes) {  note in
+                            NoteChip(selectedNote: note,
+                                     mode: .label,
+                                     onSelect: {
+                                withAnimation(.easeInOut(duration: 0.2) ){
+                                    chatViewModel.deleteFocusedNote(id: note.id)
+                                }
+                            })
+                            .transition(.opacity.combined(with: .scale))
+                        }
                     }
                 }
-                if !chatViewModel.focusedNotes.contains(where: { $0.id == state.selectedNoteID }) {
+            }
+            if !chatViewModel.focusedNotes.contains(where: { $0.id == state.selectedNoteID }) {
+                CustomChipLayout(spacing: 8) {
                     NoteChip(selectedNote: chatViewModel.selectedNote,
                              mode: .button,
                              onSelect: {

@@ -17,6 +17,8 @@ struct TagSuggestionsView: View {
                 HStack(spacing: 8) {
                     ProgressView()
                         .progressViewStyle(.circular)
+                        .scaleEffect(0.7)
+                        .controlSize(.small)
                     Text("Generating tags…")
                         .coteFont(.text2, color: .textSecondary)
                         .foregroundStyle(Color.textDefault)
