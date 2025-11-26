@@ -23,13 +23,13 @@ struct TagSuggestionsView: View {
                 }
                 .padding(.vertical, 4)
             }
-            HStack(spacing: 6) {
-                ForEach(viewModel.generatedTags, id: \.self) { tag in
-                    TagChip(tag: tag.name){
-                        viewModel.addNewTag(tag)
-                    }
-                }
-            }
+//            HStack(spacing: 6) {
+//                ForEach(viewModel.generatedTags, id: \.self) { tag in
+//                    TagChip(tag: tag.name, isSugesstion: false, isDeletable: false){
+//                        viewModel.addNewTag(tag)
+//                    }
+//                }
+//            }
         }
     }
     

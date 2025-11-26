@@ -42,21 +42,28 @@ struct HomeView: View {
             
             // Toolbar
             .overlay(alignment: .topLeading) {
-                HStack(spacing: 0) {
-                    SideToolbar(offset: $sidebarWidth)
-                    Cote.contentToolbar(isBtnTapped: $isBtnTapped, showChat: $showChat)
+                ZStack {
+                    HStack(spacing: 0) {
+                        SideToolbar(offset: $sidebarWidth)
+                        Cote.contentToolbar(isBtnTapped: $isBtnTapped, showChat: $showChat)
+                    }
+                    .background(state.isSidebarOpen ? Color.clear : Color.bgToolbar)
                 }
-                .background(state.isSidebarOpen ? Color.clear : Color.bgToolbar)
             }
-            .overlayPreferenceValue(TagFieldAnchorKey.self) { anchor in
+            .overlayPreferenceValue(TagChipsAnchorKey.self) { anchor in
                 GeometryReader { proxy in
                     if contentViewModel.showTags, let anchor {
                         let rect = proxy[anchor]
-                        TagSuggestionsView()
-                            .onDisappear { contentViewModel.hideSuggestions() }
-                            .frame(maxWidth: 400, alignment: .leading)
-                            .position(x: rect.minX + 200,
-                                      y: rect.maxY + 80)
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withAnimation(.snappy) {
+                                    contentViewModel.hideSuggestions()
+                                }
+                            }
+                        TagView()
+                            .frame(width: 400, height: 100, alignment: .topLeading)
+                            .offset(x: rect.minX, y: 0)
                     }
                 }
             }
@@ -143,4 +150,3 @@ struct HomeView: View {
         .frame(width: chatViewWidth)
     }
 }
-
