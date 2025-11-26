@@ -473,26 +473,27 @@ private enum GutterRenderer {
             gutterWidth: gutter.bounds.width
         )
         
-        //let scrollOffset = scrollView.contentView.bounds.minY
+        // 현재 커서 위치의 라인 번호 계산
+        let caretLocation = textView.selectedRange.location
+        let caretLine = textView.string.lineNumber(at: caretLocation)
+        
         var drawnLines = Set<Int>()
         
-        // glyphRange를 한 줄씩 순회
         layoutManager.enumerateLineFragments(forGlyphRange: glyphRange) { rect, usedRect, _, glyphRange, _ in
-            // 해당 줄의 첫 번째 글자의 index 알아내기
             let charIndex = layoutManager.characterIndexForGlyph(at: glyphRange.location)
-            // 해당 줄의 첫번 째 글자(charIndex)가 몇 번째 줄에 있는지
             let lineNumber = textView.string.lineNumber(at: charIndex)
             
             guard drawnLines.insert(lineNumber).inserted else { return }
             
             let actualHeight = usedRect.height > 0 ? usedRect.height : rect.height
-            
             let yPosition = rect.minY + textView.textContainerOrigin.y - scrollOffset
             
+            // 현재 커서가 있는 라인인지 확인
             renderer.drawLineNumber(
                 lineNumber,
                 at: yPosition,
-                lineHeight: actualHeight
+                lineHeight: actualHeight,
+                isCurrent: (lineNumber == caretLine)
             )
         }
         
