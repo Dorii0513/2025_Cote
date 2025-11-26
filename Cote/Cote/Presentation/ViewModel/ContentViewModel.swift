@@ -16,7 +16,8 @@ final class ContentViewModel: ObservableObject {
     private let updateNoteUseCase: UpdateNoteUseCase
     private let fetchUseCase: FetchNotesUseCase
     private let generateUseCase: GenerateCommentUseCase
-    private let deleteUseCase: DeleteNoteUseCase
+    private let deleteNoteUseCase: DeleteNoteUseCase
+    private let deleteTagUseCase: DeleteTagUseCase
     
     // 노트 편집
     @Published private(set) var currentNoteID: UUID? = nil
@@ -40,13 +41,15 @@ final class ContentViewModel: ObservableObject {
         updateNoteUseCase: UpdateNoteUseCase,
         fetchUseCase: FetchNotesUseCase,
         generateUseCase: GenerateCommentUseCase,
-        deleteUseCase: DeleteNoteUseCase
+        deleteNoteUseCase: DeleteNoteUseCase,
+        deleteTagUseCase: DeleteTagUseCase
     ) {
         self.tagUseCase = tagUseCase
         self.updateNoteUseCase = updateNoteUseCase
         self.fetchUseCase = fetchUseCase
         self.generateUseCase = generateUseCase
-        self.deleteUseCase = deleteUseCase
+        self.deleteNoteUseCase = deleteNoteUseCase
+        self.deleteTagUseCase = deleteTagUseCase
     }
     
     convenience init() {
@@ -55,44 +58,55 @@ final class ContentViewModel: ObservableObject {
             updateNoteUseCase: DefaultUpdateNoteUseCase(),
             fetchUseCase: DefaultFetchNotesUseCase(),
             generateUseCase: DefaultGenerateCommentUseCase(),
-            deleteUseCase: DefaultDeleteNoteUseCase()
+            deleteNoteUseCase: DefaultDeleteNoteUseCase(),
+            deleteTagUseCase: DefaultDeleteTagUseCase()
         )
     }
-    
+
     //MARK: - 태그 관련
     func addNewTag(_ tag: Tag) {
-        guard !noteTags.contains(where: { $0.id == tag.id }) else { return } // 중복 태그 방지
+        guard !noteTags.contains(where: { $0.id == tag.id }) else { return }
         noteTags.append(tag)
     }
-    
+
     func showSuggestions() {
-        guard !showTags else { return }
         showTags = true
-        Task { await generateTags() }
+        if !isGenerating {
+            Task { await generateTags() }
+        }
     }
-    
+
     func hideSuggestions() {
-        guard showTags else { return }
         showTags = false
-        generatedTags = []
     }
-    
-    func insertTag(_ tag: String) {
-        let insertion = "// #\(tag)\n"
-        content += insertion
-    }
-    
+
     func generateTags() async {
-        guard !isGenerating, !content.isEmpty else { return }
+        guard !isGenerating, !content.isEmpty else {
+            print("⚠️ [generateTags] blocked - isGenerating: \(isGenerating), content isEmpty: \(content.isEmpty)")
+            return
+        }
+        
         isGenerating = true
+        generatedTags = []
+        
         defer { isGenerating = false }
         
         do {
             let tagNames = try await tagUseCase.generateTags(content: content)
             generatedTags = tagNames.map { Tag(name: $0) }
+            print("✅ [generateTags] success: \(tagNames)")
         } catch {
-            print("[TagGeneration] Error: \(error.localizedDescription)")
+            print("❌ [TagGeneration] Error: \(error.localizedDescription)")
             generatedTags = []
+        }
+    }
+    
+    func deleteTag(noteID: UUID, tagName: String) async {
+        do {
+            try await deleteTagUseCase.execute(noteID: noteID, tagName: tagName)
+            self.noteTags.removeAll { $0.name == tagName }
+        } catch {
+            print("[DeleteTag] : \(error)")
         }
     }
     
@@ -166,7 +180,7 @@ final class ContentViewModel: ObservableObject {
     func deleteNote(id: UUID) {
         Task {
             do {
-                try await deleteUseCase.execute(id: id)
+                try await deleteNoteUseCase.execute(id: id)
             } catch {
                 print("[SideBarVM] delete failed: \(error)")
             }

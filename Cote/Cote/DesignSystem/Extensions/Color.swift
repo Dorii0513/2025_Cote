@@ -35,6 +35,7 @@ extension ShapeStyle where Self == Color {
     static var bgSidebar: Self { Color("black90_80") }
     static var bgSurfaceScroll:  Self { Color("black70") }
     static var bgSurfaceBar:     Self { Color("gray90") }
+    static var bgTagSugesstion: Self { Color("black85") }
     
     // action
     static var actionDefault: Self { Color("gray80_10pct") }

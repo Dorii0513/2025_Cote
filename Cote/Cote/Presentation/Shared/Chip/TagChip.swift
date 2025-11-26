@@ -9,25 +9,52 @@ import SwiftUI
 
 struct TagChip: View {
     let tag: String
-    let action: () -> Void
+    let isSugesstion: Bool
+    let isDeletable: Bool
+    let onDelete: () -> Void
+    let onSelect: () -> Void
     
     var body: some View {
-        Button {
-            action()
-        } label: {
-            Text(tag)
-                .coteFont(.tag, color: .aiSecondary)
-                .tracking(0.5)
-            
-                .buttonStyle(.plain)
-                .padding(.vertical, 3)
-                .padding(.horizontal, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(.aiDark)
-                )
+        if isSugesstion {
+            Button {
+                onSelect()
+            } label: {
+                Text(tag)
+                    .coteFont(.tag, color: .textDefault)
+                    .tracking(0.5)
+                
+                    .buttonStyle(.plain)
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(.actionDefault )
+                    )
+            }
+            .buttonStyle(.plain)
+        } else {
+            HStack {
+                Text(tag)
+                    .coteFont(.tag, color: .aiSecondary)
+                    .tracking(0.5)
+                if isDeletable {
+                    Button {
+                        onDelete()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.aiSecondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.vertical, 3)
+            .padding(.horizontal, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(.aiDark)
+            )
         }
-        .buttonStyle(.plain)
     }
 }
 

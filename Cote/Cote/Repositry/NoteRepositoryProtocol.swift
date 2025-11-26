@@ -25,5 +25,7 @@ protocol NoteRepositoryProtocol {
     func deleteFolder(id: UUID) async throws
     func updateFolderName(id: UUID, name: String) async throws
     
+    func deleteTag(noteID: UUID, tagName: String) async throws
+    
     func fetchNoteLight(limit: Int?) async throws -> [(UUID, String, String, [String], Date, [String], [Float]?)]
 }

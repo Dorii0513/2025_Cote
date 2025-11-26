@@ -286,8 +286,30 @@ struct NoteRepository: @preconcurrency NoteRepositoryProtocol {
             for i in obj.tags {
                 tags.append(i.name)
             }
-
+            
             return (obj.id, obj.title, obj.content, folders, obj.updatedAt, tags, vector)
+        }
+    }
+    
+    func deleteTag(noteID: UUID, tagName: String) async throws {
+        let realm = try openRealm()
+        
+        guard let note = realm.object(ofType: NoteObject.self, forPrimaryKey: noteID) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        
+        guard let tagToRemove = note.tags.first(where: { $0.name == tagName }) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        
+        try await realm.asyncWrite {
+            if let index = note.tags.index(of: tagToRemove) {
+                note.tags.remove(at: index)
+            }
+            
+            if tagToRemove.notes.isEmpty {
+                realm.delete(tagToRemove)
+            }
         }
     }
 }

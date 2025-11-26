@@ -21,15 +21,29 @@ struct contentToolbar: View {
     @State private var isSettingHover: Bool = false
     @State private var isChatHover: Bool = false
     
+    @State private var showTagView: Bool = false
+    
     @Binding var isBtnTapped: Bool
     @Binding var showChat: Bool
     
     private var tagChipsView: some View {
         HStack(spacing: 6) {
             ForEach(viewModel.noteTags, id: \.self) { tag in
-                TagChip(tag: tag.name){}
+                TagChip(tag: tag.name,
+                        isSugesstion: false,
+                        isDeletable: false,
+                        onDelete: {},
+                        onSelect: {}
+                )
             }
         }
+        .background(
+            GeometryReader { proxy in
+                Color.clear
+                    .anchorPreference(key: TagChipsAnchorKey.self,
+                                      value: .bounds) { $0 }
+            }
+        )
     }
     
     var body: some View {
@@ -73,10 +87,9 @@ struct contentToolbar: View {
                     .padding(.trailing, 10)
             }
             
-            if !viewModel.noteTags.isEmpty {
-                tagChipsView
-                    .padding(.trailing, 10)
-            }
+            tagChipsView
+                .padding(.trailing, 10)
+            
             
             if showTagField {
                 TextField("", text: $newTag.name)
@@ -112,25 +125,12 @@ struct contentToolbar: View {
                     }
             }
             
-            if !showTagField && state.selectedNoteID != nil {
-                Button {
-                    focusField = .tag
-                    showTagField = true
-                    viewModel.showSuggestions()
-                } label: {
-                    Text("Add Tags")
-                        .coteFont(.text2,
-                                  color: .textMuted)
-                }
-                .buttonStyle(.plain)
-            }
-            
             Spacer()
             
             // setting Button
             Menu {
                 Button {
-                    
+                    viewModel.showTags = true
                 } label: {
                     HStack {
                         Image(systemName: "tag")
@@ -217,10 +217,24 @@ struct contentToolbar: View {
                 }
             }
         }
+        .onChange(of: viewModel.showTags) { _, newValue in
+            if newValue {
+                viewModel.showSuggestions()
+            } else {
+                viewModel.hideSuggestions()
+            }
+        }
     }
 }
 
 struct TagFieldAnchorKey: PreferenceKey {
+    static var defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = nextValue() ?? value
+    }
+}
+
+struct TagChipsAnchorKey: PreferenceKey {
     static var defaultValue: Anchor<CGRect>? = nil
     static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
         value = nextValue() ?? value
