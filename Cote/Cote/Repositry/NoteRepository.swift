@@ -98,11 +98,20 @@ struct NoteRepository: @preconcurrency NoteRepositoryProtocol {
         }
     }
     
-    func updateNoteContent(id: UUID, content: String, embadding: Data) async throws {
+    func updateNoteContent(id: UUID, content: String) async throws {
         let realm = try openRealm()
         if let obj = realm.object(ofType: NoteObject.self, forPrimaryKey: id) {
             try realm.write {
                 obj.content = content
+                obj.updatedAt = Date()
+            }
+        }
+    }
+    
+    func updateNoteEmbadding(id: UUID, embadding: Data) async throws {
+        let realm = try openRealm()
+        if let obj = realm.object(ofType: NoteObject.self, forPrimaryKey: id) {
+            try realm.write {
                 obj.embedding = embadding
                 obj.updatedAt = Date()
             }

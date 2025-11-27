@@ -10,11 +10,11 @@ import FoundationModels
 
 @available(macOS 26.0, *)
 struct ChatView: View {
-    @StateObject private var chatViewModel = ChatViewModel()
+    @EnvironmentObject private var chatViewModel: ChatViewModel
     @EnvironmentObject private var contentViewModel: ContentViewModel
     @EnvironmentObject private var state: UIState
-    @FocusState private var isFocused: Bool
     
+    @FocusState private var isFocused: Bool
     @State private var showNote: Bool = false
     @State private var isHover: Bool = false
     
@@ -123,19 +123,28 @@ struct ChatView: View {
         
         HStack(spacing: 10) {
             CustomChipLayout(spacing: 8) {
-                if !chatViewModel.focusedNotes.isEmpty {
-                    ForEach(chatViewModel.focusedNotes) { note in
-                        NoteChip(selectedNote: note,
-                                 mode: .label,
-                                 onSelect: {
-                            withAnimation(.easeInOut(duration: 0.2) ){
-                                chatViewModel.deleteFocusedNote(id: note.id)
-                            }
-                        })
-                        .transition(.opacity.combined(with: .scale))
-                    }
-                }
-                if !chatViewModel.focusedNotes.contains(where: { $0.id == state.selectedNoteID }) {
+            if !chatViewModel.focusedNotes.isEmpty {
+//                VStack {
+//                    HStack {
+//                        Text("in focus ...")
+//                            .coteFont(.text2, color: .textSecondary)
+//                        Spacer()
+//                    }
+//                    .padding(.leading, 4)
+                    
+                        ForEach(chatViewModel.focusedNotes) {  note in
+                            NoteChip(selectedNote: note,
+                                     mode: .label,
+                                     onSelect: {
+                                withAnimation(.easeInOut(duration: 0.2) ){
+                                    chatViewModel.deleteFocusedNote(id: note.id)
+                                }
+                            })
+                            .transition(.opacity.combined(with: .scale))
+                        }
+//                }
+            }
+            if !chatViewModel.focusedNotes.contains(where: { $0.id == state.selectedNoteID }) {
                     NoteChip(selectedNote: chatViewModel.selectedNote,
                              mode: .button,
                              onSelect: {
@@ -154,6 +163,7 @@ struct ChatView: View {
     private var RecommendView: some View {
         HStack {
             Button {
+                state.selectedNoteID = chatViewModel.focusedNotes.first?.id
                 Task { @MainActor in
                     await contentViewModel.generateComments()
                 }

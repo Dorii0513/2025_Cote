@@ -14,7 +14,7 @@ protocol UpdateNoteUseCase {
 struct DefaultUpdateNoteUseCase: UpdateNoteUseCase {
     private let repository: NoteRepositoryProtocol
     private let embeddingModel = E5EmbeddingModel()
-
+    
     init(repository: NoteRepositoryProtocol) {
         self.repository = repository
     }
@@ -23,13 +23,15 @@ struct DefaultUpdateNoteUseCase: UpdateNoteUseCase {
     init() {
         self.init(repository: NoteRepository())
     }
-
+    
     func execute(id: UUID, save: NoteSaveField) async throws {
         switch save {
         case .title(let newTitle):
             try await repository.updateNoteTitle(id: id, title: newTitle)
             
         case .content(let newContent):
+            try await repository.updateNoteContent(id: id, content: newContent)
+            
             let summarizer = CodeSummarizer()
             let summary = try await summarizer.summarize(code: newContent)
             
@@ -39,7 +41,7 @@ struct DefaultUpdateNoteUseCase: UpdateNoteUseCase {
                 .map(Float.init)
                 .withUnsafeBufferPointer(Data.init)
             
-            try await repository.updateNoteContent(id: id, content: newContent, embadding: data)
+            try await repository.updateNoteEmbadding(id: id, embadding: data)
             
         case .tags(let newTags):
             try await repository.updateNoteTags(id: id, tags: newTags)

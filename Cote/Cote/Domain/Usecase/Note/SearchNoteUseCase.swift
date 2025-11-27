@@ -42,10 +42,10 @@ struct DefaultSearchUseCase: searchUseCase {
             let titleBonus = calculateTitleBonus(query: query, title: title)
             
             // 키워드 매칭 점수
-            let keywordBonus = calculateKeywordBonus(query: query, content: content)
+//            let keywordBonus = calculateKeywordBonus(query: query, content: content)
             
             // 최종 점수
-            let adjusted = similarity * lengthPenalty + titleBonus + keywordBonus
+            let adjusted = similarity * lengthPenalty + titleBonus
             
             // semanticSearch
             if mode == .semantic {

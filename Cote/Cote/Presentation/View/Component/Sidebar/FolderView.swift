@@ -99,9 +99,6 @@ private var newFolderRow: some View {
                 .coteFont(.text3, color: .textDefault)
                 .padding(.horizontal, 4)
                 .padding(.vertical, 5)
-                .frame(height: 20)
-                .frame(minWidth: 60, alignment: .leading)
-                .fixedSize()
                 .textFieldStyle(.plain)
                 .background(
                     GeometryReader { proxy in
@@ -125,6 +122,7 @@ private var newFolderRow: some View {
                 }
         }
         .padding([.horizontal, .vertical], 5)
+        .frame(maxWidth: .infinity, minHeight: 26)
     }
 }
 
@@ -140,9 +138,6 @@ private var newNoteRow: some View {
                 .coteFont(.text3, color: .textDefault)
                 .padding(.horizontal, 4)
                 .padding(.vertical, 5)
-                .frame(height: 20)
-                .frame(minWidth: 60, alignment: .leading)
-                .fixedSize()
                 .textFieldStyle(.plain)
                 .background(
                     GeometryReader { proxy in
@@ -169,7 +164,8 @@ private var newNoteRow: some View {
                     }
                 }
         }
-        .padding(.top, 5)
+        .padding([.horizontal, .vertical], 5)
+        .frame(maxWidth: .infinity, minHeight: 26)
     }
 }
 
