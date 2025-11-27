@@ -122,8 +122,9 @@ struct ChatView: View {
     private var FocusNoteView: some View {
         
         HStack(spacing: 10) {
+            CustomChipLayout(spacing: 8) {
             if !chatViewModel.focusedNotes.isEmpty {
-                VStack {
+//                VStack {
 //                    HStack {
 //                        Text("in focus ...")
 //                            .coteFont(.text2, color: .textSecondary)
@@ -131,7 +132,6 @@ struct ChatView: View {
 //                    }
 //                    .padding(.leading, 4)
                     
-                    CustomChipLayout(spacing: 8) {
                         ForEach(chatViewModel.focusedNotes) {  note in
                             NoteChip(selectedNote: note,
                                      mode: .label,
@@ -142,11 +142,9 @@ struct ChatView: View {
                             })
                             .transition(.opacity.combined(with: .scale))
                         }
-                    }
-                }
+//                }
             }
             if !chatViewModel.focusedNotes.contains(where: { $0.id == state.selectedNoteID }) {
-                CustomChipLayout(spacing: 8) {
                     NoteChip(selectedNote: chatViewModel.selectedNote,
                              mode: .button,
                              onSelect: {
