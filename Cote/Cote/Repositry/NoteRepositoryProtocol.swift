@@ -12,7 +12,8 @@ protocol NoteRepositoryProtocol {
     func noteStream(id: UUID) -> AsyncStream<Note?>
     
     func updateNoteTitle(id: UUID, title: String) async throws
-    func updateNoteContent(id: UUID, content: String, embadding: Data) async throws
+    func updateNoteContent(id: UUID, content: String) async throws
+    func updateNoteEmbadding(id: UUID, embadding: Data) async throws
     func updateNoteTags(id: UUID, tags: [Tag]) async throws
     func updateNoteLanguage(id: UUID, language: String) async throws
     func deleteNote(id: UUID) async throws
