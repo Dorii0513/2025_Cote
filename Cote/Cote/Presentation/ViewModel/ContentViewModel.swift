@@ -232,8 +232,13 @@ final class ContentViewModel: ObservableObject {
             
             // 아래 줄의 들여쓰기 가져옴
             let leadingWhitespace = originalLine.prefix(while: { $0.isWhitespace })
+            var finalComment = ""
             
-            let finalComment = comment.hasPrefix("//") ? comment : "// " + comment
+            if language == "python" {
+                finalComment = comment.hasPrefix("#") ? comment : "# " + comment
+            } else {
+                finalComment = comment.hasPrefix("//") ? comment : "// " + comment
+            }
             
             // 주석을 해당 줄 위에 추가 (들여쓰기 고려)
             let commentLine = String(leadingWhitespace) + finalComment

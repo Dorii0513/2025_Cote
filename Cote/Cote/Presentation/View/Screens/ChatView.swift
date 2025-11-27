@@ -165,6 +165,7 @@ struct ChatView: View {
     private var RecommendView: some View {
         HStack {
             Button {
+                state.selectedNoteID = chatViewModel.focusedNotes.first?.id
                 Task { @MainActor in
                     await contentViewModel.generateComments()
                 }
