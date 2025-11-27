@@ -10,11 +10,11 @@ import FoundationModels
 
 @available(macOS 26.0, *)
 struct ChatView: View {
-    @StateObject private var chatViewModel = ChatViewModel()
+    @EnvironmentObject private var chatViewModel: ChatViewModel
     @EnvironmentObject private var contentViewModel: ContentViewModel
     @EnvironmentObject private var state: UIState
-    @FocusState private var isFocused: Bool
     
+    @FocusState private var isFocused: Bool
     @State private var showNote: Bool = false
     @State private var isHover: Bool = false
     

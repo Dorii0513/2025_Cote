@@ -8,6 +8,7 @@
 import SwiftUI
 import AppKit
 
+@available(macOS 26.0, *)
 struct HomeView: View {
     @State private var sidebarWidth: CGFloat = 210
     @State private var chatViewWidth: CGFloat = 250
@@ -16,8 +17,10 @@ struct HomeView: View {
     @State private var showEdge_L: Bool = false
     @State private var showEdge_R: Bool = false
     @State private var showChat: Bool = false
+    
     @StateObject private var contentViewModel = ContentViewModel()
     @StateObject private var state = UIState()
+    @StateObject private var chatViewModel = ChatViewModel()
     
     var body: some View {
         
@@ -80,6 +83,7 @@ struct HomeView: View {
         }
         .environmentObject(contentViewModel)
         .environmentObject(state)
+        .environmentObject(chatViewModel)
     }
     
     
@@ -143,7 +147,6 @@ struct HomeView: View {
             
             if #available(macOS 26.0, *) {
                 ChatView()
-                    .environmentObject(ChatViewModel())
                     .ignoresSafeArea()
             } else { }
         }
