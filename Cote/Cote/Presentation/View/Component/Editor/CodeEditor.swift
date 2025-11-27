@@ -179,6 +179,7 @@ private enum TextViewFactory {
         textView.isRichText = false         // 서식 비활성화
         textView.importsGraphics = false    // 이미지 첨부 금지
         textView.usesRuler = false
+        textView.isIncrementalSearchingEnabled = true
         
         let style = NSMutableParagraphStyle()
         style.lineSpacing = 8
@@ -365,9 +366,9 @@ private extension String {
 class CodeTextView: NSTextView {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        DispatchQueue.main.async { [weak self] in
-            self?.window?.makeFirstResponder(nil)
-        }
+//        DispatchQueue.main.async { [weak self] in
+//            self?.window?.makeFirstResponder(nil)
+//        }
     }
     
     override func draw(_ dirtyRect: NSRect) {

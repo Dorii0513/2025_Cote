@@ -8,6 +8,7 @@
 import SwiftUI
 import RealmSwift
 import Foundation
+import AppKit
 
 @main
 struct CoteApp: SwiftUI.App {
@@ -47,9 +48,9 @@ struct CoteApp: SwiftUI.App {
             }
         }
         
-        #if DEBUG
+#if DEBUG
         print("Realm file:", Realm.Configuration.defaultConfiguration.fileURL?.path ?? "nil")
-        #endif
+#endif
     }
     var body: some Scene {
         WindowGroup {
@@ -68,5 +69,19 @@ struct CoteApp: SwiftUI.App {
             }
         }
         .windowResizability(.contentSize)
+        .commands {
+            CommandGroup(after: .textEditing) {
+                Button("Find…") {
+                    // 첫 번째 응답자(현재 포커스 뷰)에게 Find 액션 전송
+                    let item = NSMenuItem()
+                    item.tag = NSTextFinder.Action.showFindInterface.rawValue
+                    NSApp.sendAction(#selector(NSResponder.performTextFinderAction(_:)),
+                                     to: nil,
+                                     from: item)
+                }
+                .keyboardShortcut("f", modifiers: .command)
+            }
+        }
     }
 }
+
