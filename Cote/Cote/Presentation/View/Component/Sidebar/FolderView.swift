@@ -61,6 +61,7 @@ struct FolderView: View {
                     }
                 }, onDeleteNote: { id in
                     viewModel.deleteNote(id: id)
+                    state.selectedNoteID = state.previousNoteID
                 }, onStartRename: { id, name in
                     withAnimation(.easeIn(duration: 0.3)) {
                         renamingFolderID = id
